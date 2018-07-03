@@ -1,0 +1,16 @@
+{
+  "version": "0.1",
+  "moduledefinitions": [
+    {
+      "fid": "p_dcctrl",
+      "name": "DC Motor Control",
+      "inputsize": 24,
+      "outputsize": 24,
+      "init": "",
+      "read": "",
+      "write": "",
+      "source": "dcctrl.c",
+      "include": ""
+    }
+  ]
+}

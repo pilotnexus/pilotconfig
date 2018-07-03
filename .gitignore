@@ -1,0 +1,8 @@
+/dist/
+/build/lib/pilot/matiec/
+/pilot.egg-info/
+/pilot/__pycache__/
+/pilot/matiec/
+/pilot_config\.egg-info/
+/pilot_cli.egg-info/
+/testfiles/

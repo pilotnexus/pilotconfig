@@ -1,0 +1,66 @@
+#ifndef RPC_PLC_H
+#define RPC_PLC_H
+{{#if PLC}}
+#include "time.h"
+#include "POUS.h"
+
+//PLC located variables in config.h
+{{#each PLC.mem}}extern unsigned char *located_{{region}};
+{{/each}}
+#define BITBAND_BASE 0x22000000 
+#define __GET_BIT(array, byte, bit)\
+	*((char*)(BITBAND_BASE + ((((int)array)-0x20000000+byte) * 32) + (bit*4)))
+
+/* for set_plc_variable */
+#define PLC_VAR_FORCE_BIT     0x8000
+#define PLC_VAR_UNFORCE_BIT   0x4000
+
+/*for get_plc_variable*/
+#define PLC_VAR_SUBSCRIBE_BIT     0x8000
+#define PLC_VAR_UNSUBSCRIBE_BIT   0x4000
+
+{{#each PLC.programs}}extern {{type}} {{resource}}__{{name}};{{/each}}
+{{#each PLC.programs}}#define {{name}} {{resource}}__{{name}}{{/each}}
+
+//extern globals
+{{#each PLC.variables}}{{externdeclaration}}{{/each}}
+
+//extern located
+{{#each PLC.locatedvariables}}{{externlocated}}{{/each}}
+
+extern IEC_TIME __CURRENT_TIME;
+extern int plc_state;
+extern unsigned long long __tick;
+
+static void plc_tick()
+{
+  if (plc_state == 1)
+  {
+    /* increment tick counter */
+    __tick++;
+    __CURRENT_TIME.tv_nsec += 1000000L;
+    if (__CURRENT_TIME.tv_nsec >= 1000000000L)
+    {
+      __CURRENT_TIME.tv_nsec = 0;
+      __CURRENT_TIME.tv_sec++;
+    }
+  }	
+}
+
+void plc_loop();
+
+void init_plc_modules();
+void read_plc_inputs();
+void write_plc_outputs();
+
+int configure_plc_read_variables(uint16_t *variables, int count);
+int read_plc_variables(uint8_t *buffer);
+void configure_plc_write_variables(uint16_t *variables, int count);
+void write_plc_variables(uint8_t *buffer, int count);
+int read_from_plc_variable(uint16_t number, uint8_t *buffer, int index);
+int write_to_plc_variable(uint16_t varnumber, uint8_t *buffer, int index);
+int find_next_updated_variable();
+
+void plc_port_config(uint8_t slot, uint8_t port, uint16_t baud);
+{{/if}}
+#endif
