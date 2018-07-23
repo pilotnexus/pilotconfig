@@ -38,9 +38,7 @@ varsizes = {
         }
 
 def iec2c_compile(iec2c_path, iecfile, temp_path):
-  #k = subprocess.Popen([os.path.join(iec2c_path, 'iec2c'),'-T "{}"'.format(os.path.abspath(temp_path)), os.path.abspath(iecfile)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=iec2c_path)
-  #print k.communicate()
-  resultfile=os.path.join(os.path.abspath(temp_path), 'result.txt')
+  # resultfile=os.path.join(os.path.abspath(temp_path), 'result.txt')
   execute='{} -I {} -T {} {}'.format(os.path.join(iec2c_path, 'iec2c'), os.path.join(iec2c_path,'lib'), os.path.abspath(temp_path), iecfile)
   return os.system(execute)
   #with open(resultfile, 'r') as fin:
@@ -48,7 +46,7 @@ def iec2c_compile(iec2c_path, iecfile, temp_path):
 
 def init(config, model):
   configdef = { 'moduledefinitions': [] }
-  for root, dirnames, filenames in os.walk(os.path.dirname(os.path.realpath(__file__))):
+  for root, _dirnames, filenames in os.walk(os.path.dirname(os.path.realpath(__file__))):
     for filename in fnmatch.filter(filenames, 'configdefs.json'):
       with open(os.path.join(root, filename)) as obj:
         configdef['moduledefinitions'].extend( json.load(obj)['moduledefinitions'] )
@@ -134,7 +132,7 @@ def parseplcvariables(temp_path, mem):
             variables.append(var)
 
   #parse located variables
-  regex = re.compile('__LOCATED_VAR\((?P<type>\w+),(?P<var>[^,]*),(?P<mem>\w),(?P<size>\w),(?P<byte>\d+)(,(?P<bit>\w))?\)')
+  regex = re.compile(r'__LOCATED_VAR\((?P<type>\w+),(?P<var>[^,]*),(?P<mem>\w),(?P<size>\w),(?P<byte>\d+)(,(?P<bit>\w))?\)')
   locatedvarfilepath=os.path.join(os.path.abspath(temp_path), 'LOCATED_VARIABLES.h')
   with open(locatedvarfilepath) as locatedvarfile:
     locatedvariables = [regex.match(line).groupdict() for line in locatedvarfile]
@@ -156,7 +154,7 @@ def parseplcvariables(temp_path, mem):
 
   #calc absolute memory position
   pos = 0
-  for key, value in mem.items():
+  for _key, value in mem.items():
     value['start'] = pos
     value['absolute'] = '0x{:X}'.format(pos + baseAddress)
     pos += value['size']
@@ -182,6 +180,7 @@ def checkIfReplacementExists(key, module):
     #TODO check if module is an array
     regex = re.compile(r"\{\{(.*?)+\}\}")
     m = regex.match(module[key])
+    print(m)
     # TODO check that all replacements can be made, otherwise it cannot compile
     # that happens with wrong config file e.g.
 
@@ -243,10 +242,6 @@ def parsemodules(mem, modules):
   calls = {'read': [], 'write': [], 'init': [], 'include': []}
   compiler = Compiler()
 
-  helpers={
-    'markdown': helper_markdown
-  }
-
   for key, value in mem.items():
     for module in modules:
         if (key+'address') in module:
@@ -280,7 +275,7 @@ def parsetemplate(out_path, templatedata):
   #filecontent = filter(lambda x: x in printable, templatefile.read())
   template_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'template')
 
-  for root, dirs, files in os.walk(template_path):
+  for _root, _dirs, files in os.walk(template_path):
     templfiles = map(lambda x: os.path.join(template_path, x) ,filter(lambda x: x.endswith('.templ'), files))
 
     for templfile in templfiles:

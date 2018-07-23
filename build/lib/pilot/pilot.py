@@ -6,6 +6,7 @@ import argparse
 import os
 from . import pilotsetup
 from . import compile
+from . import program
 
 def main():
   with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'VERSION'), encoding='utf-8') as f:
@@ -19,6 +20,11 @@ def main():
 
   parser_b = subparsers.add_parser('build', help="Compile additional software into firmware")
   compile.arguments(parser_b)
+
+  parser_c = subparsers.add_parser('program', help="Remote program PLC")
+  program.arguments(parser_c)
+
+
 
   args = argparser.parse_args()
   if ('subparser_name' in args):

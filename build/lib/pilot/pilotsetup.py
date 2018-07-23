@@ -43,6 +43,7 @@ PILOT_SERVER = 'https://mypilot.io'
 API_PATH = '/api'
 PILOTRC = '~/.pilotrc'
 TMP_DIR = '/tmp/pilot'
+PILOT_DIR = '/etc/pilot'
 
 REMOTE_CLIENT = None
 
@@ -82,16 +83,25 @@ def exit_app(retcode):
     REMOTE_CLIENT.close()
   sys.exit(retcode)
 
-def cmd(command):
+def cmd(command, throw_on_nonzero_retcode=False):
   global REMOTE_CLIENT
   if not REMOTE_CLIENT:
     p = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                          universal_newlines=True)
-    output, _err = p.communicate()
+    output, err = p.communicate()
+
+    if throw_on_nonzero_retcode and p.returncode != 0:
+      raise Exception('Cound not execute {} \nError: {}'.format(command, err))
+
     return output
   else:
-    _stdin, stdout, _stderr = REMOTE_CLIENT.exec_command(command)
+    chan = REMOTE_CLIENT.get_transport().open_session()
+    _stdin, stdout, stderr = chan.exec_command(command)
+    chan.close()
+    if throw_on_nonzero_retcode and chan.recv_exit_status() != 0:
+      raise Exception('Cound not execute {} \nError: {}'.format(command, stderr))
+
     return ''.join(stdout)
 
 def cmd_retcode(command):
@@ -101,6 +111,7 @@ def cmd_retcode(command):
   else:
     chan = REMOTE_CLIENT.get_transport().open_session()
     chan.exec_command(command)
+    chan.close()
     return chan.recv_exit_status()
 
 def get_modules():
@@ -277,17 +288,17 @@ def load_pilot_defs():
 def driver_loaded():
   return os.path.exists(PILOT_DRIVER_ROOT)
 
+def getFileContent(file):
+  return cmd('sudo cat {}'.format(file), True)
+
+def setFileContent(file, content):
+  return cmd('printf "{}" | sudo tee {} >/dev/null'.format(content.replace('\n', '\\n').replace('"', '\"'), file), True)
 
 def getModuleEeprom(module, memregion):
   try:
-    path = '{}/module{}/eeprom/{}'.format(PILOT_DRIVER_ROOT, module, memregion)
-    if os.path.exists(path):
-      with open(path, 'r') as fid_file:
-        return fid_file.read()
+    return getFileContent('{}/module{}/eeprom/{}'.format(PILOT_DRIVER_ROOT, module, memregion))
   except:
     return ''
-
-#subprocess.call(shlex.split('wmctrl -r {} -e {}'.format(app['name'], sizeparam)))
 
 def build(loadbin = True, buildSilent = False, extractDir = TMP_DIR, savelocal = False):
   global eeproms
@@ -354,26 +365,71 @@ def build(loadbin = True, buildSilent = False, extractDir = TMP_DIR, savelocal =
     print('Oops! An error occured downloading the firmware. We have been notified of the problem.')
     exit_app(3)
 
-def addnode():
+def registernode():
+  nodeconffile = PILOT_DIR + '/config.yml'
+  nodeconf = {}
+  nodeid = None
+  apikey = None
+
+  address = get_mac()
+  h = iter(hex(address)[2:].zfill(12))
+  mac = "".join(i + next(h) for i in h)
+
   try:
-    mac = get_mac()
+    nodeconf = yaml.load(getFileContent(nodeconffile))
+  except:
+    nodeconf = None
+  
+  if nodeconf != None and nodeconf['nodeid'] and nodeconf['apikey']:
+    nodeid = nodeconf['nodeid']
+    apikey = nodeconf['apikey']
     query = u"""
     {{
-      nodebymac(mac: "{}") {{
+      nodebyid(id: "{}") {{
         name
+        apikey
       }}
     }}
-    """.format(mac)
+    """.format(nodeconf['nodeid'])
     ret, obj = query_graphql(query)
-    print(ret)
-    if ret == 200 and obj['data']:
-      pass
-      #print(obj['data'])
-  except:
-    print('Could not load')
-    bugsnag.notify(Exception(sys.exc_info()[0]), user={
-                   "username": pilotcfg['username']})
+    if ret == 200 and obj['data'] and obj['data']['nodebyid']:
+      if obj['data']['nodebyid']['apikey'] != nodeconf['apikey']:
+        print('The API key is wrong, correcting using your credentials.')
+        apikey = obj['data']['nodebyid']['apikey']
+      print('Your Node was already registered as \'{}\''.format(obj['data']['nodebyid']['name']))
+    elif ret == 200 and not obj['data']['nodebyid']:
+      apikey = None
 
+  if apikey == None:
+    ch = input('Do you want to register the Node with mypilot.io? (required for remote access) (y/n)')
+    # ch = read_single_keypress()
+    if ch.strip() == 'y':
+      #Register unassigned Node
+      name = input('Enter the Name for this Node (Unassigned Node): ')
+      if name == '':
+        name = 'Unassigned Node'
+      query = u"""
+      mutation {{
+        upsertNode (node: {{
+          name: "{}",
+          mac: "{}"}} ) {{
+         id
+         apikey
+       }}
+      }}
+      """.format(name, mac)
+      ret, obj = query_graphql(query)
+      if ret == 200 and obj['data'] and obj['data']['upsertNode']:
+        nodeid = obj['data']['upsertNode']['id']
+        apikey = obj['data']['upsertNode']['apikey']
+
+  if nodeid != None and apikey != None:
+    if nodeconf == None:
+      nodeconf = {}
+    nodeconf['nodeid'] = nodeid
+    nodeconf['apikey'] = apikey
+
+    setFileContent(nodeconffile, yaml.dump(nodeconf, default_flow_style=False))
 
 def tryrun(text, retries, cmd):
   print(text + '...', end='')
@@ -571,7 +627,8 @@ def wait_build(loadbin, extractDir = TMP_DIR, savelocal = False):
   silent = False
   while build(loadbin, silent, extractDir, savelocal) == 1:
     silent = True
-
+    time.sleep(5)
+    
 def main(args):
   global modules
   global PILOT_SERVER
@@ -620,6 +677,7 @@ def main(args):
       srcpath = os.path.abspath(args.source)
       wait_build(False, srcpath, True)
 
+    registernode()
     # addnode()
 
 if __name__ == '__main__':

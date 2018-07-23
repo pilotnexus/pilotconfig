@@ -1,0 +1,305 @@
+import sys
+import time
+import re
+import os
+import scp
+import tarfile
+import requests
+import bugsnag
+
+from PilotServer import PilotServer
+from Sbc import Sbc
+
+from colorama import Fore
+from colorama import Style
+from colorama import init
+
+class PilotDriver():
+  MODULE_COUNT = 4
+  retry_count = 2
+  emptystr = '-'
+  pilot_driver_root = '/proc/pilot'
+  tmp_dir = '/tmp/pilot'
+  kernmodule_list = ['pilot', 'pilot_plc', 'pilot_tty',
+                     'pilot_rtc', 'pilot_fpga', 'pilot_io', 'pilot_slcd']
+
+  eeproms = {}
+  modules = {}
+
+  ps = None
+  sbc = None
+
+  def __init__(self, pilotserver: PilotServer, sbc: Sbc):
+    self.ps = pilotserver
+    self.sbc = sbc
+
+  def get_modules(self):
+    memregs = ['uid', 'hid', 'fid']
+    strmlist = list(filter(
+        None, self.sbc.cmd('find /proc/pilot/module* -maxdepth 0 -printf "%f\\n"').split('\n')))
+    matches = filter(None, map(lambda x: re.match(r'module(\d+)', x), strmlist))
+    modlist = {int(x.group(1)): {'uid': '', 'hid': '', 'fid': ''}
+              for x in matches}
+    for mod in modlist:
+      for memreg in memregs:
+        retry = self.retry_count
+        while retry > 0:
+          retry = retry - 1
+          try:
+            regfile = self.sbc.cmd(
+                'cat {}/module{}/eeprom/{}'.format(self.pilot_driver_root, mod, memreg))
+            modlist[mod][memreg] = ''.join(
+                char for char in regfile if str.isprintable(char)).strip()
+            break
+          except:
+            modlist[mod][memreg] = ''
+            #dbg('could not read {} of module {}'.format(memreg, mod))
+    return modlist
+
+
+  def load_pilot_defs(self):
+    eeproms = self.get_modules()
+    query = u"""
+    {{
+      fid(fids:[{}]) {{
+      fid
+      name
+      }}
+      hid(hids: [{}]) {{
+        module
+        hid
+        title
+        subtitle
+        description
+      fids {{
+        fid
+        name
+        isdefault
+      }}
+      }}
+    }}
+    """.format(
+        ','.join(['"{}"'.format(value['fid'])
+                  for key, value in eeproms.items() if value['fid'] != '']),
+        ','.join(['{{number: {}, hid: "{}"}}'.format(key, value['hid'])
+                  for key, value in eeproms.items()])
+    )
+    ret, obj = self.ps.query_graphql(query)
+
+    if ret == 200:
+      fidmap = {v['fid'].strip(): v['name'] for v in obj['data']['fid']}
+
+      if obj['data']['hid']:
+        for module in obj['data']['hid']:
+          fid = eeproms[int(module['module'])]['fid']
+          module['currentfid_nicename'] = fidmap[fid] if fid in fidmap and fid != '' else self.emptystr
+          module['currentfid'] = fid
+      else:
+        print('error reading modules, please try again')
+        return None
+
+      return sorted(obj['data']['hid'], key=lambda x: x['module']) if ret == 200 and obj['data']['hid'] != None else None
+
+
+  def driver_loaded(self):
+    return os.path.exists(self.pilot_driver_root)
+
+  def getModuleEeprom(self, module, memregion):
+    try:
+      return self.sbc.getFileContent('{}/module{}/eeprom/{}'.format(self.pilot_driver_root, module, memregion))
+    except:
+      return ''
+
+  def tryrun(self, text, retries, cmd):
+    print(text + '...', end='')
+    sys.stdout.flush()
+    while retries > 0:
+      retries = retries - 1
+      try:
+        if self.sbc.cmd_retcode(cmd) == 0:
+          print(Fore.GREEN + 'done')
+          return 0
+      except:
+        print('.', end='')
+        sys.stdout.flush()
+    print(Fore.RED + 'failed')
+    return 1
+
+  def reset_pilot(self):
+    try:
+      # TODO check if gpio are exported as outputs first
+      self.sbc.cmd('[ ! -f /sys/class/gpio/gpio17/value ] && sudo echo "17" > /sys/class/gpio/export')
+      self.sbc.cmd('sudo echo "out" > /sys/class/gpio/gpio17/direction')
+      self.sbc.cmd('echo -n "1" > /sys/class/gpio/gpio17/value')
+      time.sleep(2)
+      self.sbc.cmd('echo -n "0" > /sys/class/gpio/gpio17/value')
+    except:
+      pass
+
+
+  def check_raspberry(self):
+    try:
+      hardware = ['BCM2835', 'BCM2836']
+      match = re.match(r'Hardware\s*?:(?P<hw>.*?)$', self.sbc.cmd('cat /proc/cpuinfo'))
+      if match and match.group('hw') in hardware:
+        return True
+      return False
+    except:
+      return True #for now do nothing on error, assume that it is a raspberry
+
+  def load_driver(self):
+    try:
+      match = re.match(
+          r'Linux (?P<name>.*?) (?P<version>\d+.\d+.\d+-.*?) #(?P<buildnum>\d+).*?', self.sbc.cmd('uname -a'))
+      if match:
+        packagename = "pilot-{}{}".format(match.group('version'),
+                                          match.group('buildnum'))
+        print('trying to install package ''{}'''.format(packagename))
+        if self.sbc.cmd_retcode("""sudo sh -c 'echo "deb http://archive.amescon.com/ ./" > /etc/apt/sources.list.d/amescon.list'""") != 0:
+          return 1
+        self.sbc.cmd_retcode('sudo apt-get update')
+        return self.sbc.cmd_retcode('sudo apt-get install -y --allow-unauthenticated {}'.format(packagename))
+      else:
+        print('Could not detect your linux version')
+        return 1
+    except:
+      bugsnag.notify(Exception(sys.exc_info()[0]), user={
+          "username": self.ps.pilotcfg['username']})
+    return 1
+
+  def check_driver(self):
+    if self.sbc.cmd_retcode('ls ' + self.pilot_driver_root) != 0:
+      print('Pilot driver is not loaded. Trying to install')
+      if self.load_driver() == 0:
+        print('Pilot driver installed, please reboot your system')
+        return 1
+      else:
+        return -1
+    return 0
+        
+  def reload_drivers(self):
+    ok = True
+    print('reloading drivers...', end='')
+    sys.stdout.flush()
+    for module in self.kernmodule_list[::-1]:
+      try:
+        self.sbc.cmd_retcode("sudo modprobe -r {}".format(module))
+      except:
+        pass
+
+    for module in self.kernmodule_list:
+      try:
+        self.sbc.cmd_retcode("sudo modprobe {}".format(module))
+      except:
+        ok = False
+
+    if ok:
+      print(Fore.GREEN + 'done')
+    else:
+      print(Fore.RED + 'failed')
+
+    return ok
+
+  def build(self, loadbin, buildSilent, extractDir, savelocal):
+    gzbinfile = 'firmware.tar.gz'
+    gzsrcfile = 'firmware_src.tar.gz'
+    try:
+      query = u"""
+      {{
+        build(modules: [{}]) {{
+          guid
+          url
+          successful
+        }}
+      }}
+      """.format(','.join(['{{number: {}, uid: "{}", fid: "{}"}}'.format(key, value['uid'], value['fid']) for key, value in self.eeproms.items() if value['fid'] != '']))
+      ret, obj = self.ps.query_graphql(query)
+      if ret == 200 and obj['data'] and obj['data']['build']:
+        if obj['data']['build']['successful']:
+          if obj['data']['build']['guid']:
+            if not buildSilent:
+              print('building firmware...', end='')
+              sys.stdout.flush()
+            return 1
+          elif obj['data']['build']['url']:
+            url = obj['data']['build']['url']
+            if not loadbin:
+              url = url.replace(gzbinfile, gzsrcfile)
+            sys.stdout.write('downloading firmware {}'.format(
+                'source to ' + extractDir + ' ...' if not loadbin else ' ...'))
+            sys.stdout.flush()
+            if savelocal:
+              r = requests.get(url, stream=True)
+              if r.status_code == 200:
+                if not os.path.exists(self.tmp_dir):
+                  os.makedirs(self.tmp_dir)
+                fname = '{}/{}'.format(self.tmp_dir, gzbinfile if loadbin else gzsrcfile)
+                with open(fname, 'wb') as f:
+                  f.write(r.content)
+                tar = tarfile.open(fname, "r:gz")
+                if not os.path.exists(extractDir):
+                  os.makedirs(extractDir)
+                tar.extractall(path=extractDir)
+                tar.close()
+                print(Fore.GREEN + 'done')
+                return 0
+            else:
+              command = 'mkdir -p {0} && mkdir -p {2} && wget -O {0}/pilot_tmp_fw.tar.gz {1} && tar -zxf {0}/pilot_tmp_fw.tar.gz -C {2}'.format(
+                  self.tmp_dir, url, extractDir)
+              if (self.sbc.cmd_retcode(command)) == 0:
+                print(Fore.GREEN + 'done')
+                return 0
+
+            print(Fore.RED + 'error')
+            return -1
+        else:
+            print(Fore.RED + 'failed on server')
+            bugsnag.notify(Exception('Error building firmware on server side'), user={
+                          "username": self.ps.pilotcfg['username']})
+            return -1
+      else:
+        print('Error building firmware.')
+        bugsnag.notify(Exception('Error building firmware'),
+                      user={"username": self.ps.pilotcfg['username']})
+        return -1
+    except:
+      bugsnag.notify(Exception(sys.exc_info()[0]), user={
+                    "username": self.ps.pilotcfg['username']})
+      print('Oops! An error occured downloading the firmware. We have been notified of the problem.')
+      return -1
+
+  def build_firmware(self):
+    return self.wait_build(True, self.tmp_dir, False)
+
+  def wait_build(self, loadbin, extractDir, savelocal=False):
+    silent = False
+    ret = 1
+    while ret == 1:
+      ret = self.build(loadbin, silent, extractDir, savelocal)
+      silent = True
+      time.sleep(5)
+    return False if ret < 0 else True
+
+  def program(self):
+    binpath = '{}/bin'.format(os.path.join(
+        os.path.abspath(os.path.dirname(__file__))))
+
+    if self.sbc.remote_client:
+      with scp.SCPClient(self.sbc.remote_client.get_transport()) as scp_client:
+        scp_client.put(binpath + '/jamplayer', remote_path=self.tmp_dir)
+        scp_client.put(binpath + '/stm32flash', remote_path=self.tmp_dir)
+        binpath = self.tmp_dir
+
+    res = self.tryrun('erasing CPLD', 2,
+                 'sudo {}/jamplayer -aerase {}/cpld.jam'.format(binpath, self.tmp_dir))
+    if res != 0:
+      return 1
+    res = self.tryrun('programming MCU', 4,
+                 'sudo {}/stm32flash -w {}/stm.bin -g 0 /dev/ttyAMA0'.format(binpath, self.tmp_dir))
+    if res != 0:
+      return 1
+    res = self.tryrun('programming CPLD', 2,
+                 'sudo {}/jamplayer -aprogram {}/cpld.jam'.format(binpath, self.tmp_dir))
+    self.reload_drivers()
+    if res != 0:
+      return 1
