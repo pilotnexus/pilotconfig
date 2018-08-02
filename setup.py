@@ -19,7 +19,7 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 def package_files(directoryarr):
     paths = []
     for directory in directoryarr:
-      for (path, directories, filenames) in os.walk(os.path.join('pilot', directory)):
+      for (path, _directories, filenames) in os.walk(os.path.join('pilot', directory)):
           for filename in filenames:
               paths.append(os.path.join('..', path, filename))
     return paths
@@ -64,7 +64,7 @@ setup(
   python_requires='>=3',
   entry_points={  # Optional
       'console_scripts': [
-          'pilot-config=pilot.pilot:main',
+          'pilot=pilot.pilot:main',
       ],
   },
   project_urls={  # Optional

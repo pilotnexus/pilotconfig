@@ -23,9 +23,9 @@ from colorama import Style
 from colorama import init
 
 # class imports
-from PilotServer import PilotServer
-from PilotDriver import PilotDriver
-from Sbc import Sbc
+from .PilotServer import PilotServer
+from .PilotDriver import PilotDriver
+from .Sbc import Sbc
 
 ############### INIT ###################
 
@@ -36,13 +36,6 @@ with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'VERSION'), e
 
 DEBUG = False
 EXECVP_ENABLED = False
-
-bugsnag.configure(
-    api_key="2d614bb3561d92fbd3b6f371e39b554a",
-    project_root=".",
-    app_version=VERSION,
-    release_stage='production'
-)
 
 logger = logging.getLogger()
 handler = BugsnagHandler()
@@ -58,12 +51,8 @@ def arguments(parser):
                       help='Alternative URL for the pilot server API to contact')
   parser.add_argument('--source', '-c', default=None, dest='source',
                       help='Download Sourcecode only')
-  parser.add_argument('--host', '-o', default=None, dest='host',
-                      help='Hostname to remote configure')
-  parser.add_argument('--user', '-u', default='pi', dest='user',
-                      help='Remote SSH User (default: pi)')
-  parser.add_argument('--password', '-p', default='raspberry', dest='password',
-                      help='Remote SSH Password (default: raspberry)')
+  parser.add_argument('--node', '-n', default=None, dest='node',
+                      help='Configure node only')
   parser.add_argument('--reset', '-r', default=None, action='store_const', const='reset', dest='reset',
                       help='Resets the Pilot Mainboard')
 
@@ -84,38 +73,40 @@ def main(args):
     if not pilotdriver.check_raspberry() and not args.host:
       print('This does not seem to be a Raspberry Pi. Please use the --host option to remote connect to it.')
       return 2
-    
-    if sbc.need_sudo_pw():
-      print('we need sudo on remote machine (without interactive authentication)')
-      return 2
 
-    if (args.reset):
-      print('Resetting Pilot Mainboard')
-      pilotdriver.reset_pilot()
-      print('Done')
-      return 0
+    if not args.node:
 
-    ret = pilotdriver.check_driver()
-    if ret != 0:
-      return 1
+      if sbc.need_sudo_pw():
+        print('we need sudo on remote machine (without interactive authentication)')
+        return 2
 
-    modules = pilotdriver.load_pilot_defs()
-    if modules != None:
-      for module in modules:
-        print('Module {}: {} {}'.format(
-            module['module'], module['currentfid_nicename'], '*' if len(module['fids']) > 1 else ''))
+      if (args.reset):
+        print('Resetting Pilot Mainboard')
+        pilotdriver.reset_pilot()
+        print('Done')
+        return 0
 
-      if args.source == None:
-        ch = input('Do you want to build and program the PiloT Mainboard Firmware? (y/n): ').strip()
-        if ch == 'y' or ch == 'yes':
-          if pilotdriver.build_firmware():
-            pilotdriver.program()
-            pilotdriver.reset_pilot()
-      else:
-        srcpath = os.path.abspath(args.source)
-        pilotdriver.wait_build(False, srcpath, True)
+      ret = pilotdriver.check_driver()
+      if ret != 0:
+        return 1
 
-      pilotserver.registernode()
+      modules = pilotdriver.load_pilot_defs()
+      if modules != None:
+        for module in modules:
+          print('Module {}: {} {}'.format(
+              module['module'], module['currentfid_nicename'], '*' if len(module['fids']) > 1 else ''))
+
+        if args.source == None:
+          ch = input('Do you want to build and program the PiloT Mainboard Firmware? (y/n): ').strip().lower()
+          if ch == 'y' or ch == 'yes':
+            if pilotdriver.build_firmware():
+              pilotdriver.program()
+              pilotdriver.reset_pilot()
+        else:
+          srcpath = os.path.abspath(args.source)
+          pilotdriver.wait_build(False, srcpath, True)
+
+    pilotserver.registernode()
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Setup PiloT')

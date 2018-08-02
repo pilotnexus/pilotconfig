@@ -2,9 +2,6 @@
 Pilot Config Tool
 =================
 
-Build:
-`python3 setup.py sdist bdist_wheel upload`
-
 Install:
 `sudo -H pip3 install pilot-config`
 
@@ -12,7 +9,7 @@ Upgrade:
 `sudo -H pip3 install --upgrade pilot-config`
 
 Run:
-`pilot-config setup`
+`pilot setup`
 to setup your system
 
 **************************************************

@@ -5,7 +5,7 @@ import json
 from distutils.dir_util import copy_tree
 from shutil import copyfile, move
 import yaml
-import pilotplc
+from . import pilotplc
 
 class bcolors:
     HEADER = '\033[95m'
