@@ -4,6 +4,7 @@ import bugsnag
 import os
 import yaml
 import getpass
+import json
 from uuid import getnode as get_mac
 
 from colorama import Fore
@@ -126,7 +127,7 @@ class PilotServer():
     nodeconffile = self.pilot_dir + '/pilotnode.yml'
     self.sbc.setFileContent(nodeconffile, yaml.dump(nodeconf, default_flow_style=False))
 
-  def registernode(self):
+  def registernode(self, fwconfig):
     nodeconf = self.loadnodeconf()
     nodeid = None
     apikey = None
@@ -185,9 +186,26 @@ class PilotServer():
         nodeconf = {}
       nodeconf['nodeid'] = nodeid
       nodeconf['apikey'] = apikey
-
       self.savenodeconf(nodeconf)
 
+      if fwconfig != None:
+        try:
+          print('Saving Node configuration...', end='')
+          query = u"""
+          mutation {{
+            setNodeConfig (nodeId: "{}", fwconfig: "{}")
+          }}
+          """.format(nodeid, json.dumps(fwconfig).replace('"', '\\"'))
+          ret, obj = self.query_graphql(query)
+          if ret == 200 and obj['data'] and obj['data']['setNodeConfig']:
+            if obj['data']['setNodeConfig'] == 1:
+              print(Fore.GREEN + 'done')
+            else:
+              print(Fore.RED + 'failed on server')
+          else:
+            print(Fore.RED + 'failed')
+        except:
+          print(Fore.RED + 'failed')
 
   def load_config(self):
     #first check if a .pilotrc file exists

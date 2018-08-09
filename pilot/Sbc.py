@@ -62,4 +62,4 @@ class Sbc():
 
 
   def setFileContent(self, file, content):
-    return self.cmd('printf "{}" | sudo tee {} >/dev/null'.format(content.replace('\n', '\\n').replace('"', '\"'), file), True)
+    return self.cmd('printf "{}" | sudo tee {} >/dev/null'.format(content.replace('\n', '\\n').replace('"', '\\"'), file), True)

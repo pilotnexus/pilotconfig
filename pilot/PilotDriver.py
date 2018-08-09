@@ -58,7 +58,7 @@ class PilotDriver():
 
 
   def load_pilot_defs(self):
-    eeproms = self.get_modules()
+    self.eeproms = self.get_modules()
     query = u"""
     {{
       fid(fids:[{}]) {{
@@ -80,9 +80,9 @@ class PilotDriver():
     }}
     """.format(
         ','.join(['"{}"'.format(value['fid'])
-                  for key, value in eeproms.items() if value['fid'] != '']),
+                  for key, value in self.eeproms.items() if value['fid'] != '']),
         ','.join(['{{number: {}, hid: "{}"}}'.format(key, value['hid'])
-                  for key, value in eeproms.items()])
+                  for key, value in self.eeproms.items()])
     )
     ret, obj = self.ps.query_graphql(query)
 
@@ -91,7 +91,7 @@ class PilotDriver():
 
       if obj['data']['hid']:
         for module in obj['data']['hid']:
-          fid = eeproms[int(module['module'])]['fid']
+          fid = self.eeproms[int(module['module'])]['fid']
           module['currentfid_nicename'] = fidmap[fid] if fid in fidmap and fid != '' else self.emptystr
           module['currentfid'] = fid
       else:

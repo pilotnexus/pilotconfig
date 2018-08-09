@@ -105,8 +105,11 @@ def main(args):
         else:
           srcpath = os.path.abspath(args.source)
           pilotdriver.wait_build(False, srcpath, True)
-
-    pilotserver.registernode()
+      fwconfig = {}
+      fwconfig['modules'] = modules
+      pilotserver.registernode(fwconfig)
+    else:
+      pilotserver.registernode(None)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Setup PiloT')

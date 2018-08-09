@@ -4,12 +4,22 @@ print('Pilot Config')
 
 import argparse
 import os
+import sys
 import bugsnag
 from . import pilotsetup
 from . import compiler
 from . import program
 from . import project
 
+def my_except_hook(exctype, value, traceback):
+  if exctype == KeyboardInterrupt:
+    print("Keyboard Interrupt, cancelling. Bye!")
+    exit(3)
+  else:
+    bugsnag.notify(Exception('Unhandled Exception, type: {}, value: {}, traceback: {}'.format(exectype, value, traceback)))
+    sys.__excepthook__(exctype, value, traceback)
+
+sys.excepthook = my_except_hook
 
 def remoteargs(argparser):
     # Arguments available for all subparsers
@@ -30,6 +40,8 @@ def main():
       app_version=VERSION,
       release_stage='production'
   )
+
+  sys.excepthook = my_except_hook
 
   argparser = argparse.ArgumentParser(description='Pilot Command-Line Interface')
 
