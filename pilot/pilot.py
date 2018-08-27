@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-print('Pilot Config')
-
 import argparse
 import os
 import sys
@@ -11,18 +9,22 @@ from . import compiler
 from . import program
 from . import project
 
-def my_except_hook(exctype, value, traceback):
-  if exctype == KeyboardInterrupt:
+print('Pilot Configuration Tool')
+
+def my_except_hook(exectype, value, traceback):
+  if exectype == KeyboardInterrupt:
     print("Keyboard Interrupt, cancelling. Bye!")
     exit(3)
   else:
     bugsnag.notify(Exception('Unhandled Exception, type: {}, value: {}, traceback: {}'.format(exectype, value, traceback)))
-    sys.__excepthook__(exctype, value, traceback)
+    sys.__excepthook__(exectype, value, traceback)
 
 sys.excepthook = my_except_hook
 
 def remoteargs(argparser):
     # Arguments available for all subparsers
+  argparser.add_argument('--server', '-s', default=None, dest='server',
+                  help='Alternative URL for the pilot server API to contact')
   argparser.add_argument('--host', '-o', default=None, dest='host',
                          help='Hostname to remote configure')
   argparser.add_argument('--user', '-u', default='pi', dest='user',

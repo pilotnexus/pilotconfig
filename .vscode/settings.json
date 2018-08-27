@@ -8,4 +8,5 @@
     "**/build": true,
     "**/__pycache__": true
   },
+  "python.jediEnabled": false,
 }

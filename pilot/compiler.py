@@ -5,6 +5,7 @@ import json
 from distutils.dir_util import copy_tree
 from shutil import copyfile, move
 import yaml
+
 from . import pilotplc
 
 class bcolors:
@@ -38,9 +39,8 @@ def main(args):
     try:
       args.iec2cdir = os.environ['IEC2C_DIR']
     except:
-      print("No parameter IEC2C directory given and no IEC2C_DIR environment variable defined, exiting")
-      exit(1)
-
+      args.iec2cdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'matiec')
+ 
   #if no source path parameter is given try the environment var
   if args.source == None:
     try:

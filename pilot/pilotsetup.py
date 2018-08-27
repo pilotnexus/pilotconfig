@@ -23,8 +23,8 @@ from colorama import Style
 from colorama import init
 
 # class imports
-from .PilotServer import PilotServer
 from .PilotDriver import PilotDriver
+from .PilotServer import PilotServer
 from .Sbc import Sbc
 
 ############### INIT ###################
@@ -47,8 +47,6 @@ logger.addHandler(handler)
 
 def arguments(parser):
   # parser.add_argument('--terminal', '-t', action='store_true', help='forces the terminal version instead of GUI')
-  parser.add_argument('--server', '-s', default=None, dest='server',
-                      help='Alternative URL for the pilot server API to contact')
   parser.add_argument('--source', '-c', default=None, dest='source',
                       help='Download Sourcecode only')
   parser.add_argument('--node', '-n', default=None, dest='node',

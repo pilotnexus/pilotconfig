@@ -10,6 +10,8 @@ import bugsnag
 from .PilotServer import PilotServer
 from .Sbc import Sbc
 
+from shutil import copyfile
+
 from colorama import Fore
 from colorama import Style
 from colorama import init
@@ -23,11 +25,15 @@ class PilotDriver():
   kernmodule_list = ['pilot', 'pilot_plc', 'pilot_tty',
                      'pilot_rtc', 'pilot_fpga', 'pilot_io', 'pilot_slcd']
 
+  binpath = '{}/bin'.format(os.path.join(
+    os.path.abspath(os.path.dirname(__file__))))
+
   eeproms = {}
   modules = {}
 
   ps = None
   sbc = None
+
 
   def __init__(self, pilotserver: PilotServer, sbc: Sbc):
     self.ps = pilotserver
@@ -252,16 +258,20 @@ class PilotDriver():
             if savelocal:
               r = requests.get(url, stream=True)
               if r.status_code == 200:
-                if not os.path.exists(self.tmp_dir):
-                  os.makedirs(self.tmp_dir)
-                fname = '{}/{}'.format(self.tmp_dir, gzbinfile if loadbin else gzsrcfile)
-                with open(fname, 'wb') as f:
-                  f.write(r.content)
-                tar = tarfile.open(fname, "r:gz")
-                if not os.path.exists(extractDir):
-                  os.makedirs(extractDir)
-                tar.extractall(path=extractDir)
-                tar.close()
+                try:
+                  if not os.path.exists(self.tmp_dir):
+                    os.makedirs(self.tmp_dir)
+                  fname = '{}/{}'.format(self.tmp_dir, gzbinfile if loadbin else gzsrcfile)
+                  with open(fname, 'wb') as f:
+                    f.write(r.content)
+                  tar = tarfile.open(fname, "r:gz")
+                  if not os.path.exists(extractDir):
+                    os.makedirs(extractDir)
+                  tar.extractall(path=extractDir)
+                  tar.close()
+                except:
+                  print("Error writing firmware file. Please check if you have write permissions to your target directory")
+                  exit(1)
                 print(Fore.GREEN + 'done')
                 return 0
             else:
@@ -301,26 +311,51 @@ class PilotDriver():
       time.sleep(5)
     return False if ret < 0 else True
 
-  def program(self):
-    binpath = '{}/bin'.format(os.path.join(
-        os.path.abspath(os.path.dirname(__file__))))
+  def program_cpld(self, binfile, erase=False):
+    return self.tryrun('erasing CPLD' if erase else 'programming CPLD', 2,
+                 'sudo {}/jamplayer -a{} {}'.format(self.binpath, 'erase' if erase else 'program', binfile))
 
+  def program_mcu(self, binfile):
+    return self.tryrun('programming MCU', 4, 'sudo {}/stm32flash -w {} -g 0 /dev/ttyAMA0'.format(self.binpath, binfile))
+
+  def program(self, program_cpld=True, program_mcu=True, cpld_file=None, mcu_file=None, var_file=None):
+    res = 0
     if self.sbc.remote_client:
-      with scp.SCPClient(self.sbc.remote_client.get_transport()) as scp_client:
-        scp_client.put(binpath + '/jamplayer', remote_path=self.tmp_dir)
-        scp_client.put(binpath + '/stm32flash', remote_path=self.tmp_dir)
-        binpath = self.tmp_dir
+      if self.sbc.cmd_retcode('sudo chown $USER {}'.format(self.tmp_dir)) == 0:
+        with scp.SCPClient(self.sbc.remote_client.get_transport()) as scp_client:
+          scp_client.put(self.binpath + '/jamplayer', remote_path=self.tmp_dir)
+          scp_client.put(self.binpath + '/stm32flash', remote_path=self.tmp_dir)
+          if cpld_file != None:
+            scp_client.put(cpld_file, remote_path=os.path.join(self.tmp_dir,'cpld.jam'))
+          if mcu_file != None:
+            scp_client.put(mcu_file, remote_path=os.path.join(self.tmp_dir, 'stm.bin'))
+          if var_file != None:
+            scp_client.put(var_file, remote_path=os.path.join(self.tmp_dir, 'variables'))
 
-    res = self.tryrun('erasing CPLD', 2,
-                 'sudo {}/jamplayer -aerase {}/cpld.jam'.format(binpath, self.tmp_dir))
-    if res != 0:
-      return 1
-    res = self.tryrun('programming MCU', 4,
-                 'sudo {}/stm32flash -w {}/stm.bin -g 0 /dev/ttyAMA0'.format(binpath, self.tmp_dir))
-    if res != 0:
-      return 1
-    res = self.tryrun('programming CPLD', 2,
-                 'sudo {}/jamplayer -aprogram {}/cpld.jam'.format(binpath, self.tmp_dir))
+          self.binpath = self.tmp_dir        
+      else:
+        print('Error setting permissions to folder {}'.format(self.tmp_dir))
+    else:
+      if cpld_file != None:
+        copyfile(cpld_file, os.path.join(self.tmp_dir, 'cpld.jam'))
+      if mcu_file != None:
+        copyfile(mcu_file, os.path.join(self.tmp_dir, 'stm.bin'))
+      if var_file != None:
+        copyfile(var_file, os.path.join(self.tmp_dir, 'variables'))
+
+    if program_cpld and res == 0:
+      res = self.program_cpld(os.path.join(self.tmp_dir, 'cpld.jam'), True)
+
+    if program_mcu and res == 0:
+      self.program_mcu(os.path.join(self.tmp_dir, 'stm.bin'))
+
+    if program_cpld and res == 0:
+      res = self.program_cpld(os.path.join(self.tmp_dir, 'cpld.jam'))
+
     self.reload_drivers()
-    if res != 0:
-      return 1
+
+    if var_file != None:
+      res = self.tryrun('setting PLC variables', 4, 'sudo cp {}/variables /proc/pilot/plc/varconf/variables'.format(self.tmp_dir))
+      self.tryrun('setting PLC variables permanently', 4, 'sudo cp {}/variables /etc/pilot/variables'.format(self.tmp_dir))     
+
+    return res
