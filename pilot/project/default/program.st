@@ -1,0 +1,17 @@
+PROGRAM fb1
+  VAR_INPUT    i1 : BOOL;
+  END_VAR
+  VAR_OUTPUT
+    o1 : BOOL;
+  END_VAR
+  VAR_INPUT
+    i2 : BOOL;
+  END_VAR
+  o1 := i1 AND i1;
+END_PROGRAM
+CONFIGURATION config
+RESOURCE resource1 ON PLC
+TASK test_task(INTERVAL := t#100ms,PRIORITY := 0);
+PROGRAM test_instance : fb1;
+END_RESOURCE
+END_CONFIGURATION

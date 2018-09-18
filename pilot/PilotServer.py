@@ -1,4 +1,5 @@
 import sys
+import time
 import requests
 import bugsnag
 import os
@@ -6,6 +7,7 @@ import yaml
 import getpass
 import json
 from uuid import getnode as get_mac
+from enum import Enum
 
 from colorama import Fore
 from colorama import Style
@@ -13,12 +15,21 @@ from colorama import init
 
 from .Sbc import Sbc
 
+class RegisterNodeStatus(Enum):
+  FAILED = -1
+  OK = 0
+  CODE_NOT_FOUND = 1
+  COULD_NOT_CREATE = 2
+  COULD_NOT_UPDATE = 3
+  MAC_ALREADY_USED = 4
+
 class PilotServer():
-  pilot_server = 'https://mypilot.io'
-  api_path = '/api'
+  pilot_server = 'https://api.pilotnexus.io/v1'
+  api_path = '/query'
   pilotrc = '~/.pilotrc'
   pilotcfg = {'username': '', 'token': ''}
   pilot_dir = '/etc/pilot'
+  nodeconfname = '/pilotnode.yml'
   terminal = True
 
   sbc = None
@@ -49,59 +60,18 @@ class PilotServer():
       return 0, e
 
 
-  def authenticate(self):
-    retrycount = 3
-    successful = False
-
-    while retrycount > 0 and successful == False:
-      retrycount = retrycount - 1
-      if self.terminal:
-        user = input('Username: ')
-        pswd = getpass.getpass('Password: ')
-      else:
-        pass  # todo - add gui for login
-
-      self.pilotcfg['username'] = user
-      ret, obj = self.login(user, pswd)
-      if ret == 200 and obj and 'success' in obj:
-        if obj['success'] == True:
-          print(Fore.GREEN + 'Authentication successful!')
-          self.pilotcfg['token'] = obj['token']
-          self.save_config()
-          successful = True
-        else:
-          print('Error authenticating')
-          bugsnag.notify(Exception(obj['message'] if 'message' in obj else 'unknown error'),
-                         user={"username": self.pilotcfg['username']})
-          return False
-      elif ret == 404:
-        print('Authentication Server not found')
-        bugsnag.notify(Exception("Authentication Server not found"),
-                       user={"username": self.pilotcfg['username']})
-        return False
-      else:
-        print('Invalid Username or Password')
-    return True
-
-
-  def query_graphql(self, s):
+  def query_graphql(self, s, apikey=None):
     try:
-      headers = {
-          'Authorization': "Bearer " + self.pilotcfg['token']
-      }
+      headers = {}
+
+      if apikey:
+        headers = {
+            'Authorization': 'Node-ApiKey ' + apikey
+        }
 
       res = requests.post(self.pilot_server + self.api_path,
                           headers=headers,
                           json={"query": s})
-
-      if 'Authorization' in res.headers:
-        self.pilotcfg['token'] = res.headers['Authorization'].replace('Bearer ', '')
-        self.save_config()
-      if res.status_code == 401:  # unauthorized
-        if not self.authenticate():
-          # TODO Throw
-          pass
-        return self.query_graphql(s)
 
       return res.status_code, res.json()
     except:
@@ -109,13 +79,13 @@ class PilotServer():
       if e is requests.exceptions.ConnectionError:
         print('Cannot connect to server!')
         bugsnag.notify(Exception('Connection Error - cannot connect to server ' +
-                                self.pilot_server), user={"username": self.pilotcfg['username']})
+                                self.pilot_server))
       else:
-        bugsnag.notify(Exception(e), user={"username": self.pilotcfg['username']})
+        bugsnag.notify(Exception(e))
       return 0, e
 
   def loadnodeconf(self):
-    nodeconffile = self.pilot_dir + '/pilotnode.yml'
+    nodeconffile = self.pilot_dir + self.nodeconfname
     nodeconf = None
     try:
       nodeconf = yaml.load(self.sbc.getFileContent(nodeconffile))
@@ -124,7 +94,7 @@ class PilotServer():
     return nodeconf
 
   def savenodeconf(self, nodeconf):
-    nodeconffile = self.pilot_dir + '/pilotnode.yml'
+    nodeconffile = self.pilot_dir + self.nodeconfname
     self.sbc.setFileContent(nodeconffile, yaml.dump(nodeconf, default_flow_style=False))
 
   def registernode(self, fwconfig):
@@ -147,39 +117,66 @@ class PilotServer():
         }}
       }}
       """.format(nodeconf['nodeid'])
-      ret, obj = self.query_graphql(query)
+      ret, obj = self.query_graphql(query, apikey)
       if ret == 200 and obj['data'] and obj['data']['nodebyid']:
-        if obj['data']['nodebyid']['apikey'] != nodeconf['apikey']:
-          print('The API key is wrong, correcting using your credentials.')
-          apikey = obj['data']['nodebyid']['apikey']
-        print('Your Node is registered as \'{}\''.format(
+        print('Node Name: \'{}\''.format(
             obj['data']['nodebyid']['name']))
       elif ret == 200 and not obj['data']['nodebyid']:
         apikey = None
 
     if apikey == None:
       ch = input(
-          'Do you want to register the Node with mypilot.io? (required for remote access) (y/n)').strip().lower()
+          'Do you want to register the Node? (required for remote access) (y/n)').strip().lower()
       # ch = read_single_keypress()
       if ch == 'y' or ch == 'yes':
         #Register unassigned Node
-        name = input('Enter the Name for this Node (Unassigned Node): ')
-        if name == '':
-          name = 'Unassigned Node'
+        nodename = input('Enter a name for this Node (Unassigned Node): ')
+        if nodename == '':
+          nodename = 'Unassigned Node'
         query = u"""
         mutation {{
-          upsertNode (node: {{
-            name: "{}",
-            mac: "{}"}} ) {{
-          id
-          apikey
+          getNodeCode(node: {{name: "{}", mac: "{}"}}) {{
+            code
+            requestid
+            registerNodeStatus
+          }}
         }}
-        }}
-        """.format(name, mac)
+        """.format(nodename, mac)
         ret, obj = self.query_graphql(query)
-        if ret == 200 and obj['data'] and obj['data']['upsertNode']:
-          nodeid = obj['data']['upsertNode']['id']
-          apikey = obj['data']['upsertNode']['apikey']
+        if ret == 200 and obj['data'] and obj['data']['getNodeCode']:
+          code = obj['data']['getNodeCode']['code']
+          requestid = obj['data']['getNodeCode']['requestid']
+          retcode = RegisterNodeStatus(obj['data']['getNodeCode']['registerNodeStatus'])
+
+          if retcode == RegisterNodeStatus.OK:
+            print('To register, please go to https://pilotnexus.io/registernode and enter the following code:')
+            print(Fore.GREEN + code)
+
+            # We have a node code, lets poll the status
+            node = None
+            while not node:
+              time.sleep(2)
+              query = u"""
+              {{
+                noderequeststatus(requestid: "{}") {{
+                  id
+                  apikey
+                  instanceid
+                }}
+              }}
+              """.format(requestid)
+              ret, obj = self.query_graphql(query)
+
+              if ret == 200 and obj['data'] and obj['data']['noderequeststatus']:
+                print(Fore.GREEN + 'Node added successfully!')
+                nodeid = obj['data']['noderequeststatus']['id']
+                apikey = obj['data']['noderequeststatus']['apikey']
+                break
+
+          elif retcode == RegisterNodeStatus.MAC_ALREADY_USED:
+            print(Fore.RED + 'A node with this MAC address is already registered, cannot register another one')
+          else:
+            print(Fore.RED + 'Could not register node')
 
     if nodeid != None and apikey != None:
       if nodeconf == None:

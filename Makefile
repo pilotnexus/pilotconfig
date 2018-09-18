@@ -1,3 +1,5 @@
+run: guard-PILOT_DEVENV_PI_HOST
+	python3 -m pilot.pilot setup --host $(PILOT_DEVENV_PI_HOST)
 upload:
 	rm dist/*
 	python3 setup.py sdist bdist_wheel
