@@ -64,48 +64,53 @@ class PilotDriver():
 
 
   def load_pilot_defs(self):
-    self.eeproms = self.get_modules()
-    query = u"""
-    {{
-      fid(fids:[{}]) {{
-      fid
-      name
-      }}
-      hid(hids: [{}]) {{
-        module
-        hid
-        title
-        subtitle
-        description
-      fids {{
+    try:
+      self.eeproms = self.get_modules()
+      query = u"""
+      {{
+        fid(fids:[{}]) {{
         fid
         name
-        isdefault
+        }}
+        hid(hids: [{}]) {{
+          module
+          hid
+          title
+          subtitle
+          description
+        fids {{
+          fid
+          name
+          isdefault
+        }}
+        }}
       }}
-      }}
-    }}
-    """.format(
-        ','.join(['"{}"'.format(value['fid'])
-                  for key, value in self.eeproms.items() if value['fid'] != '']),
-        ','.join(['{{number: {}, hid: "{}"}}'.format(key, value['hid'])
-                  for key, value in self.eeproms.items()])
-    )
-    ret, obj = self.ps.query_graphql(query)
+      """.format(
+          ','.join(['"{}"'.format(value['fid'])
+                    for key, value in self.eeproms.items() if value['fid'] != '']),
+          ','.join(['{{number: {}, hid: "{}"}}'.format(key, value['hid'])
+                    for key, value in self.eeproms.items()])
+      )
+      ret, obj = self.ps.query_graphql(query)
 
-    if ret == 200:
-      fidmap = {v['fid'].strip(): v['name'] for v in obj['data']['fid']}
+      if ret == 200:
+        fidmap = {v['fid'].strip(): v['name'] for v in obj['data']['fid']}
 
-      if obj['data']['hid']:
-        for module in obj['data']['hid']:
-          fid = self.eeproms[int(module['module'])]['fid']
-          module['currentfid_nicename'] = fidmap[fid] if fid in fidmap and fid != '' else self.emptystr
-          module['currentfid'] = fid
+        if obj['data']['hid']:
+          for module in obj['data']['hid']:
+            fid = self.eeproms[int(module['module'])]['fid']
+            module['currentfid_nicename'] = fidmap[fid] if fid in fidmap and fid != '' else self.emptystr
+            module['currentfid'] = fid
+        else:
+          print('error reading modules, please try again')
+          return None
+        return sorted(obj['data']['hid'], key=lambda x: x['module']) if ret == 200 and obj['data']['hid'] != None else None
       else:
-        print('error reading modules, please try again')
         return None
-
-      return sorted(obj['data']['hid'], key=lambda x: x['module']) if ret == 200 and obj['data']['hid'] != None else None
-
+    except:
+      e = sys.exc_info()[0]
+      print(e)
+    return None
 
   def driver_loaded(self):
     return os.path.exists(self.pilot_driver_root)
@@ -227,89 +232,105 @@ class PilotDriver():
 
     return ok
 
-  def build(self, loadbin, buildSilent, extractDir, savelocal):
-    gzbinfile = 'firmware.tar.gz'
-    gzsrcfile = 'firmware_src.tar.gz'
+  def run_build(self):
     try:
       query = u"""
-      {{
+      mutation {{
         build(modules: [{}]) {{
-          guid
+          id
+          isComplete
+          status
           url
-          successful
         }}
       }}
       """.format(','.join(['{{number: {}, uid: "{}", fid: "{}"}}'.format(key, value['uid'], value['fid']) for key, value in self.eeproms.items() if value['fid'] != '']))
       ret, obj = self.ps.query_graphql(query)
       if ret == 200 and obj['data'] and obj['data']['build']:
-        if obj['data']['build']['successful']:
-          if obj['data']['build']['guid']:
-            if not buildSilent:
-              print('building firmware...', end='')
-              sys.stdout.flush()
-            return 1
-          elif obj['data']['build']['url']:
-            url = obj['data']['build']['url']
-            if not loadbin:
-              url = url.replace(gzbinfile, gzsrcfile)
-            sys.stdout.write('downloading firmware {}'.format(
-                'source to ' + extractDir + ' ...' if not loadbin else ' ...'))
-            sys.stdout.flush()
-            if savelocal:
-              r = requests.get(url, stream=True)
-              if r.status_code == 200:
-                try:
-                  if not os.path.exists(self.tmp_dir):
-                    os.makedirs(self.tmp_dir)
-                  fname = '{}/{}'.format(self.tmp_dir, gzbinfile if loadbin else gzsrcfile)
-                  with open(fname, 'wb') as f:
-                    f.write(r.content)
-                  tar = tarfile.open(fname, "r:gz")
-                  if not os.path.exists(extractDir):
-                    os.makedirs(extractDir)
-                  tar.extractall(path=extractDir)
-                  tar.close()
-                except:
-                  print("Error writing firmware file. Please check if you have write permissions to your target directory")
-                  exit(1)
-                print(Fore.GREEN + 'done')
-                return 0
-            else:
-              command = 'mkdir -p {0} && mkdir -p {2} && wget -O {0}/pilot_tmp_fw.tar.gz {1} && tar -zxf {0}/pilot_tmp_fw.tar.gz -C {2}'.format(
-                  self.tmp_dir, url, extractDir)
-              if (self.sbc.cmd_retcode(command)) == 0:
-                print(Fore.GREEN + 'done')
-                return 0
-
-            print(Fore.RED + 'error')
-            return -1
-        else:
-            print(Fore.RED + 'failed on server')
-            bugsnag.notify(Exception('Error building firmware on server side'), user={
-                          "username": self.ps.pilotcfg['username']})
-            return -1
-      else:
-        print('Error building firmware.')
-        bugsnag.notify(Exception('Error building firmware'),
-                      user={"username": self.ps.pilotcfg['username']})
-        return -1
+        return obj['data']['build']
     except:
-      bugsnag.notify(Exception(sys.exc_info()[0]), user={
-                    "username": self.ps.pilotcfg['username']})
-      print('Oops! An error occured downloading the firmware. We have been notified of the problem.')
-      return -1
+      pass
+    return None
+
+  def build_status(self, id):
+    try:
+      query = u"""
+      {{
+        buildstatus(id: [{}]) {{
+          id
+          isComplete
+          status
+          url
+        }}
+      }}
+      """.format(id)
+      ret, obj = self.ps.query_graphql(query)
+      if ret == 200 and obj['data'] and obj['data']['build']:
+        return obj['data']['build']
+    except:
+      pass
+    return None
+
+  def build(self):
+    ret = self.run_build()
+    if ret != None:
+      if ret['isComplete'] and ret['status'] == 0: #already built
+        return ret['url'], None
+      elif ret['id'] > 0:
+        while True:
+          time.sleep(1)
+          ret = self.build_status(ret['id'])
+          if ret != None:
+            if ret['isComplete']:
+              if ret['status'] == 0:
+                return ret['url'], None
+              else:
+                return None, 'Could not create firmware'
+          else:
+            return None, 'Error contacting server'
+      else:
+        return None, 'Error, could not get the build status'
+  def get_firmware(self, loadbin, extractDir, savelocal):
+    gzbinfile = 'firmware.tar.gz'
+    gzsrcfile = 'firmware_src.tar.gz'
+
+    url, error = self.build()
+
+    if error == None:
+      if not loadbin:
+        url = url.replace(gzbinfile, gzsrcfile)
+      sys.stdout.write('downloading firmware {}'.format(
+          'source to ' + extractDir + ' ...' if not loadbin else ' ...'))
+      sys.stdout.flush()
+      if savelocal:
+        r = requests.get(url, stream=True)
+        if r.status_code == 200:
+          try:
+            if not os.path.exists(self.tmp_dir):
+              os.makedirs(self.tmp_dir)
+            fname = '{}/{}'.format(self.tmp_dir, gzbinfile if loadbin else gzsrcfile)
+            with open(fname, 'wb') as f:
+              f.write(r.content)
+            tar = tarfile.open(fname, "r:gz")
+            if not os.path.exists(extractDir):
+              os.makedirs(extractDir)
+            tar.extractall(path=extractDir)
+            tar.close()
+          except:
+            print("Error writing firmware file. Please check if you have write permissions to your target directory")
+            exit(1)
+          print(Fore.GREEN + 'done')
+          return 0
+      else:
+        command = 'mkdir -p {0} && mkdir -p {2} && wget -O {0}/pilot_tmp_fw.tar.gz {1} && tar -zxf {0}/pilot_tmp_fw.tar.gz -C {2}'.format(self.tmp_dir, url, extractDir)
+        if (self.sbc.cmd_retcode(command)) == 0:
+          print(Fore.GREEN + 'done')
+          return 0
+    else: # error building firmware
+      print(Fore.RED + error)
+      bugsnag.notify(Exception(error))
 
   def build_firmware(self):
-    return self.wait_build(True, self.tmp_dir, False)
-
-  def wait_build(self, loadbin, extractDir, savelocal=False):
-    silent = False
-    ret = 1
-    while ret == 1:
-      ret = self.build(loadbin, silent, extractDir, savelocal)
-      silent = True
-      time.sleep(5)
-    return False if ret < 0 else True
+    return self.get_firmware(True, self.tmp_dir, False)
 
   def program_cpld(self, binfile, erase=False):
     return self.tryrun('erasing CPLD' if erase else 'programming CPLD', 2,

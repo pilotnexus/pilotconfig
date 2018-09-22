@@ -14,7 +14,6 @@ import bugsnag
 import logging
 import paramiko
 
-
 from uuid import getnode as get_mac
 from bugsnag.handlers import BugsnagHandler
 from threading import Thread
@@ -73,7 +72,6 @@ def main(args):
       return 2
 
     if not args.node:
-
       if sbc.need_sudo_pw():
         print('we need sudo on remote machine (without interactive authentication)')
         return 2
@@ -95,14 +93,16 @@ def main(args):
               module['module'], module['currentfid_nicename'], '*' if len(module['fids']) > 1 else ''))
 
         if args.source == None:
-          ch = input('Do you want to build and program the PiloT Mainboard Firmware? (y/n): ').strip().lower()
+          ch = input('Do you want to build and program the Pilot Nexus Firmware? (y/n): ').strip().lower()
           if ch == 'y' or ch == 'yes':
-            if pilotdriver.build_firmware():
+            if pilotdriver.build_firmware() == 0:
               pilotdriver.program()
               pilotdriver.reset_pilot()
         else:
           srcpath = os.path.abspath(args.source)
-          pilotdriver.wait_build(False, srcpath, True)
+          pilotdriver.get_firmware(False, srcpath, True)
+      else:
+        print('No modules found, is the driver loaded?')
       fwconfig = {}
       fwconfig['modules'] = modules
       pilotserver.registernode(fwconfig)

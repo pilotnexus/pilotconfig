@@ -38,28 +38,6 @@ class PilotServer():
     self.sbc = sbc
     self.load_config()
 
-  def login(self, user, password):
-    try:
-      address = get_mac()
-      h = iter(hex(address)[2:].zfill(12))
-      mac = ":".join(i + next(h) for i in h)
-      res = requests.post(self.pilot_server + '/authenticate',
-                          json={"username": user, "password": password, "hash": mac})
-      if res.status_code == 200:
-        return res.status_code, res.json()
-      else:
-        return res.status_code, res.text
-    except:
-      e = sys.exc_info()[0]
-
-      if e is requests.exceptions.ConnectionError:
-        print('Cannot connect to server!')
-        bugsnag.notify(Exception(e), user={"username": self.pilotcfg['username']})
-      else:
-        bugsnag.notify(Exception(e), user={"username": self.pilotcfg['username']})
-      return 0, e
-
-
   def query_graphql(self, s, apikey=None):
     try:
       headers = {}
