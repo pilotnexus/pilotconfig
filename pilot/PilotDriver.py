@@ -4,8 +4,10 @@ import re
 import os
 import scp
 import tarfile
+import itertools
 import requests
 import bugsnag
+
 
 from .PilotServer import PilotServer
 from .Sbc import Sbc
@@ -255,7 +257,7 @@ class PilotDriver():
     try:
       query = u"""
       {{
-        buildstatus(id: [{}]) {{
+        buildstatus(id: {}) {{
           id
           isComplete
           status
@@ -264,24 +266,36 @@ class PilotDriver():
       }}
       """.format(id)
       ret, obj = self.ps.query_graphql(query)
-      if ret == 200 and obj['data'] and obj['data']['build']:
-        return obj['data']['build']
+      if ret == 200 and obj['data'] and obj['data']['buildstatus']:
+        return obj['data']['buildstatus']
     except:
       pass
     return None
 
   def build(self):
+    spinner = itertools.cycle(['-', '/', '|', '\\'])
+    sys.stdout.write('checking if firmware is available...')
+    sys.stdout.flush()
     ret = self.run_build()
     if ret != None:
       if ret['isComplete'] and ret['status'] == 0: #already built
+        print(Fore.GREEN + 'available')
         return ret['url'], None
       elif ret['id'] > 0:
+        print(Fore.GREEN + 'needs compilation')
+        sys.stdout.write('compiling firmware ')
+        sys.stdout.flush()
         while True:
+          sys.stdout.write(Fore.GREEN + next(spinner))   # write the next character
+          sys.stdout.flush()                # flush stdout buffer (actual character display)
+          sys.stdout.write('\b')            # erase the last written char
           time.sleep(1)
           ret = self.build_status(ret['id'])
           if ret != None:
             if ret['isComplete']:
               if ret['status'] == 0:
+                sys.stdout.write('\b')
+                print('...' + Fore.GREEN + 'done')
                 return ret['url'], None
               else:
                 return None, 'Could not create firmware'
@@ -298,8 +312,8 @@ class PilotDriver():
     if error == None:
       if not loadbin:
         url = url.replace(gzbinfile, gzsrcfile)
-      sys.stdout.write('downloading firmware {}'.format(
-          'source to ' + extractDir + ' ...' if not loadbin else ' ...'))
+      sys.stdout.write('downloading firmware{}'.format(
+          ' source to ' + extractDir + '...' if not loadbin else '...'))
       sys.stdout.flush()
       if savelocal:
         r = requests.get(url, stream=True)
@@ -336,8 +350,8 @@ class PilotDriver():
     return self.tryrun('erasing CPLD' if erase else 'programming CPLD', 2,
                  'sudo {}/jamplayer -a{} {}'.format(self.binpath, 'erase' if erase else 'program', binfile))
 
-  def program_mcu(self, binfile):
-    return self.tryrun('programming MCU', 4, 'sudo {}/stm32flash -w {} -g 0 /dev/ttyAMA0'.format(self.binpath, binfile))
+  def program_mcu(self, binfile): #use 115200, 57600, 38400 baud rates sequentially
+    return self.tryrun('programming MCU', 4, 'sudo {}/stm32flash -w {} -b 115200 -g 0 /dev/ttyAMA0'.format(self.binpath, binfile))
 
   def program(self, program_cpld=True, program_mcu=True, cpld_file=None, mcu_file=None, var_file=None):
     res = 0

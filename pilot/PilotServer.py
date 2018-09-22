@@ -36,7 +36,6 @@ class PilotServer():
 
   def __init__(self, sbc: Sbc):
     self.sbc = sbc
-    self.load_config()
 
   def query_graphql(self, s, apikey=None):
     try:
@@ -73,7 +72,8 @@ class PilotServer():
 
   def savenodeconf(self, nodeconf):
     nodeconffile = self.pilot_dir + self.nodeconfname
-    self.sbc.setFileContent(nodeconffile, yaml.dump(nodeconf, default_flow_style=False))
+    nodeconfcontent = yaml.dump(nodeconf, default_flow_style=False)
+    return self.sbc.setFileContent(nodeconffile, nodeconfcontent)
 
   def registernode(self, fwconfig):
     nodeconf = self.loadnodeconf()
@@ -84,7 +84,7 @@ class PilotServer():
     h = iter(hex(address)[2:].zfill(12))
     mac = "".join(i + next(h) for i in h)
 
-    if nodeconf != None and nodeconf['nodeid'] and nodeconf['apikey']:
+    if nodeconf != None and 'nodeid' in nodeconf and 'apikey' in nodeconf:
       nodeid = nodeconf['nodeid']
       apikey = nodeconf['apikey']
       query = u"""
@@ -104,7 +104,7 @@ class PilotServer():
 
     if apikey == None:
       ch = input(
-          'Do you want to register the Node? (required for remote access) (y/n)').strip().lower()
+          'Do you want to register the Node? (required for remote access) (y/n) ').strip().lower()
       # ch = read_single_keypress()
       if ch == 'y' or ch == 'yes':
         #Register unassigned Node
@@ -127,7 +127,7 @@ class PilotServer():
           retcode = RegisterNodeStatus(obj['data']['getNodeCode']['registerNodeStatus'])
 
           if retcode == RegisterNodeStatus.OK:
-            print('To register, please go to https://pilotnexus.io/registernode and enter the following code:')
+            print('To register, please go to https://pilotcockpit.io/#/registernode and enter the following code:')
             print(Fore.GREEN + code)
 
             # We have a node code, lets poll the status
@@ -161,9 +161,9 @@ class PilotServer():
         nodeconf = {}
       nodeconf['nodeid'] = nodeid
       nodeconf['apikey'] = apikey
-      self.savenodeconf(nodeconf)
+      print(self.savenodeconf(nodeconf))
 
-      if fwconfig != None:
+      if fwconfig and nodeconf and nodeconf['apikey']:
         try:
           print('Saving Node configuration...', end='')
           query = u"""
@@ -171,7 +171,7 @@ class PilotServer():
             setNodeConfig (nodeId: "{}", fwconfig: "{}")
           }}
           """.format(nodeid, json.dumps(fwconfig).replace('"', '\\"'))
-          ret, obj = self.query_graphql(query)
+          ret, obj = self.query_graphql(query, nodeconf['apikey'])
           if ret == 200 and obj['data'] and obj['data']['setNodeConfig']:
             if obj['data']['setNodeConfig'] == 1:
               print(Fore.GREEN + 'done')
@@ -181,24 +181,3 @@ class PilotServer():
             print(Fore.RED + 'failed')
         except:
           print(Fore.RED + 'failed')
-
-  def load_config(self):
-    #first check if a .pilotrc file exists
-    try:
-      with open(os.path.expanduser(self.pilotrc), 'r') as rcfile:
-        self.pilotcfg = yaml.safe_load(rcfile)
-        if self.pilotcfg == None:
-          self.pilotcfg = {}
-        if not 'username' in self.pilotcfg:
-          self.pilotcfg['username'] = ''
-        if not 'token' in self.pilotcfg:
-          self.pilotcfg['token'] = ''
-    except:
-      self.pilotcfg = {'username': '', 'token': ''}
-
-  def save_config(self):
-    try:
-      with open(os.path.expanduser(self.pilotrc), 'w') as rcfile:
-        yaml.dump(self.pilotcfg, rcfile)
-    except:
-      pass
