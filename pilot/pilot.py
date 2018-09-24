@@ -8,6 +8,7 @@ from . import pilotsetup
 from . import compiler
 from . import program
 from . import project
+from . import moduleinfo
 
 print('Pilot Configuration Tool')
 
@@ -66,6 +67,10 @@ def main():
   remoteargs(parser_d)
   project.arguments(parser_d)
 
+  parser_e = subparsers.add_parser('module', help="Get infos on modules")
+  remoteargs(parser_e)
+  project.arguments(parser_e)
+
   args = argparser.parse_args()
 
   if ('subparser_name' in args):
@@ -77,6 +82,8 @@ def main():
       program.main(args)
     elif (args.subparser_name == 'init'):
       project.main(args)
+    elif (args.subparser_name == 'module'):
+      moduleinfo.main(args)
     elif (args.subparser_name == 'version'):
       print(VERSION)
     else:

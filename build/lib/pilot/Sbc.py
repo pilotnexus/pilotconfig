@@ -1,3 +1,4 @@
+import os
 import paramiko
 import subprocess
 
@@ -42,8 +43,17 @@ class Sbc():
 
       return output
     else:
-      _stdin, stdout, _stderr = self.remote_client.exec_command(command)
-      return ''.join(stdout)
+      ret = -1
+      chan = self.remote_client.get_transport().open_session()
+      chan.exec_command(command)
+      stdout = chan.makefile('rb').read()
+      stderr = chan.makefile_stderr('rb').read()
+      ret = chan.recv_exit_status()
+      chan.close()
+      if throw_on_nonzero_retcode and ret != 0:
+        raise Exception('Cound not execute {} \nError: {}'.format(command, stderr.decode('utf-8')))
+
+      return stdout.decode('utf-8')
 
   def cmd_retcode(self, command):
     if not self.remote_client:
@@ -60,6 +70,6 @@ class Sbc():
   def getFileContent(self, file):
     return self.cmd('sudo cat {}'.format(file), True)
 
-
   def setFileContent(self, file, content):
-    return self.cmd('printf "{}" | sudo tee {} >/dev/null'.format(content.replace('\n', '\\n').replace('"', '\\"'), file), True)
+    cmdstr = 'sudo mkdir -p "{}" && printf "{}" | sudo tee {} >/dev/null'.format(os.path.dirname(file), content.replace('"', '\\"'), file)
+    return self.cmd(cmdstr, True)

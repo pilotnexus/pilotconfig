@@ -64,6 +64,8 @@ class PilotDriver():
             #dbg('could not read {} of module {}'.format(memreg, mod))
     return modlist
 
+  def set_module_fid(self, number, fid):
+    self.sbc.setFileContent(self.pilot_driver_root + '/module{}/eeprom/fid'.format(number), fid + '       ')
 
   def load_pilot_defs(self):
     try:
@@ -394,3 +396,23 @@ class PilotDriver():
       self.tryrun('setting PLC variables permanently', 4, 'sudo cp {}/variables /etc/pilot/variables'.format(self.tmp_dir))     
 
     return res
+
+  def get_help(self):
+    try:
+      query = u"""
+      {{
+        modulehelp(modules: [{}]) {{
+          number
+          help
+          examples {{title  example}}
+        }}
+      }}
+      """.format(','.join(['{{number: {}, fid: "{}"}}'.format(key, value['fid']) for key, value in self.eeproms.items() if value['fid'] != '']))
+      ret, obj = self.ps.query_graphql(query)
+      if ret == 200 and obj['data'] and obj['data']['modulehelp']:
+        return obj['data']['modulehelp']
+    except:
+      e = sys.exc_info()[0]
+      print('Could not contact Pilot Nexus API to get help data')
+      bugsnag.notify(e)
+    return None
