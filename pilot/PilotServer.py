@@ -161,7 +161,17 @@ class PilotServer():
         nodeconf = {}
       nodeconf['nodeid'] = nodeid
       nodeconf['apikey'] = apikey
-      print(self.savenodeconf(nodeconf))
+
+      #generate default connector entry if no connectors are defined
+      #needs a change in the future probably for instance based deepstream servers
+      #connectors:
+      #  server:
+      #    type: deepstream
+      #    server: wss://rt.pilotnexus.io
+      if not 'connectors' in nodeconf:
+        nodeconf['connectors'] = { 'server': { 'type': 'deepstream', 'server': 'wss://rt.pilotnexus.io' } }
+
+      self.savenodeconf(nodeconf)
 
       if fwconfig and nodeconf and nodeconf['apikey']:
         try:

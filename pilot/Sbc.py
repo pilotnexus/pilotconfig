@@ -5,9 +5,11 @@ import subprocess
 class Sbc():
   remote_client = None
   args = None
+  checksudo = False
 
-  def __init__(self, args):
+  def __init__(self, args, checksudo = False):
     self.args = args
+    self.checksudo = checksudo
 
   def __enter__(self):
     if self.args.host != None:
@@ -17,6 +19,9 @@ class Sbc():
       client.set_missing_host_key_policy(paramiko.WarningPolicy())
       client.connect(self.args.host, username=self.args.user, password=self.args.password)
       self.remote_client = client
+    elif os.getuid() != 0 and self.checksudo:
+      print('Please run the tool with sudo permissions (sudo pilot setup')
+      exit(1)
     return self
 
   def __exit__(self, exc_type, exc_value, traceback):

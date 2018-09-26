@@ -58,7 +58,7 @@ def main(args):
   print('Version {}'.format(VERSION))
   # print('Amescon/Daniel Amesberger 2018, www.amescon.com')
 
-  with Sbc(args) as sbc:
+  with Sbc(args, True) as sbc:
     # PilotServer
     pilotserver = PilotServer(sbc)
     if args.server != None:
@@ -109,7 +109,10 @@ def main(args):
               if pilotdriver.build_firmware() == 0:
                 pilotdriver.program()
                 pilotdriver.reset_pilot()
-                break
+              else:
+                print('Could not write firmware')
+              
+              break
             elif ch.isdigit() and int(ch) in range(1, pilotdriver.MODULE_COUNT) and len(modules_with_multiple_fids) > 0:
               changemodulenr = int(ch)
               print()
