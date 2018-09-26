@@ -10,7 +10,7 @@
             "request": "launch",
             "module": "pilot.pilot",
             "args": [
-                "setup", "--host", "192.168.101.74"
+                "init", "--host", "192.168.101.73"
             ],
             "console": "integratedTerminal"
         },

@@ -58,7 +58,7 @@ def main(args):
   print('Version {}'.format(VERSION))
   # print('Amescon/Daniel Amesberger 2018, www.amescon.com')
 
-  with Sbc(args, True) as sbc:
+  with Sbc(args) as sbc:
     # PilotServer
     pilotserver = PilotServer(sbc)
     if args.server != None:
@@ -69,6 +69,10 @@ def main(args):
 
     if not pilotdriver.check_raspberry() and not args.host:
       print('This does not seem to be a Raspberry Pi. Please use the --host option to remote connect to it.')
+      return 2
+
+    if os.getuid() != 0 and not args.host:
+      print('Please run with sudo permissions.')
       return 2
 
     if not args.node:

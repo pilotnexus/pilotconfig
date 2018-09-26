@@ -33,16 +33,23 @@ def main(args):
       else:
         print('You need to specify a valid file for the --variables attribute.')
         exit(1)
+    else:
+      varfile = os.path.join(args.workdir, 'out/VARIABLES.csv') if args.workdir else './out/VARIABLES.csv'
+      if os.path.isfile(varfile):
+        print('Using variable file ' + varfile)
+        args.vars = varfile
 
     if args.bin:
-      if os.path.isfile(args.bin):
-        pilotdriver.program(program_cpld=False, program_mcu=True, mcu_file=args.bin, var_file=vars)
-      else:
+      if not os.path.isfile(args.bin):
         print('You need to specify a valid file for the --binary attribute.')
         exit(1)
+    elif os.path.isfile(os.path.join(args.workdir, 'out/stm.bin') if args.workdir else './out/stm.bin'):
+      args.bin = os.path.join(args.workdir, 'out/stm.bin') if args.workdir else './out/stm.bin'
     else:
       print('You need to specify an image file to write with the --binary attribute.')
       exit(1)
+
+    pilotdriver.program(program_cpld=False, program_mcu=True, mcu_file=args.bin, var_file=vars)
 
 if (__name__ == "__main__"):
   parser = argparse.ArgumentParser(

@@ -32,6 +32,8 @@ def remoteargs(argparser):
                          help='Remote SSH User (default: pi)')
   argparser.add_argument('--password', '-p', default='raspberry', dest='password',
                          help='Remote SSH Password (default: raspberry)')
+  argparser.add_argument('--workdir', '-d', dest='workdir',
+                         help='set working directory')
 
 def main():
   with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'VERSION'), encoding='utf-8') as f:
