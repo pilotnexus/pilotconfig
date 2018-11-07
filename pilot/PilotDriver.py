@@ -202,7 +202,7 @@ class PilotDriver():
         print('Drivers loaded')
       else:
         if self.install_driver() == 0:
-          print('Pilot driver installed, please reboot your system')
+          print('Pilot driver installed.')
           return 1
         else:
           print('Could not install the pilot driver, most likely there is no driver compiled for your kernel.')

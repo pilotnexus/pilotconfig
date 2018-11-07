@@ -54,6 +54,8 @@ def arguments(parser):
                       help='Resets the Pilot Mainboard')
   parser.add_argument('--yes', '-y', default=None, action='store_const', const='noninteractive', dest='noninteractive',
                       help='Confirms default action (non-interactive mode)')
+  parser.add_argument('--driveronly', '-d', default=None, action='store_const', const='driveronly', dest='driveronly',
+                      help='Installs driver only')
 
 
 def main(args):
@@ -91,15 +93,13 @@ def main(args):
       ret = pilotdriver.check_driver()
       if ret != 0:
         if ret == 1:
-          if (args.noninteractive):
-            ch = 'y'
-          else:
-            ch = input('Reboot required, do you want to reboot now? (y/n): ')
-          if ch == 'y' or ch == 'yes':
-            sbc.cmd_retcode('sudo reboot')
+          print('Reboot required')
           return 0
-
         return 1
+    
+      # do not continue if driveronly is specified
+      if args.driveronly:
+        return 0
 
       modules = pilotdriver.load_pilot_defs()
       if modules != None:
