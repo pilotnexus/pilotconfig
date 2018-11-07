@@ -52,6 +52,8 @@ def arguments(parser):
                       help='Configure node only')
   parser.add_argument('--reset', '-r', default=None, action='store_const', const='reset', dest='reset',
                       help='Resets the Pilot Mainboard')
+  parser.add_argument('--yes', '-y', default=None, action='store_const', const='noninteractive', dest='noninteractive',
+                      help='Confirms default action (non-interactive mode)')
 
 
 def main(args):
@@ -88,6 +90,15 @@ def main(args):
 
       ret = pilotdriver.check_driver()
       if ret != 0:
+        if ret == 1:
+          if (args.noninteractive):
+            ch = 'y'
+          else:
+            ch = input('Reboot required, do you want to reboot now? (y/n): ')
+          if ch == 'y' or ch == 'yes':
+            sbc.cmd_retcode('sudo reboot')
+          return 0
+
         return 1
 
       modules = pilotdriver.load_pilot_defs()
@@ -108,7 +119,10 @@ def main(args):
             if len(modules_with_multiple_fids) > 0:
               print('Modules marked with an Asterisk (*) have multiple firmware configurations')
               print('Press Module Number [{}] to change selected firmware.'.format(modsel))
-            ch = input('Do you want to build and program the Pilot Nexus Firmware? (y/n{}): '.format('/'+modsel if len(modules_with_multiple_fids) > 0 else '')).strip().lower()
+            if (args.noninteractive):
+              ch = 'y'
+            else:
+              ch = input('Do you want to build and program the Pilot Nexus Firmware? (y/n{}): '.format('/'+modsel if len(modules_with_multiple_fids) > 0 else '')).strip().lower()
             if ch == 'y' or ch == 'yes':
               if pilotdriver.build_firmware() == 0:
                 pilotdriver.program()

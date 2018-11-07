@@ -52,14 +52,14 @@ class PilotServer():
 
       return res.status_code, res.json()
     except:
-      e = sys.exc_info()[0]
-      if e is requests.exceptions.ConnectionError:
+      type, value, traceback = sys.exc_info()
+      if type is requests.exceptions.ConnectionError:
         print('Cannot connect to server!')
         bugsnag.notify(Exception('Connection Error - cannot connect to server ' +
                                 self.pilot_server))
       else:
-        bugsnag.notify(Exception(e))
-      return 0, e
+        bugsnag.notify(Exception(type))
+      return 0, value
 
   def loadnodeconf(self):
     nodeconffile = self.pilot_dir + self.nodeconfname

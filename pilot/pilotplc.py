@@ -51,7 +51,9 @@ def init(config, model):
       with open(os.path.join(root, filename)) as obj:
         configdef['moduledefinitions'].extend( json.load(obj)['moduledefinitions'] )
 
-  memmodules = config["modules"] + config['plugins']
+  memmodules = config["modules"]
+  if 'plugins' in config:
+    memmodules = memmodules + config['plugins']
 
   #generate module config
   modulelist = [dict(n[0], **n[1][0]) for n in map(lambda x: (x, list(filter(lambda y: x["fid"] == y["fid"],configdef["moduledefinitions"]))), memmodules) if n[1] != []]
@@ -64,9 +66,17 @@ def init(config, model):
         if (confmod['fid'] != module['Name']):
           misalignedmodules.append(confmod['slot'])
 
+  # generate start addresses if they are not configured
+  for memregion in memregions:
+    start = 0
+    for module in modulelist:
+      if (memregion+'address') not in module and (memregion+'size') in module and module[memregion+'size'] > 0:
+        module[memregion+'address'] = start
+        start = start + module[memregion+'size']
+
   #generate memory regions
   for memregion in memregions: map(lambda x: x.update({memregion+'bytes': range(x[memregion+'address'],x[memregion+'address']+x[memregion+'size'])}), filter(lambda x: (memregion+'address') in x and (memregion+'size') in x,modulelist))
-
+  
   #calculate memory overlaps and sizes
   overlaps = []
   for memregion in memregions:
@@ -80,7 +90,7 @@ def init(config, model):
   for memregion in memregions:
     for module in modulelist:
       if (memregion+'address') in module and (memregion+'size') in module:
-        size = module[memregion+'address'] +module[memregion+'size'] 
+        size = module[memregion+'address'] + module[memregion+'size'] 
         mem[memregion]['size'] = size if size > mem[memregion]['size'] else size
 
   return (modulelist, overlaps, misalignedmodules, mem)

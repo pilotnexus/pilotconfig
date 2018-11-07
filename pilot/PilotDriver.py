@@ -275,36 +275,40 @@ class PilotDriver():
     return None
 
   def build(self):
-    spinner = itertools.cycle(['-', '/', '|', '\\'])
-    sys.stdout.write('checking if firmware is available...')
-    sys.stdout.flush()
-    ret = self.run_build()
-    if ret != None:
-      if ret['isComplete'] and ret['status'] == 0: #already built
-        print(Fore.GREEN + 'available')
-        return ret['url'], None
-      elif ret['id'] > 0:
-        print(Fore.GREEN + 'needs compilation')
-        sys.stdout.write('compiling firmware ')
-        sys.stdout.flush()
-        while True:
-          sys.stdout.write(Fore.GREEN + next(spinner))   # write the next character
-          sys.stdout.flush()                # flush stdout buffer (actual character display)
-          sys.stdout.write('\b')            # erase the last written char
-          time.sleep(1)
-          ret = self.build_status(ret['id'])
-          if ret != None:
-            if ret['isComplete']:
-              if ret['status'] == 0:
-                sys.stdout.write('\b')
-                print('...' + Fore.GREEN + 'done')
-                return ret['url'], None
-              else:
-                return None, 'Could not create firmware'
-          else:
-            return None, 'Error contacting server'
-      else:
-        return None, 'Error, could not get the build status'
+    try:
+      spinner = itertools.cycle(['-', '/', '|', '\\'])
+      sys.stdout.write('checking if firmware is available...')
+      sys.stdout.flush()
+      ret = self.run_build()
+      if ret != None:
+        if ret['isComplete'] and ret['status'] == 0: #already built
+          print(Fore.GREEN + 'available')
+          return ret['url'], None
+        elif ret['id'] > 0:
+          print(Fore.GREEN + 'needs compilation')
+          sys.stdout.write('compiling firmware ')
+          sys.stdout.flush()
+          while True:
+            sys.stdout.write(Fore.GREEN + next(spinner))   # write the next character
+            sys.stdout.flush()                # flush stdout buffer (actual character display)
+            sys.stdout.write('\b')            # erase the last written char
+            time.sleep(1)
+            ret = self.build_status(ret['id'])
+            if ret != None:
+              if ret['isComplete']:
+                if ret['status'] == 0:
+                  sys.stdout.write('\b')
+                  print('...' + Fore.GREEN + 'done')
+                  return ret['url'], None
+                else:
+                  return None, 'Could not create firmware'
+            else:
+              return None, 'Error contacting server'
+        else:
+          return None, 'Error, could not get the build status'
+    except:
+      return None, sys.exc_info()[0]
+
   def get_firmware(self, loadbin, extractDir, savelocal):
     gzbinfile = 'firmware.tar.gz'
     gzsrcfile = 'firmware_src.tar.gz'
@@ -321,8 +325,7 @@ class PilotDriver():
         r = requests.get(url, stream=True)
         if r.status_code == 200:
           try:
-            if not os.path.exists(self.tmp_dir):
-              os.makedirs(self.tmp_dir)
+            self.sbc.cmd('mkdir -p {}'.format(self.tmp_dir), throw_on_nonzero_retcode=True)
             fname = '{}/{}'.format(self.tmp_dir, gzbinfile if loadbin else gzsrcfile)
             with open(fname, 'wb') as f:
               f.write(r.content)
@@ -332,7 +335,7 @@ class PilotDriver():
             tar.extractall(path=extractDir)
             tar.close()
           except:
-            print("Error writing firmware file. Please check if you have write permissions to your target directory")
+            print("Error writing firmware file. Please check if you have write permissions to required directories {} and {}".format(self.tmp_dir, extractDir))
             exit(1)
           print(Fore.GREEN + 'done')
           return 0
@@ -358,6 +361,7 @@ class PilotDriver():
   def program(self, program_cpld=True, program_mcu=True, cpld_file=None, mcu_file=None, var_file=None):
     res = 0
     if self.sbc.remote_client:
+      self.sbc.cmd_retcode('mkdir -p {}'.format(self.tmp_dir))
       if self.sbc.cmd_retcode('sudo chown $USER {}'.format(self.tmp_dir)) == 0:
         with scp.SCPClient(self.sbc.remote_client.get_transport()) as scp_client:
           scp_client.put(self.binpath + '/jamplayer', remote_path=self.tmp_dir)

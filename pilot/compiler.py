@@ -12,7 +12,7 @@ from . import pilotplc
 
 def arguments(parser):
   parser.add_argument('--config', dest='configfile',
-                      default=None, help='module config file (.json or .yml)')
+                      default=None, help='module config file (config.json)')
   parser.add_argument('--iec2c', dest='iec2cdir',
                       default=None, help='directory of iec2c compiler')
   parser.add_argument('--source', dest='source',
@@ -47,7 +47,11 @@ def main(args):
 
   if args.configfile == None:
     try:
-      args.configfile = os.environ['PILOT_CONFIG']
+      config = os.path.join(args.workdir, 'config.json') if args.workdir else './config.json'
+      if os.path.isfile(config):
+        args.configfile = config
+      else:
+        args.configfile = os.environ['PILOT_CONFIG']
     except:
       print("No configuration file given, continuing without it")
 
@@ -84,6 +88,9 @@ def main(args):
         m = list(filter(lambda x: x['slot'] - 1 == module['Slot'] ,config['modules']))
         print("{0:1}: {1:10} {2:10}".format(module['Slot']+1, module['Name'], m[0]['fid'] if len(m) == 1 else 'None'))
       exit(2)
+
+  print(mem)
+  print(modules)
 
   copy_tree(args.source, args.target)
   copy_tree(os.path.join(os.path.abspath(os.path.dirname(os.path.realpath(__file__))), 'template', 'inc'), os.path.join(args.target, 'inc'))

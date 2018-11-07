@@ -1,4 +1,5 @@
 import os
+import json
 import argparse
 
 from .Sbc import Sbc
@@ -13,6 +14,25 @@ def arguments(parser):
 
 def main(args):
 
+  hostsfromconfig = False
+  #check if a config.json file exists and extract hosts
+  configfile = os.path.join(args.workdir, 'credentials.json') if args.workdir else './credentials.json'
+  if os.path.isfile(configfile):
+    with open(configfile) as f:
+      config = json.load(f)
+      if 'nodes' in config and isinstance(config['nodes'], list):
+        for node in config['nodes']:
+          if 'host' in node:
+            hostsfromconfig = True
+            args.host = node['host']
+            args.user = node['user']
+            args.password = node['password']
+            program(args)
+
+  if not hostsfromconfig:
+    program(args)
+
+def program(args):
   with Sbc(args) as sbc:
     # PilotServer
     pilotserver = PilotServer(sbc)
