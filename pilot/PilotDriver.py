@@ -325,7 +325,9 @@ class PilotDriver():
         r = requests.get(url, stream=True)
         if r.status_code == 200:
           try:
-            self.sbc.cmd('mkdir -p {}'.format(self.tmp_dir), throw_on_nonzero_retcode=True)
+            #self.sbc.cmd('mkdir -p {}'.format(self.tmp_dir), throw_on_nonzero_retcode=True)
+            if not os.path.exists(self.tmp_dir):
+              os.makedirs(self.tmp_dir)
             fname = '{}/{}'.format(self.tmp_dir, gzbinfile if loadbin else gzsrcfile)
             with open(fname, 'wb') as f:
               f.write(r.content)

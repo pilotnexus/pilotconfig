@@ -54,7 +54,7 @@ def arguments(parser):
                       help='Resets the Pilot Mainboard')
   parser.add_argument('--yes', '-y', default=None, action='store_const', const='noninteractive', dest='noninteractive',
                       help='Confirms default action (non-interactive mode)')
-  parser.add_argument('--driveronly', '-d', default=None, action='store_const', const='driveronly', dest='driveronly',
+  parser.add_argument('--driveronly', '-x', default=None, action='store_const', const='driveronly', dest='driveronly',
                       help='Installs driver only')
 
 

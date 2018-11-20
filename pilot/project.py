@@ -73,6 +73,9 @@ def main(args):
         module = {}
         module['slot'] = mod['module']
         module['fid'] = mod['currentfid']
+        # TODO: move to plugin
+        if module['fid'] == 'io16':
+          module['config'] = { 'direction': {'0_3': 'in', '4_7': 'in', '8_11': 'in', '12_15': 'in'} }
         config['modules'].append(module)
 
     with open(os.path.join(args.workdir, 'config.json') if args.workdir else './config.json', 'w') as configfile:

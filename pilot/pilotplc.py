@@ -56,6 +56,8 @@ def init(config, model):
     memmodules = memmodules + config['plugins']
 
   #generate module config
+  print('config:')
+  print(config)
   modulelist = [dict(n[0], **n[1][0]) for n in map(lambda x: (x, list(filter(lambda y: x["fid"] == y["fid"],configdef["moduledefinitions"]))), memmodules) if n[1] != []]
 
   misalignedmodules = []
@@ -194,14 +196,23 @@ def checkIfReplacementExists(key, module):
     # TODO check that all replacements can be made, otherwise it cannot compile
     # that happens with wrong config file e.g.
 
+#TODO: move to plugins
 def io16_init_gen(nibble, direction, module):
+  print('nibble:')
+  print(nibble)
+  print('direction:')
+  print(direction)
+  print('module:')
+  print(module)
+
   return 'rpc_io16_{}_set_direction({}, {}); '.format(
     module['index'],
     module['codegen']['nibbles'][nibble]['selector'],
     module['codegen']['direction'][direction])
 
+#TODO: move to plugins
 def io16_read_gen(calls, module):
-  if module['fid'] == 'io16' and module['config']:
+  if module['fid'] == 'io16' and 'config' in module and 'direction' in module['config']:
     gen = defaultdict(lambda : {})
     for k,v in module['config']['direction'].items():
       if not module['codegen']['nibbles'][k][v]['offset'] in gen[v]:
@@ -247,7 +258,7 @@ def parsemodules(mem, modules):
   global baseAddress
 
   for module in modules:
-    module['index'] = module['slot']-1
+    module['index'] = int(module['slot'])-1
 
   calls = {'read': [], 'write': [], 'init': [], 'include': []}
   compiler = Compiler()
@@ -266,9 +277,11 @@ def parsemodules(mem, modules):
 
 
   # module config specific calls
+  print(module)
   for module in modules:
-    if module['fid'] == 'io16' and module['config']['direction']:
+    if module['fid'] == 'io16' and 'config' in module and 'direction' in module['config']:
       directions = module['config']['direction']
+      print('directions:')
       calls['init'].extend(list(map((lambda x: io16_init_gen(x, directions[x], module)), directions.keys())))
     calls = io16_read_gen(calls, module)
 

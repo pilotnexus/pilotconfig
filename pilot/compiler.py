@@ -52,8 +52,10 @@ def main(args):
         args.configfile = config
       else:
         args.configfile = os.environ['PILOT_CONFIG']
+      print('Using config file ' + args.configfile)
+
     except:
-      print("No configuration file given, continuing without it")
+      print("No configuration file found, continuing without it")
 
 
   stmmodel = {}
@@ -89,8 +91,8 @@ def main(args):
         print("{0:1}: {1:10} {2:10}".format(module['Slot']+1, module['Name'], m[0]['fid'] if len(m) == 1 else 'None'))
       exit(2)
 
-  print(mem)
-  print(modules)
+  #print(mem)
+  #print(modules)
 
   copy_tree(args.source, args.target)
   copy_tree(os.path.join(os.path.abspath(os.path.dirname(os.path.realpath(__file__))), 'template', 'inc'), os.path.join(args.target, 'inc'))

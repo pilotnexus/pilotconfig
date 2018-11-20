@@ -57,7 +57,7 @@ def program(args):
       varfile = os.path.join(args.workdir, 'out/VARIABLES.csv') if args.workdir else './out/VARIABLES.csv'
       if os.path.isfile(varfile):
         print('Using variable file ' + varfile)
-        args.vars = varfile
+        vars = varfile
 
     if args.bin:
       if not os.path.isfile(args.bin):
