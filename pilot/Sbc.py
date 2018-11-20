@@ -1,6 +1,7 @@
-import os
-import paramiko
-import subprocess
+import lazy_import
+os = lazy_import.lazy_module("os")
+paramiko = lazy_import.lazy_module("paramiko")
+subprocess = lazy_import.lazy_module("subprocess")
 
 class Sbc():
   remote_client = None

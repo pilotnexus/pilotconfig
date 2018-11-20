@@ -8,11 +8,6 @@ from .PilotServer import PilotServer
 
 from colorama import Fore
 
-def arguments(parser):
-  # parser.add_argument('--terminal', '-t', action='store_true', help='forces the terminal version instead of GUI')
-  pass
-
-
 def main(args):
   print('This will create a new Pilot firmware project in the current folder')
 

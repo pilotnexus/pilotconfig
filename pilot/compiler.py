@@ -7,22 +7,9 @@ from distutils.dir_util import copy_tree
 from shutil import copyfile, move
 import yaml
 
+from . import arguments
+
 from . import pilotplc
-
-
-def arguments(parser):
-  parser.add_argument('--config', dest='configfile',
-                      default=None, help='module config file (config.json)')
-  parser.add_argument('--iec2c', dest='iec2cdir',
-                      default=None, help='directory of iec2c compiler')
-  parser.add_argument('--source', dest='source',
-                      default=None, help='source directory')
-  parser.add_argument('--target', dest='target',
-                      default=None, help='target directory')
-  parser.add_argument('--verbose', action='store_const',
-                      const=True, help='verbose output')
-  parser.add_argument('files', nargs='*', default=None,
-                      help='IEC Structured Text File')
 
 def main(args):
   config = None
@@ -156,6 +143,6 @@ def main(args):
 if (__name__ == "__main__"):
   parser = argparse.ArgumentParser(
     description='Compile Pilot PLC and custom code')
-  arguments(parser)
+  arguments.compiler_arguments(parser)
   main(parser.parse_args())
 

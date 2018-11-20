@@ -1,13 +1,18 @@
-import sys
-import time
-import requests
-import bugsnag
-import os
-import yaml
-import getpass
-import json
-from uuid import getnode as get_mac
-from enum import Enum
+import lazy_import
+
+sys = lazy_import.lazy_module("sys")
+time = lazy_import.lazy_module("time")
+requests = lazy_import.lazy_module("requests")
+bugsnag = lazy_import.lazy_module("bugsnag")
+os = lazy_import.lazy_module("os")
+yaml = lazy_import.lazy_module("yaml")
+getpass = lazy_import.lazy_module("getpass")
+json = lazy_import.lazy_module("json")
+
+get_mac = lazy_import.lazy_callable("uuid.getnode")
+#from uuid import getnode as get_mac
+Enum = lazy_import.lazy_callable("enum.Enum")
+#from enum import Enum
 
 from colorama import Fore
 from colorama import Style

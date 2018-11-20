@@ -1,13 +1,19 @@
+import lazy_import
+
 #Pilot PLC and custom code scripts
-from pybars import Compiler
-#import subprocess
-import os
-import json
-import itertools
-import string
-import re
-from collections import defaultdict
-import fnmatch
+
+Compiler = lazy_import.lazy_callable("pybars.Compiler")
+# from pybars import Compiler
+
+os = lazy_import.lazy_module("os")
+json = lazy_import.lazy_module("json")
+itertools = lazy_import.lazy_module("itertools")
+string = lazy_import.lazy_module("string")
+re = lazy_import.lazy_module("re")
+
+#from collections import defaultdict
+defaultdict = lazy_import.lazy_callable("collections.defaultdict")
+fnmatch = lazy_import.lazy_module("fnmatch")
 
 memregions = ['input', 'output', 'memory']
 baseAddress        = 0x20000000

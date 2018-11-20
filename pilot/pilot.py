@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
+import lazy_import
 
 import argparse
 import os
 import sys
-import bugsnag
-from . import pilotsetup
-from . import compiler
-from . import program
-from . import project
-from . import moduleinfo
 
-print('Pilot Configuration Tool')
+bugsnag = lazy_import.lazy_module("bugsnag")
+
+from . import arguments
+
+with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'VERSION'), 'r') as myfile:
+    version=myfile.read().replace('\n', '')
+print('Pilot Configuration Tool v' + version)
 
 def my_except_hook(exectype, value, traceback):
   if exectype == KeyboardInterrupt:
@@ -55,36 +56,40 @@ def main():
 
   parser_a = subparsers.add_parser('setup', help="Configure Pilot Firmware")
   remoteargs(parser_a)
-  pilotsetup.arguments(parser_a)
+  arguments.setup_arguments(parser_a)
 
   parser_b = subparsers.add_parser('build', help="Compile additional software into firmware (IEC 61131-3 or C)")
   remoteargs(parser_b)
-  compiler.arguments(parser_b)
+  arguments.compiler_arguments(parser_b)
 
   parser_c = subparsers.add_parser('program', help="Remote program PLC")
   remoteargs(parser_c)
-  program.arguments(parser_c)
+  arguments.program_arguments(parser_c)
 
   parser_d = subparsers.add_parser('init', help="Initialize a new firmware project")
   remoteargs(parser_d)
-  project.arguments(parser_d)
+  arguments.project_arguments(parser_d)
 
   parser_e = subparsers.add_parser('module', help="Get infos on modules")
   remoteargs(parser_e)
-  project.arguments(parser_e)
 
   args = argparser.parse_args()
 
   if ('subparser_name' in args):
     if (args.subparser_name == 'setup'):
+      from . import pilotsetup
       pilotsetup.main(args)
     elif (args.subparser_name == 'build'):
+      from . import compiler
       compiler.main(args)
     elif (args.subparser_name == 'program'):
+      from . import program
       program.main(args)
     elif (args.subparser_name == 'init'):
+      from . import project
       project.main(args)
     elif (args.subparser_name == 'module'):
+      from . import moduleinfo
       moduleinfo.main(args)
     elif (args.subparser_name == 'version'):
       print(VERSION)

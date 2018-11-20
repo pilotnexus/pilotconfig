@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
+
 from __future__ import print_function  # disables annoying pylint print warning
 
-import sys
-import json
-import re
-import shlex
-import time
-import os
-import argparse
-import base64
-import gettext
-import bugsnag
-import logging
-import paramiko
+import lazy_import
+from . import arguments
+
+sys = lazy_import.lazy_module("sys")
+json = lazy_import.lazy_module("json")
+re = lazy_import.lazy_module("re")
+shlex = lazy_import.lazy_module("shlex")
+time = lazy_import.lazy_module("time")
+os = lazy_import.lazy_module("os")
+argparse = lazy_import.lazy_module("argparse")
+base64 = lazy_import.lazy_module("base64")
+gettext = lazy_import.lazy_module("gettext")
+bugsnag = lazy_import.lazy_module("bugsnag")
+logging = lazy_import.lazy_module("logging")
+paramiko = lazy_import.lazy_module("paramiko")
 
 from uuid import getnode as get_mac
 from bugsnag.handlers import BugsnagHandler
@@ -30,9 +34,6 @@ from .Sbc import Sbc
 
 init(autoreset=True)  # colorama color autoreset
 
-with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'VERSION'), encoding='utf-8') as f:
-  VERSION = f.read().strip()
-
 DEBUG = False
 EXECVP_ENABLED = False
 
@@ -44,23 +45,7 @@ logger.addHandler(handler)
 
 ############## PROC FILE ACCESS #####################
 
-def arguments(parser):
-  # parser.add_argument('--terminal', '-t', action='store_true', help='forces the terminal version instead of GUI')
-  parser.add_argument('--source', '-c', default=None, dest='source',
-                      help='Download Sourcecode only')
-  parser.add_argument('--node', '-n', default=None, dest='node',
-                      help='Configure node only')
-  parser.add_argument('--reset', '-r', default=None, action='store_const', const='reset', dest='reset',
-                      help='Resets the Pilot Mainboard')
-  parser.add_argument('--yes', '-y', default=None, action='store_const', const='noninteractive', dest='noninteractive',
-                      help='Confirms default action (non-interactive mode)')
-  parser.add_argument('--driveronly', '-x', default=None, action='store_const', const='driveronly', dest='driveronly',
-                      help='Installs driver only')
-
-
 def main(args):
-  print('Version {}'.format(VERSION))
-  # print('Amescon/Daniel Amesberger 2018, www.amescon.com')
 
   with Sbc(args) as sbc:
     # PilotServer
@@ -152,13 +137,14 @@ def main(args):
         print('No modules found, is the driver loaded?')
       fwconfig = {}
       fwconfig['modules'] = modules
-      pilotserver.registernode(fwconfig)
-    else:
+      if not args.noninteractive:
+        pilotserver.registernode(fwconfig)
+    elif not args.noninteractive:
       pilotserver.registernode(None)
 
   print ("To get help on how to use the modules, run 'pilot module'")
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Setup Pilot Nexus')
-  arguments(parser)
+  arguments.setup_arguments(parser)
   main(parser.parse_args())

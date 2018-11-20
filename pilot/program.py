@@ -1,16 +1,10 @@
 import os
 import json
 import argparse
-
+from . import arguments
 from .Sbc import Sbc
 from .PilotServer import PilotServer
 from .PilotDriver import PilotDriver
-
-def arguments(parser):
-  parser.add_argument('--binary', '-b', default=None, dest='bin',
-                      help='Write binary image to the Pilot Microcontroller')
-  parser.add_argument('--variables', '-v', default=None, dest='vars',
-                      help='Set PLC variables')
 
 def main(args):
 
@@ -74,5 +68,5 @@ def program(args):
 if (__name__ == "__main__"):
   parser = argparse.ArgumentParser(
     description='Write custom firmware')
-  arguments(parser)
+  arguments.program_arguments(parser)
   main(parser.parse_args())

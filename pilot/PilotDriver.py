@@ -1,12 +1,14 @@
-import sys
-import time
-import re
-import os
-import scp
-import tarfile
-import itertools
-import requests
-import bugsnag
+import lazy_import
+
+sys = lazy_import.lazy_module("sys")
+time = lazy_import.lazy_module("time")
+re = lazy_import.lazy_module("re")
+os = lazy_import.lazy_module("os")
+scp = lazy_import.lazy_module("scp")
+tarfile = lazy_import.lazy_module("tarfile")
+itertools = lazy_import.lazy_module("itertools")
+requests = lazy_import.lazy_module("requests")
+bugsnag = lazy_import.lazy_module("bugsnag")
 
 
 from .PilotServer import PilotServer
