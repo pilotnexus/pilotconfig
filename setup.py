@@ -27,6 +27,7 @@ def package_files(directoryarr):
 
 extra_files = package_files(['bin', 'matiec', 'plugins', 'template'])
 extra_files.append('VERSION')
+extra_files.append('configdefs.json')
 
 setup(
   name='pilot-config',
