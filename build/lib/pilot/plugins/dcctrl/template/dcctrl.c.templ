@@ -1,0 +1,51 @@
+#include "fpga.c"
+
+#define MOTOR_COUNT 6
+
+void dc_reset_{{slot}}(uint8_t motor_id)
+{
+ uint8_t cmd[2] = { (motor_id * 4) | 0x80, 0x0 }
+
+  pcp_fpga_{{slot}}_send(cmd, 2);
+}
+
+void dc_set_current_position_{{slot}}(uint8_t motor_id, uint32_t position)
+{
+ uint8_t cmd[4] = { 0x1+(motor_id * 4) | 0x80, 
+  (position >> 16) & 0xF,
+  (position >> 8) & 0xF
+  position & 0xF };
+
+  pcp_fpga_{{slot}}_send(cmd, 4);
+}
+
+uint8_t dc_get_flag_{{slot}}(uint8_t motor_id)
+{
+  uint8_t cmd[2] = { (motor_id * 4), 0x0 }
+  pcp_fpga_{{slot}}_send(cmd, 2);
+  return cmd[1];
+}
+
+void dc_set_speed_{{slot}}(uint8_t motor_id, uint8_t speed)
+{
+ uint8_t cmd[2] = { 0x40 + (motor_id * 4) | 0x80, speed }
+
+  pcp_fpga_{{slot}}_send(cmd, 2);
+}
+
+void dc_set_target_position_{{slot}}(uint8_t motor_id, uint32_t position)
+{
+  uint8_t cmd[4] = { 0x41+(motor_id * 4) | 0x80, 
+  (position >> 16) & 0xF,
+  (position >> 8) & 0xF
+  position & 0xF };
+
+  pcp_fpga_{{slot}}_send(cmd, 4);
+}
+
+void dc_read_all_{{slot}}(uint8_t *buffer)
+{
+  uint8_t cmd[1+(MOTOR_COUNT*4)] = { 0x0 };
+  pcp_fpga_{{slot}}_send(cmd, 1+(MOTOR_COUNT*4));
+  memcpy(buffer, cmd, 1+(MOTOR_COUNT*4));
+}

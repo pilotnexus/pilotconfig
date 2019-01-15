@@ -46,6 +46,7 @@ def main(args):
           for idx,example in enumerate(module['examples']):
             print(Fore.CYAN + 'Example {}: {}'.format(idx+1, example['title']))
             print(example['example'])
+  return 0
         
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Module Info')
