@@ -35,7 +35,7 @@ def main(args):
 
   if args.configfile == None:
     try:
-      config = os.path.join(args.workdir, 'config.json') if args.workdir else './config.json'
+      config = os.path.join(args.workdir, '.pilotfwconfig.json') if args.workdir else './.pilotfwconfig.json'
       if os.path.isfile(config):
         args.configfile = config
       else:

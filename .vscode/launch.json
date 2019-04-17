@@ -10,7 +10,7 @@
             "request": "launch",
             "module": "pilot.pilot",
             "args": [
-                "init", "--host", "192.168.101.73"
+                "fw", "build", "--workdir", "~/work/phoinix/newfw/"
             ],
             "console": "integratedTerminal"
         },

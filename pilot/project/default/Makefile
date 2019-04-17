@@ -12,7 +12,7 @@ fw:
 	pilot setup --host 192.168.101.78 --source ./fwbase
 
 plc:
-	pilot build --source ./fwbase/stm/ --config config.json test.st motors.c motors.h
+	pilot build --source ./fwbase/stm/ --config .pilotfwconfig.json test.st motors.c motors.h
 
 build:
 	$(MAKE) -C ./out plc

@@ -16,7 +16,7 @@ to setup your system
 Run docker container for custom firmware build
 **************************************************
 
-Run the following command from the project directory (containing the config.json and the st file)
+Run the following command from the project directory (containing the .pilotfwconfig.json and the st file)
 
 `docker run -v $PWD/fwbase/stm:/src -v $PWD:/files pilotplc:latest` /files/file.st
 

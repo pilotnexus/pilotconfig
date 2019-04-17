@@ -18,4 +18,4 @@ ADD ./template/ /app/template/
 
 RUN chmod a+x *.py
 
-ENTRYPOINT ["python3", "./main.py", "--iec2c", "./matiec", "--source", "/src", "--target", "/files/out", "--config", "/files/config.json"]
+ENTRYPOINT ["python3", "./main.py", "--iec2c", "./matiec", "--source", "/src", "--target", "/files/out", "--config", "/files/.pilotfwconfig.json"]

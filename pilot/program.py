@@ -9,7 +9,7 @@ from .PilotDriver import PilotDriver
 def main(args):
 
   hostsfromconfig = False
-  #check if a config.json file exists and extract hosts
+  #check if a .pilotfwconfig.json file exists and extract hosts
   configfile = os.path.join(args.workdir, 'credentials.json') if args.workdir else './credentials.json'
   if os.path.isfile(configfile):
     with open(configfile) as f:

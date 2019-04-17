@@ -19,7 +19,7 @@ def program_arguments(parser):
 
 def compiler_arguments(parser):
   parser.add_argument('--config', dest='configfile',
-                      default=None, help='module config file (config.json)')
+                      default=None, help='module config file (.pilotfwconfig.json)')
   parser.add_argument('--iec2c', dest='iec2cdir',
                       default=None, help='directory of iec2c compiler')
   parser.add_argument('--source', dest='source',
