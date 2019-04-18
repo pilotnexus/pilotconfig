@@ -1,0 +1,36 @@
+{
+	"version": "0.1",
+	"targethardware": [
+    {
+      "name": "rpi",
+      "fullname": "Raspberry Pi",
+      "reset_pin": {
+        "number": 17
+      },
+      "boot_pin": {
+        "number": 4     
+      }
+
+    },
+    {
+      "name": "rpi1",
+      "fullname": "Raspberry Pi 1",
+      "reset_pin": {
+        "number": 17
+      },
+      "boot_pin": {
+        "number": 4        
+      }
+    },
+    {
+      "name": "coral",
+      "fullname": "Coral Board",
+      "reset_pin": {
+        "number": 154
+      },
+      "boot_pin": {
+        "number": 155
+      }
+    }
+  ]
+}
