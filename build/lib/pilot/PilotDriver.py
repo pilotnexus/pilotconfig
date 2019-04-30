@@ -345,7 +345,7 @@ class PilotDriver():
           print(Fore.GREEN + 'done')
           return 0
       else:
-        command = 'mkdir -p {0} && mkdir -p {2} && wget -O {0}/pilot_tmp_fw.tar.gz {1} && tar -zxf {0}/pilot_tmp_fw.tar.gz -C {2}'.format(self.tmp_dir, url, extractDir)
+        command = 'sudo rm -R {0} && mkdir {0} && mkdir -p {2} && wget -O {0}/pilot_tmp_fw.tar.gz {1} && tar -zxf {0}/pilot_tmp_fw.tar.gz -C {2}'.format(self.tmp_dir, url, extractDir)
         if (self.sbc.cmd_retcode(command)) == 0:
           print(Fore.GREEN + 'done')
           return 0
@@ -358,10 +358,22 @@ class PilotDriver():
 
   def program_cpld(self, binfile, erase=False):
     return self.tryrun('erasing CPLD' if erase else 'programming CPLD', 2,
-                 'sudo {}/jamplayer -a{} {}'.format(self.binpath, 'erase' if erase else 'program', binfile))
+                 'sudo {}/jamplayer -a{} -g{},{},{},{} {}'.format(self.binpath, 
+                 'erase' if erase else 'program', 
+                 self.target['tdi_pin']['number'], 
+                 self.target['tms_pin']['number'], 
+                 self.target['tdo_pin']['number'], 
+                 self.target['tck_pin']['number'], 
+                 binfile))
+
+                 
 
   def program_mcu(self, binfile): #use 115200, 57600, 38400 baud rates sequentially
-    return self.tryrun('programming MCU', 4, 'sudo {}/stm32flash -w {} -b 115200 -g 0 /dev/ttyAMA0'.format(self.binpath, binfile))
+    return self.tryrun('programming MCU', 4, 'sudo {}/stm32flash -w {} -b 115200 -g 0 -x {} -z {} /dev/ttyAMA0'.format(
+      self.binpath, 
+      binfile, 
+      self.target['reset_pin']['number'], 
+      self.target['boot_pin']['number']))
 
   def program(self, program_cpld=True, program_mcu=True, cpld_file=None, mcu_file=None, var_file=None):
     res = 0

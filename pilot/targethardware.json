@@ -11,36 +11,16 @@
         "number": 4     
       },
       "tdi_pin": {
-        "gpio_base": "0x20200000",
-        "number": 22,
-        "gpio_offset_set": 7,
-        "gpio_offset_clr": 10,
-        "gpio_offset_get": 13,
-        "gpio_map_size": 4096
+        "number": 22
       },
       "tms_pin": {
-        "gpio_base": "0x20200000",
-        "number": 23,
-        "gpio_offset_set": 7,
-        "gpio_offset_clr": 10,
-        "gpio_offset_get": 13,
-        "gpio_map_size": 4096
+        "number": 23
       },
       "tdo_pin": {
-        "gpio_base": "0x20200000",
-        "number": 24,
-        "gpio_offset_set": 7,
-        "gpio_offset_clr": 10,
-        "gpio_offset_get": 13,
-        "gpio_map_size": 4096
+        "number": 24
       },
       "tck_pin": {
-        "gpio_base": "0x20200000",
-        "number": 25,
-        "gpio_offset_set": 7,
-        "gpio_offset_clr": 10,
-        "gpio_offset_get": 13,
-        "gpio_map_size": 4096
+        "number": 25
       },
       "devicetree_overlay": "pilot_pi.dtbo"
     },
@@ -54,36 +34,16 @@
         "number": 4        
       },
       "tdi_pin": {
-        "gpio_base": "0x3F200000",
-        "number": 22,
-        "gpio_offset_set": 7,
-        "gpio_offset_clr": 10,
-        "gpio_offset_get": 13,
-        "gpio_map_size": 4096
+        "number": 22
       },
       "tms_pin": {
-        "gpio_base": "0x3F200000",
-        "number": 23,
-        "gpio_offset_set": 7,
-        "gpio_offset_clr": 10,
-        "gpio_offset_get": 13,
-        "gpio_map_size": 4096
+        "number": 23
       },
       "tdo_pin": {
-        "gpio_base": "0x3F200000",
-        "number": 24,
-        "gpio_offset_set": 7,
-        "gpio_offset_clr": 10,
-        "gpio_offset_get": 13,
-        "gpio_map_size": 4096
+        "number": 24
       },
       "tck_pin": {
-        "gpio_base": "0x3F200000",
-        "number": 25,
-        "gpio_offset_set": 7,
-        "gpio_offset_clr": 10,
-        "gpio_offset_get": 13,
-        "gpio_map_size": 4096
+        "number": 25
       },
       "devicetree_overlay": "pilot_pi.dtbo"
     },
@@ -95,6 +55,18 @@
       },
       "boot_pin": {
         "number": 155
+      },
+      "tdi_pin": {
+        "number": 14
+      },
+      "tms_pin": {
+        "number": 73
+      },
+      "tdo_pin": {
+        "number": 138
+      },
+      "tck_pin": {
+        "number": 140
       },
       "devicetree_overlay": "pilot_coral.dtbo"
     }
