@@ -12,8 +12,26 @@ from . import arguments
 
 from . import pilotplc
 
-def main(args):
+
+def arguments(parser):
+  parser.add_argument('--config', dest='configfile',
+                      default=None, help='module config file (.json or .yml)')
+  parser.add_argument('--iec2c', dest='iec2cdir',
+                      default=None, help='directory of iec2c compiler')
+  parser.add_argument('--source', dest='source',
+                      default=None, help='source directory')
+  parser.add_argument('--target', dest='target',
+                      default=None, help='target directory')
+  parser.add_argument('--verbose', action='store_const',
+                      const=True, help='verbose output')
+  parser.add_argument('files', nargs='*', default=None,
+                      help='IEC Structured Text File')
+  parser.add_argument('--ignore-files', default=None, action='store_const', const='ignore_files', dest='ignore_files',
+                      help='If no files are given, do not automatically use source files found in src folder')
+  
+def main(args, target):
   config = None
+
   #if no iec path parameter is given try the environment var
   if args.iec2cdir == None:
     try:
@@ -89,8 +107,17 @@ def main(args):
   if config and 'includes' in config:
     stmmodel['includes'] = config['includes']
 
-  stfiles = list(filter(lambda x: x.endswith('.st'), args.files))
-  codefilearr = list(filter(lambda x: not x.endswith('.st'), args.files))
+  stfiles = []
+  codefilearr = []
+  if len(args.files) != 0 or 'ignore_files' in args:
+    stfiles = list(filter(lambda x: x.endswith('.st'), args.files))
+    codefilearr = list(filter(lambda x: not x.endswith('.st'), args.files))
+  else:
+    for file in os.listdir(os.path.join(args.workdir, 'src')):
+      if file.endswith(".st"):
+        stfiles.append(os.path.join(args.workdir, 'src', file))
+      elif file.endswith(".c"):
+        codefilearr.append(os.path.join(args.workdir, 'src', file))
   codefiles = ' '.join(codefilearr)
  
   plcfiles = ''
@@ -98,7 +125,7 @@ def main(args):
     plcfiles = 'config.h config.c resource1.c POUS.h ' # TODO - check if hardcoded files make sense here. can't use make plc with that. always use make default
     stfile = stfiles[0]
     if len(stfiles) > 1:
-      stfile = os.path.join(args.target, 'program.st')
+      stfile = os.path.join(args.target, '__program.st')
       with open(stfile, 'w') as outfile:
         for fname in stfiles:
           with open(fname) as infile:
@@ -119,6 +146,10 @@ def main(args):
       if 'subscriptions' in config:
         stmmodel['PLC']['subscriptions'] = pilotplc.parsesubscriptions(config['subscriptions'])
       pilotplc.parsetemplate(args.target, stmmodel)
+
+      with open(os.path.join(args.workdir, "out", 'stmmodel.json'), 'w') as stmmodelfile:
+        json.dump(stmmodel, stmmodelfile)
+
     else:
       print("Error executing IEC2C Compiler")
       exit(1)

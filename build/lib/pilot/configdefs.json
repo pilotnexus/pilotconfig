@@ -42,7 +42,7 @@
           "out": "rpcp_io16_direction_output"
 				},
 				"nibbles": {
-	    	    "1_3": { "selector": "rpcp_io16_block_0_to_3",
+	    	    "0_3": { "selector": "rpcp_io16_block_0_to_3",
 	    	    					"in": {
 	    	    							"register": "rpcp_io16_register_input_register_A",
 	    	    							"shift": 0,
@@ -54,7 +54,7 @@
 	    	    							"offset": 0
 	    	    					}
 	        },
-	  	      "5_7": { "selector": "rpcp_io16_block_4_to_7",
+	  	      "4_7": { "selector": "rpcp_io16_block_4_to_7",
 	    	    					"in": {
 	    	    							"register": "rpcp_io16_register_input_register_A",
 	    	    							"shift": 4,
@@ -66,7 +66,7 @@
 	    	    							"offset": 0
 	    	    					}
 	        },
-		        "9_11": { "selector": "rpcp_io16_block_8_to_11",
+		        "8_11": { "selector": "rpcp_io16_block_8_to_11",
 	    	    					"in": {
 	    	    							"register": "rpcp_io16_register_input_register_B",
 	    	    							"shift": 0,

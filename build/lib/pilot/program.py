@@ -6,7 +6,7 @@ from .Sbc import Sbc
 from .PilotServer import PilotServer
 from .PilotDriver import PilotDriver
 
-def main(args):
+def main(args, target):
 
   hostsfromconfig = False
   #check if a .pilotfwconfig.json file exists and extract hosts
@@ -26,7 +26,7 @@ def main(args):
   if not hostsfromconfig:
     program(args)
 
-def program(args):
+def program(args, target):
   with Sbc(args) as sbc:
     # PilotServer
     pilotserver = PilotServer(sbc)
@@ -34,11 +34,15 @@ def program(args):
       pilotserver.pilot_server = args.server
     
     #PilotDriver
-    pilotdriver = PilotDriver(pilotserver, sbc)
+    pilotdriver = PilotDriver(pilotserver, sbc, target)
 
-    if not pilotdriver.check_raspberry() and not args.host:
-      print('This does not seem to be a Raspberry Pi. Please use the --host option to remote connect to it.')
+    if not pilotdriver.driver_loaded():
+      print('Drivers are not loaded. Please use --host if you connect remotely or install pilot drivers first by running sudo pilot setup.')
       return 2
+
+    #if not pilotdriver.check_raspberry() and not args.host:
+    #  print('This does not seem to be a Raspberry Pi. Please use the --host option to remote connect to it.')
+    #  return 2
 
     vars = None
     if args.vars:

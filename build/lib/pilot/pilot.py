@@ -4,13 +4,22 @@ import lazy_import
 import argparse
 import os
 import sys
+import json
+import fnmatch
 
 bugsnag = lazy_import.lazy_module("bugsnag")
+targethardwarelist = {}
 
 from . import arguments
 
 with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'VERSION'), 'r') as myfile:
     version=myfile.read().replace('\n', '')
+
+# load target hardware list
+for root, _dirnames, filenames in os.walk(os.path.dirname(os.path.realpath(__file__))):
+  for filename in fnmatch.filter(filenames, 'targethardware.json'):
+    with open(os.path.join(root, filename)) as obj:
+      targethardwarelist = json.load(obj)['targethardware']
 
 def my_except_hook(exectype, value, traceback):
   if exectype == KeyboardInterrupt:
@@ -47,6 +56,8 @@ def main():
 
   # Parent parser for common arguments
   parent_parser = argparse.ArgumentParser(add_help=False)
+  parent_parser.add_argument('--hardware', dest='hardware', default='rpi', choices=[el['name'] for el in targethardwarelist],
+                         help='set target hardware')
   parent_parser.add_argument('--server', '-s', default=None, dest='server',
                   help='Alternative URL for the pilot server API to contact')
   parent_parser.add_argument('--host', '-o', default=None, dest='host',
@@ -68,11 +79,11 @@ def main():
   subparsers = argparser.add_subparsers(dest='subparser_name')
 
   # Setup Subparser
-  parser_a = subparsers.add_parser('setup', parents=[parent_parser], help="Configure Pilot Firmware")
+  parser_a = subparsers.add_parser('setup', parents=[parent_parser], help="Configure Pilot firmware")
   arguments.setup_arguments(parser_a)
 
   # Firmware subparser
-  parser_b = subparsers.add_parser('fw', parents=[parent_parser], help="Custom firmware command")
+  parser_b = subparsers.add_parser('fw', parents=[parent_parser], help="Init/Build/Program custom firmware")
   parser_b.add_argument('--show-toplevel', dest='show_toplevel', action='store_true',
                         help='show top level folder of firmware project')
 
@@ -89,31 +100,36 @@ def main():
 
   args = argparser.parse_args()
 
+  # set target
+  target = next(x for x in targethardwarelist if x['name'] == 'rpi') # default hardware is rpi
+  if 'hardware' in args:
+    target = next(x for x in targethardwarelist if x['name'] == args.hardware)
+
   if args.version:
     print(VERSION)
   elif args.modules:
     from . import moduleinfo
-    sys.exit(moduleinfo.main(args))
+    sys.exit(moduleinfo.main(args, target))
   elif ('subparser_name' in args):
     if (args.subparser_name == 'setup'):
       print('Pilot Configuration Tool v' + version)
       from . import pilotsetup
-      sys.exit(pilotsetup.main(args))
+      sys.exit(pilotsetup.main(args, target))
     elif (args.subparser_name == 'fw'):
       if (args.fw_subparser_name == 'build'):
         from . import compiler
-        sys.exit(compiler.main(args))
+        sys.exit(compiler.main(args, target))
       elif (args.fw_subparser_name == 'program'):
         from . import program
-        sys.exit(program.main(args))
+        sys.exit(program.main(args, target))
       elif (args.fw_subparser_name == 'init'):
         from . import project
-        sys.exit(project.main(args))
+        sys.exit(project.main(args, target))
       elif args.show_toplevel:
         print(find_fw_toplevel())
     else:
       from . import pilotsetup
-      sys.exit(pilotsetup.main(parser_a.parse_args()))
+      sys.exit(pilotsetup.main(parser_a.parse_args(), target))
 
 if __name__ == '__main__':
   main()

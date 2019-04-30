@@ -14,7 +14,7 @@ class Sbc():
     self.args = args
 
   def __enter__(self):
-    if self.args.host != None:
+    if 'host' in self.args and self.args.host != None:
       print('Connecting to remote host {}'.format(self.args.host))
       client = paramiko.SSHClient()
       client.load_system_host_keys()

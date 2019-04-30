@@ -8,7 +8,7 @@ from .PilotServer import PilotServer
 
 from colorama import Fore
 
-def main(args):
+def main(args, target):
   print('This will create a new Pilot firmware project in the current folder')
 
   node_host = args.host
@@ -27,7 +27,7 @@ def main(args):
     
   with Sbc(args) as sbc:
     pilotserver = PilotServer(sbc)
-    pilotdriver = PilotDriver(pilotserver, sbc)
+    pilotdriver = PilotDriver(pilotserver, sbc, target)
 
     if args.server != None:
       pilotserver.pilot_server = args.server
@@ -54,7 +54,7 @@ def main(args):
       node['password'] = node_password
       cred['nodes'] = [node]
     except:
-      print(Fore.RED + 'WARNING: Could not load Node Configuration (pilotnode not configured on target?). Continuing without it.')
+      print(Fore.YELLOW + 'WARNING: Could not load Node Configuration (pilotnode not configured on target?). Continuing without it.')
 
     with open(os.path.join(args.workdir, 'credentials.json') if args.workdir else './credentials.json', 'w') as credfile:
       json.dump(cred, credfile)
@@ -68,6 +68,12 @@ def main(args):
         module = {}
         module['slot'] = mod['module']
         module['fid'] = mod['currentfid']
+        module['fid_nicename'] = mod['currentfid_nicename']
+        module['hid'] = mod['hid']
+        module['title'] = mod['title']
+        module['subtitle'] = mod['subtitle']
+        module['description'] = mod['description']
+
         # TODO: move to plugin
         if module['fid'] == 'io16':
           module['config'] = { 'direction': {'0_3': 'in', '4_7': 'in', '8_11': 'in', '12_15': 'in'} }

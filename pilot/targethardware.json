@@ -3,14 +3,46 @@
 	"targethardware": [
     {
       "name": "rpi",
-      "fullname": "Raspberry Pi",
+      "fullname": "Raspberry Pi 2 and 3 (all versions)",
       "reset_pin": {
         "number": 17
       },
       "boot_pin": {
         "number": 4     
-      }
-
+      },
+      "tdi_pin": {
+        "gpio_base": "0x20200000",
+        "number": 22,
+        "gpio_offset_set": 7,
+        "gpio_offset_clr": 10,
+        "gpio_offset_get": 13,
+        "gpio_map_size": 4096
+      },
+      "tms_pin": {
+        "gpio_base": "0x20200000",
+        "number": 23,
+        "gpio_offset_set": 7,
+        "gpio_offset_clr": 10,
+        "gpio_offset_get": 13,
+        "gpio_map_size": 4096
+      },
+      "tdo_pin": {
+        "gpio_base": "0x20200000",
+        "number": 24,
+        "gpio_offset_set": 7,
+        "gpio_offset_clr": 10,
+        "gpio_offset_get": 13,
+        "gpio_map_size": 4096
+      },
+      "tck_pin": {
+        "gpio_base": "0x20200000",
+        "number": 25,
+        "gpio_offset_set": 7,
+        "gpio_offset_clr": 10,
+        "gpio_offset_get": 13,
+        "gpio_map_size": 4096
+      },
+      "devicetree_overlay": "pilot_pi.dtbo"
     },
     {
       "name": "rpi1",
@@ -20,7 +52,40 @@
       },
       "boot_pin": {
         "number": 4        
-      }
+      },
+      "tdi_pin": {
+        "gpio_base": "0x3F200000",
+        "number": 22,
+        "gpio_offset_set": 7,
+        "gpio_offset_clr": 10,
+        "gpio_offset_get": 13,
+        "gpio_map_size": 4096
+      },
+      "tms_pin": {
+        "gpio_base": "0x3F200000",
+        "number": 23,
+        "gpio_offset_set": 7,
+        "gpio_offset_clr": 10,
+        "gpio_offset_get": 13,
+        "gpio_map_size": 4096
+      },
+      "tdo_pin": {
+        "gpio_base": "0x3F200000",
+        "number": 24,
+        "gpio_offset_set": 7,
+        "gpio_offset_clr": 10,
+        "gpio_offset_get": 13,
+        "gpio_map_size": 4096
+      },
+      "tck_pin": {
+        "gpio_base": "0x3F200000",
+        "number": 25,
+        "gpio_offset_set": 7,
+        "gpio_offset_clr": 10,
+        "gpio_offset_get": 13,
+        "gpio_map_size": 4096
+      },
+      "devicetree_overlay": "pilot_pi.dtbo"
     },
     {
       "name": "coral",
@@ -30,7 +95,8 @@
       },
       "boot_pin": {
         "number": 155
-      }
+      },
+      "devicetree_overlay": "pilot_coral.dtbo"
     }
   ]
 }

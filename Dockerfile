@@ -13,6 +13,7 @@ ENV PATH="${PATH}:/opt/gcc-arm-none-eabi-7-2017-q4-major/bin"
 
 WORKDIR /app
 ADD ./configdefs.json /app/configdefs.json
+ADD ./targethardware.json /app/targethardware.json
 ADD ./*.py /app/
 ADD ./template/ /app/template/
 

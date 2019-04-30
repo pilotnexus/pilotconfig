@@ -10,7 +10,6 @@ itertools = lazy_import.lazy_module("itertools")
 requests = lazy_import.lazy_module("requests")
 bugsnag = lazy_import.lazy_module("bugsnag")
 
-
 from .PilotServer import PilotServer
 from .Sbc import Sbc
 
@@ -37,11 +36,12 @@ class PilotDriver():
 
   ps = None
   sbc = None
+  target = None
 
-
-  def __init__(self, pilotserver: PilotServer, sbc: Sbc):
+  def __init__(self, pilotserver: PilotServer, sbc: Sbc, target):
     self.ps = pilotserver
     self.sbc = sbc
+    self.target = target
 
   def get_modules(self):
     memregs = ['uid', 'hid', 'fid']
@@ -144,12 +144,13 @@ class PilotDriver():
 
   def reset_pilot(self):
     try:
+      reset_pin = self.target['reset_pin']['number']
       # TODO check if gpio are exported as outputs first
-      self.sbc.cmd('[ ! -f /sys/class/gpio/gpio17/value ] && sudo echo "17" > /sys/class/gpio/export')
-      self.sbc.cmd('sudo echo "out" > /sys/class/gpio/gpio17/direction')
-      self.sbc.cmd('echo -n "1" > /sys/class/gpio/gpio17/value')
+      self.sbc.cmd('[ ! -f /sys/class/gpio/gpio{}/value ] && sudo echo "{}" > /sys/class/gpio/export'.format(reset_pin, reset_pin))
+      self.sbc.cmd('sudo echo "out" > /sys/class/gpio/gpio{}/direction'.format(reset_pin))
+      self.sbc.cmd('echo -n "1" > /sys/class/gpio/gpio{}/value'.format(reset_pin))
       time.sleep(2)
-      self.sbc.cmd('echo -n "0" > /sys/class/gpio/gpio17/value')
+      self.sbc.cmd('echo -n "0" > /sys/class/gpio/gpio{}/value'.format(reset_pin))
     except:
       pass
 
