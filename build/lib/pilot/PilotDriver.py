@@ -345,7 +345,7 @@ class PilotDriver():
           print(Fore.GREEN + 'done')
           return 0
       else:
-        command = 'sudo rm -R {0} && mkdir {0} && mkdir -p {2} && wget -O {0}/pilot_tmp_fw.tar.gz {1} && tar -zxf {0}/pilot_tmp_fw.tar.gz -C {2}'.format(self.tmp_dir, url, extractDir)
+        command = 'sudo rm -Rf {0} && mkdir -p {0} && mkdir -p {2} && wget -O {0}/pilot_tmp_fw.tar.gz {1} && tar -zxf {0}/pilot_tmp_fw.tar.gz -C {2}'.format(self.tmp_dir, url, extractDir)
         if (self.sbc.cmd_retcode(command)) == 0:
           print(Fore.GREEN + 'done')
           return 0
@@ -369,11 +369,7 @@ class PilotDriver():
                  
 
   def program_mcu(self, binfile): #use 115200, 57600, 38400 baud rates sequentially
-    return self.tryrun('programming MCU', 4, 'sudo {}/stm32flash -w {} -b 115200 -g 0 -x {} -z {} /dev/ttyAMA0'.format(
-      self.binpath, 
-      binfile, 
-      self.target['reset_pin']['number'], 
-      self.target['boot_pin']['number']))
+    return self.tryrun('programming MCU', 4, 'sudo {}/stm32flash -w {} -b 115200 -g 0 -x {} -z {} /dev/ttyAMA0'.format(self.binpath, binfile, self.target['reset_pin']['number'], self.target['boot_pin']['number']))
 
   def program(self, program_cpld=True, program_mcu=True, cpld_file=None, mcu_file=None, var_file=None):
     res = 0
@@ -381,8 +377,8 @@ class PilotDriver():
       self.sbc.cmd_retcode('mkdir -p {}'.format(self.tmp_dir))
       if self.sbc.cmd_retcode('sudo chown $USER {}'.format(self.tmp_dir)) == 0:
         with scp.SCPClient(self.sbc.remote_client.get_transport()) as scp_client:
-          scp_client.put(self.binpath + '/jamplayer', remote_path=self.tmp_dir)
-          scp_client.put(self.binpath + '/stm32flash', remote_path=self.tmp_dir)
+          scp_client.put(self.binpath + '/' + self.target['architecture'] + '/jamplayer', remote_path=self.tmp_dir)
+          scp_client.put(self.binpath + '/' + self.target['architecture'] + '/stm32flash', remote_path=self.tmp_dir)
           if cpld_file != None:
             scp_client.put(cpld_file, remote_path=os.path.join(self.tmp_dir,'cpld.jam'))
           if mcu_file != None:

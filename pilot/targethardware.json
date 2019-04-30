@@ -3,7 +3,10 @@
 	"targethardware": [
     {
       "name": "rpi",
+      "architecture": "armvx",
       "fullname": "Raspberry Pi 2 and 3 (all versions)",
+      "defaultuser": "pi",
+      "defaultpassword": "raspberry",
       "reset_pin": {
         "number": 17
       },
@@ -26,7 +29,10 @@
     },
     {
       "name": "rpi1",
+      "architecture": "armvx",
       "fullname": "Raspberry Pi 1",
+      "defaultuser": "pi",
+      "defaultpassword": "raspberry",
       "reset_pin": {
         "number": 17
       },
@@ -49,7 +55,10 @@
     },
     {
       "name": "coral",
+      "architecture": "cortex-a53",
       "fullname": "Coral Board",
+      "defaultuser": "mendel",
+      "defaultpassword": "mendel",
       "reset_pin": {
         "number": 154
       },

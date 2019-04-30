@@ -62,10 +62,10 @@ def main():
                   help='Alternative URL for the pilot server API to contact')
   parent_parser.add_argument('--host', '-o', default=None, dest='host',
                          help='Hostname to remote configure')
-  parent_parser.add_argument('--user', '-u', default='pi', dest='user',
-                         help='Remote SSH User (default: pi)')
-  parent_parser.add_argument('--password', '-p', default='raspberry', dest='password',
-                         help='Remote SSH Password (default: raspberry)')
+  parent_parser.add_argument('--user', '-u', default='', dest='user',
+                         help='Remote SSH User')
+  parent_parser.add_argument('--password', '-p', default='', dest='password',
+                         help='Remote SSH Password')
   parent_parser.add_argument('--workdir', '-d', dest='workdir',
                          help='set working directory')
 
@@ -104,6 +104,17 @@ def main():
   target = next(x for x in targethardwarelist if x['name'] == 'rpi') # default hardware is rpi
   if 'hardware' in args:
     target = next(x for x in targethardwarelist if x['name'] == args.hardware)
+
+  print("Target hardware is {}".format(target['fullname']))
+
+  # use default passwords if none set
+  if not 'user' in args or ('user' in args and not args.user):
+    args.user = target['defaultuser']
+  
+  if not 'password' in args or ('password' in args and not args.password):
+    args.password = target['defaultpassword']
+
+  print("user {} password {}".format(args.user, args.password))
 
   if args.version:
     print(VERSION)
