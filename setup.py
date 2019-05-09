@@ -61,7 +61,7 @@ setup(
                     'uuid',
                     'bugsnag',
                     'colorama',
-                    'paramiko==2.4.2',
+                    'paramiko',
                     'scp'
                     ],
   python_requires='>=3',

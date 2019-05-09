@@ -73,8 +73,7 @@ def main(args, target):
 
       if (args.reset):
         print('Resetting Pilot Mainboard')
-        pilotdriver.reset_pilot()
-        print('Done')
+        print(pilotdriver.reset_pilot())
         return 0
 
       ret = pilotdriver.check_driver()

@@ -63,6 +63,8 @@ def main(args, target):
     except:
       print("No configuration file found, continuing without it")
 
+  tomlfile = os.path.join(args.workdir, 'Cargo.toml') if args.workdir else './Cargo.toml'
+  libcrate = os.path.isfile(tomlfile)
 
   stmmodel = {}
   modules = {}

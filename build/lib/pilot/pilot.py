@@ -6,6 +6,12 @@ import os
 import sys
 import json
 import fnmatch
+import cryptography
+
+# needed until paramiko is fixed
+import warnings
+from cryptography import utils
+warnings.simplefilter("ignore", cryptography.utils.CryptographyDeprecationWarning)
 
 bugsnag = lazy_import.lazy_module("bugsnag")
 targethardwarelist = {}
@@ -66,7 +72,7 @@ def main():
                          help='Remote SSH User')
   parent_parser.add_argument('--password', '-p', default='', dest='password',
                          help='Remote SSH Password')
-  parent_parser.add_argument('--workdir', '-d', dest='workdir',
+  parent_parser.add_argument('--workdir', '-d', default=os.getcwd(), dest='workdir',
                          help='set working directory')
 
   argparser = argparse.ArgumentParser(description='Pilot Command-Line Interface')
@@ -105,7 +111,6 @@ def main():
   if 'hardware' in args:
     target = next(x for x in targethardwarelist if x['name'] == args.hardware)
 
-  print("Target hardware is {}".format(target['fullname']))
 
   # use default passwords if none set
   if not 'user' in args or ('user' in args and not args.user):
@@ -114,14 +119,13 @@ def main():
   if not 'password' in args or ('password' in args and not args.password):
     args.password = target['defaultpassword']
 
-  print("user {} password {}".format(args.user, args.password))
-
   if args.version:
     print(VERSION)
   elif args.modules:
     from . import moduleinfo
     sys.exit(moduleinfo.main(args, target))
   elif ('subparser_name' in args):
+    print("Target hardware is {}".format(target['fullname']))
     if (args.subparser_name == 'setup'):
       print('Pilot Configuration Tool v' + version)
       from . import pilotsetup

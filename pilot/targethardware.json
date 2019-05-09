@@ -3,7 +3,9 @@
 	"targethardware": [
     {
       "name": "rpi",
-      "architecture": "armvx",
+      "architecture": "cortex-a53_32bit",
+      "tty": "/dev/ttyAMA0",
+      "apt_source": "deb http://archive.amescon.com/ rpi_raspbian main",
       "fullname": "Raspberry Pi 2 and 3 (all versions)",
       "defaultuser": "pi",
       "defaultpassword": "raspberry",
@@ -29,7 +31,9 @@
     },
     {
       "name": "rpi1",
-      "architecture": "armvx",
+      "architecture": "cortex-a53_32bit",
+      "tty": "/dev/ttyAMA0",
+      "apt_source": "deb http://archive.amescon.com/ rpi_raspbian main",
       "fullname": "Raspberry Pi 1",
       "defaultuser": "pi",
       "defaultpassword": "raspberry",
@@ -55,7 +59,9 @@
     },
     {
       "name": "coral",
-      "architecture": "cortex-a53",
+      "architecture": "cortex-a53_64bit",
+      "tty": "/dev/ttymxc0",
+      "apt_source": "deb http://archive.amescon.com/ coral_mendel main",
       "fullname": "Coral Board",
       "defaultuser": "mendel",
       "defaultpassword": "mendel",

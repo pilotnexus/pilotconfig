@@ -50,14 +50,16 @@ class Sbc():
       ret = -1
       chan = self.remote_client.get_transport().open_session()
       chan.exec_command(command)
-      stdout = chan.makefile('rb').read()
-      stderr = chan.makefile_stderr('rb').read()
+      try:
+        stdout = chan.makefile('rb').read().decode('ascii', 'replace')
+        stderr = chan.makefile_stderr('rb').read().decode('ascii', 'replace')
+      except Exception as e: 
+        print(str(e))
       ret = chan.recv_exit_status()
       chan.close()
       if throw_on_nonzero_retcode and ret != 0:
-        raise Exception('Cound not execute {} \nError: {}'.format(command, stderr.decode('utf-8')))
-
-      return stdout.decode('utf-8')
+        raise Exception('Cound not execute {} \nError: {}'.format(command, stderr))
+      return stdout
 
   def cmd_retcode(self, command):
     if not self.remote_client:

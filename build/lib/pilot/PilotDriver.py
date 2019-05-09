@@ -119,7 +119,7 @@ class PilotDriver():
     return None
 
   def driver_loaded(self):
-    return os.path.exists(self.pilot_driver_root)
+    return self.sbc.cmd_retcode('test -e {}'.format(self.pilot_driver_root)) == 0
 
   def getModuleEeprom(self, module, memregion):
     try:
@@ -145,12 +145,34 @@ class PilotDriver():
   def reset_pilot(self):
     try:
       reset_pin = self.target['reset_pin']['number']
-      # TODO check if gpio are exported as outputs first
-      self.sbc.cmd('[ ! -f /sys/class/gpio/gpio{}/value ] && sudo echo "{}" > /sys/class/gpio/export'.format(reset_pin, reset_pin))
-      self.sbc.cmd('sudo echo "out" > /sys/class/gpio/gpio{}/direction'.format(reset_pin))
-      self.sbc.cmd('echo -n "1" > /sys/class/gpio/gpio{}/value'.format(reset_pin))
+      self.sbc.cmd('sudo sh -c \'[ ! -f /sys/class/gpio/gpio{0}/value ] && echo "{0}" > /sys/class/gpio/export\''.format(reset_pin))
+      self.sbc.cmd('sudo sh -c \'echo "out" > /sys/class/gpio/gpio{}/direction\''.format(reset_pin))
+      self.sbc.cmd('sudo sh -c \'echo -n "1" > /sys/class/gpio/gpio{}/value\''.format(reset_pin))
       time.sleep(2)
-      self.sbc.cmd('echo -n "0" > /sys/class/gpio/gpio{}/value'.format(reset_pin))
+      missing_commands = ''
+      if self.sbc.cmd_retcode('command -v tty') != 0:
+        missing_commands = missing_commands + 'tty '
+      if self.sbc.cmd_retcode('command -v timeout') != 0:
+        missing_commands = missing_commands + 'timeout '
+
+      if missing_commands == '':
+        return self.sbc.cmd("sudo sh -c 'tty -F {0} 115200;timeout 2 cat {0} & sleep 0.5; echo 0 > /sys/class/gpio/gpio{1}/value;wait'".format(self.target['tty'], reset_pin))
+      else:
+        return self.sbc.cmd("/sys/class/gpio/gpio{0}/value".format(reset_pin))
+      #command = """mkdir -p {0}; echo "#!/usr/bin/env bash
+      #  sudo sh -c \'[ ! -f /sys/class/gpio/gpio{2}/value ] && echo "{2}" > /sys/class/gpio/export\'
+      #  sudo sh -c \'echo "out" > /sys/class/gpio/gpio{2}/direction\'
+      #  sudo sh -c \'echo -n "1" > /sys/class/gpio/gpio{2}/value\'
+      #  sleep 2
+      #  sudo sh -c \'stty -F {1} 115200\'
+      #  sudo sh -c \'timeout 2 cat {1} > {0}/fwboot.txt &\' 
+      #  sudo sh -c \'echo 0 > /sys/class/gpio/gpio{2}/value\'
+      #  wait
+      #  sleep 1
+      #  sudo chown $USER:$USER {0}/fwboot.txt" > {0}/reset.sh; chmod +x {0}/reset.sh """.format(self.tmp_dir, self.target['tty'], reset_pin)
+      #self.sbc.cmd(command)
+      #self.sbc.cmd("sudo sh -c '{}/reset.sh'".format(self.tmp_dir))
+      #return self.sbc.getFileContent('{}/fwboot.txt'.format(self.tmp_dir)); 
     except:
       pass
 
@@ -173,7 +195,7 @@ class PilotDriver():
         packagename = "pilot-{}{}".format(match.group('version'),
                                           match.group('buildnum'))
         print('trying to install package ''{}'''.format(packagename))
-        if self.sbc.cmd_retcode("""sudo sh -c 'echo "deb http://archive.amescon.com/ ./" > /etc/apt/sources.list.d/amescon.list'""") != 0:
+        if self.sbc.cmd_retcode("""sudo sh -c 'echo "{}" > /etc/apt/sources.list.d/amescon.list'""".format(self.target['apt_source'])) != 0:
           return 1
         self.sbc.cmd_retcode('sudo apt-get update')
         return self.sbc.cmd_retcode('sudo apt-get install -y --allow-unauthenticated {}'.format(packagename))
@@ -369,7 +391,7 @@ class PilotDriver():
                  
 
   def program_mcu(self, binfile): #use 115200, 57600, 38400 baud rates sequentially
-    return self.tryrun('programming MCU', 4, 'sudo {}/stm32flash -w {} -b 115200 -g 0 -x {} -z {} /dev/ttyAMA0'.format(self.binpath, binfile, self.target['reset_pin']['number'], self.target['boot_pin']['number']))
+    return self.tryrun('programming MCU', 4, 'sudo {}/stm32flash -w {} -b 115200 -g 0 -x {} -z {} {}'.format(self.binpath, binfile, self.target['reset_pin']['number'], self.target['boot_pin']['number'], self.target['tty']))
 
   def program(self, program_cpld=True, program_mcu=True, cpld_file=None, mcu_file=None, var_file=None):
     res = 0

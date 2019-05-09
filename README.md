@@ -2,10 +2,11 @@
 Pilot Config Tool
 =================
 
-Install:
-`sudo -H pip3 install pilot-config`
+Prerequisites:
+```sudo apt-get install libssl-dev libffi-dev
 
-If install fails building the cryptography library (something along the lines of `failed with error code 1 in /tmp/pip-build-q1l8fonw/cryptography/`, run `sudo apt-get install libssl-dev` and try again (use `sudo yum install openssl-devel libffi-dev` on Fedora, CentOS or RHEL).
+Install:
+```sudo -H pip3 install pilot-config
 
 Upgrade:
 `sudo -H pip3 install --upgrade pilot-config`

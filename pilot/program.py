@@ -24,7 +24,7 @@ def main(args, target):
             program(args)
 
   if not hostsfromconfig:
-    program(args)
+    program(args, target)
 
 def program(args, target):
   with Sbc(args) as sbc:
