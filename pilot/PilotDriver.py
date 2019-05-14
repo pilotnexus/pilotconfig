@@ -36,12 +36,10 @@ class PilotDriver():
 
   ps = None
   sbc = None
-  target = None
 
-  def __init__(self, pilotserver: PilotServer, sbc: Sbc, target):
+  def __init__(self, pilotserver: PilotServer, sbc: Sbc):
     self.ps = pilotserver
     self.sbc = sbc
-    self.target = target
 
   def get_modules(self):
     memregs = ['uid', 'hid', 'fid']
@@ -144,19 +142,19 @@ class PilotDriver():
 
   def reset_pilot(self):
     try:
-      reset_pin = self.target['reset_pin']['number']
+      reset_pin = self.sbc.target['reset_pin']['number']
       self.sbc.cmd('sudo sh -c \'[ ! -f /sys/class/gpio/gpio{0}/value ] && echo "{0}" > /sys/class/gpio/export\''.format(reset_pin))
       self.sbc.cmd('sudo sh -c \'echo "out" > /sys/class/gpio/gpio{}/direction\''.format(reset_pin))
       self.sbc.cmd('sudo sh -c \'echo -n "1" > /sys/class/gpio/gpio{}/value\''.format(reset_pin))
       time.sleep(2)
       missing_commands = ''
-      if self.sbc.cmd_retcode('command -v tty') != 0:
-        missing_commands = missing_commands + 'tty '
+      if self.sbc.cmd_retcode('command -v stty') != 0:
+        missing_commands = missing_commands + 'stty '
       if self.sbc.cmd_retcode('command -v timeout') != 0:
         missing_commands = missing_commands + 'timeout '
 
       if missing_commands == '':
-        return self.sbc.cmd("sudo sh -c 'tty -F {0} 115200;timeout 2 cat {0} & sleep 0.5; echo 0 > /sys/class/gpio/gpio{1}/value;wait'".format(self.target['tty'], reset_pin))
+        return self.sbc.cmd("sudo sh -c 'stty -F {0} 115200;timeout 2 cat {0} & sleep 0.5; echo 0 > /sys/class/gpio/gpio{1}/value;wait'".format(self.sbc.target['tty'], reset_pin))
       else:
         return self.sbc.cmd("/sys/class/gpio/gpio{0}/value".format(reset_pin))
       #command = """mkdir -p {0}; echo "#!/usr/bin/env bash
@@ -169,7 +167,7 @@ class PilotDriver():
       #  sudo sh -c \'echo 0 > /sys/class/gpio/gpio{2}/value\'
       #  wait
       #  sleep 1
-      #  sudo chown $USER:$USER {0}/fwboot.txt" > {0}/reset.sh; chmod +x {0}/reset.sh """.format(self.tmp_dir, self.target['tty'], reset_pin)
+      #  sudo chown $USER:$USER {0}/fwboot.txt" > {0}/reset.sh; chmod +x {0}/reset.sh """.format(self.tmp_dir, self.sbc.target['tty'], reset_pin)
       #self.sbc.cmd(command)
       #self.sbc.cmd("sudo sh -c '{}/reset.sh'".format(self.tmp_dir))
       #return self.sbc.getFileContent('{}/fwboot.txt'.format(self.tmp_dir)); 
@@ -177,15 +175,6 @@ class PilotDriver():
       pass
 
 
-  def check_raspberry(self):
-    try:
-      hardware = ['BCM2835', 'BCM2836']
-      match = re.search(r'Hardware\s*?:\s*(?P<hw>[\S]*)', self.sbc.cmd('cat /proc/cpuinfo'))
-      if match and match.group('hw') in hardware:
-        return True
-      return False
-    except:
-      return True #for now do nothing on error, assume that it is a raspberry
 
   def install_driver(self):
     try:
@@ -231,7 +220,7 @@ class PilotDriver():
           return 1
         else:
           print('Could not install the pilot driver, most likely there is no driver compiled for your kernel.')
-          self.get_kernel_info()
+          #self.get_kernel_info()
           return -1
     return 0
         
@@ -382,25 +371,25 @@ class PilotDriver():
     return self.tryrun('erasing CPLD' if erase else 'programming CPLD', 2,
                  'sudo {}/jamplayer -a{} -g{},{},{},{} {}'.format(self.binpath, 
                  'erase' if erase else 'program', 
-                 self.target['tdi_pin']['number'], 
-                 self.target['tms_pin']['number'], 
-                 self.target['tdo_pin']['number'], 
-                 self.target['tck_pin']['number'], 
+                 self.sbc.target['tdi_pin']['number'], 
+                 self.sbc.target['tms_pin']['number'], 
+                 self.sbc.target['tdo_pin']['number'], 
+                 self.sbc.target['tck_pin']['number'], 
                  binfile))
 
                  
 
   def program_mcu(self, binfile): #use 115200, 57600, 38400 baud rates sequentially
-    return self.tryrun('programming MCU', 4, 'sudo {}/stm32flash -w {} -b 115200 -g 0 -x {} -z {} {}'.format(self.binpath, binfile, self.target['reset_pin']['number'], self.target['boot_pin']['number'], self.target['tty']))
+    return self.tryrun('programming MCU', 4, 'sudo {}/stm32flash -w {} -b 115200 -g 0 -x {} -z {} {}'.format(self.binpath, binfile, self.sbc.target['reset_pin']['number'], self.sbc.target['boot_pin']['number'], self.sbc.target['tty']))
 
   def program(self, program_cpld=True, program_mcu=True, cpld_file=None, mcu_file=None, var_file=None):
     res = 0
     if self.sbc.remote_client:
       self.sbc.cmd_retcode('mkdir -p {}'.format(self.tmp_dir))
-      if self.sbc.cmd_retcode('sudo chown $USER {}'.format(self.tmp_dir)) == 0:
+      if self.sbc.cmd_retcode('sudo chown -R $USER {}'.format(self.tmp_dir)) == 0:
         with scp.SCPClient(self.sbc.remote_client.get_transport()) as scp_client:
-          scp_client.put(self.binpath + '/' + self.target['architecture'] + '/jamplayer', remote_path=self.tmp_dir)
-          scp_client.put(self.binpath + '/' + self.target['architecture'] + '/stm32flash', remote_path=self.tmp_dir)
+          scp_client.put(self.binpath + '/' + self.sbc.target['architecture'] + '/jamplayer', remote_path=self.tmp_dir)
+          scp_client.put(self.binpath + '/' + self.sbc.target['architecture'] + '/stm32flash', remote_path=self.tmp_dir)
           if cpld_file != None:
             scp_client.put(cpld_file, remote_path=os.path.join(self.tmp_dir,'cpld.jam'))
           if mcu_file != None:

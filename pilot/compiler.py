@@ -29,7 +29,7 @@ def arguments(parser):
   parser.add_argument('--ignore-files', default=None, action='store_const', const='ignore_files', dest='ignore_files',
                       help='If no files are given, do not automatically use source files found in src folder')
   
-def main(args, target):
+def main(args):
   config = None
 
   #if no iec path parameter is given try the environment var

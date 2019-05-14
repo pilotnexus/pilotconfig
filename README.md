@@ -3,24 +3,16 @@ Pilot Config Tool
 =================
 
 Prerequisites:
-```sudo apt-get install libssl-dev libffi-dev
+`sudo apt-get install libssl-dev libffi-dev`
 
-Install:
-```sudo -H pip3 install pilot-config
+Install locally on the Single Board Computer (Raspberry Pi or Google Coral):
+`sudo -H pip3 install pilot-config`
 
 Upgrade:
 `sudo -H pip3 install --upgrade pilot-config`
 
 Run:
-`pilot setup`
-to setup your system
-
-**************************************************
-Run docker container for custom firmware build
-**************************************************
-
-Run the following command from the project directory (containing the .pilotfwconfig.json and the st file)
-
-`docker run -v $PWD/fwbase/stm:/src -v $PWD:/files pilotplc:latest` /files/file.st
-
-Note: the /files/ must be added, even if the file is in the current directory because of the dir mapping
+`sudo pilot setup`
+to setup your system or
+`pilot setup --host [IP] --user [user] --password [password]`
+to setup the firmware remotely

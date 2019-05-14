@@ -10,7 +10,7 @@
             "request": "launch",
             "module": "pilot.pilot",
             "args": [
-                "setup", "--host", "192.168.1.38", "--reset"
+                "setup", "--host", "192.168.101.100"
                 //"fw", "program", "--workdir", "~/work/phoinix/newfw2/", "--host", "192.168.1.38"
                 //"fw", "init", "--workdir", "/tmp/tempfw", "--host", "192.168.101.63"
             ],

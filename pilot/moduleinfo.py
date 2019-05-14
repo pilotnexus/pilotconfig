@@ -15,14 +15,14 @@ def arguments(parser):
   parser.add_argument('--help', '-h', default=None, dest='source',
                       help='Get help on modules')
 
-def main(args, target):
+def main(args):
   with Sbc(args) as sbc:
     pilotserver = PilotServer(sbc)
     if 'server' in args and args.server != None:
       pilotserver.pilot_server = args.server
     
     #PilotDriver
-    pilotdriver = PilotDriver(pilotserver, sbc, target)
+    pilotdriver = PilotDriver(pilotserver, sbc)
 
     if not pilotdriver.driver_loaded():
       print('Drivers are not loaded. Please use --host if you connect remotely or install pilot drivers first by running sudo pilot setup.')

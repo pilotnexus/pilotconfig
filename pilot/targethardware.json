@@ -6,7 +6,7 @@
       "architecture": "cortex-a53_32bit",
       "tty": "/dev/ttyAMA0",
       "apt_source": "deb http://archive.amescon.com/ rpi_raspbian main",
-      "fullname": "Raspberry Pi 2 and 3 (all versions)",
+      "fullname": "Raspberry Pi",
       "defaultuser": "pi",
       "defaultpassword": "raspberry",
       "reset_pin": {
@@ -27,35 +27,11 @@
       "tck_pin": {
         "number": 25
       },
-      "devicetree_overlay": "pilot_pi.dtbo"
-    },
-    {
-      "name": "rpi1",
-      "architecture": "cortex-a53_32bit",
-      "tty": "/dev/ttyAMA0",
-      "apt_source": "deb http://archive.amescon.com/ rpi_raspbian main",
-      "fullname": "Raspberry Pi 1",
-      "defaultuser": "pi",
-      "defaultpassword": "raspberry",
-      "reset_pin": {
-        "number": 17
-      },
-      "boot_pin": {
-        "number": 4        
-      },
-      "tdi_pin": {
-        "number": 22
-      },
-      "tms_pin": {
-        "number": 23
-      },
-      "tdo_pin": {
-        "number": 24
-      },
-      "tck_pin": {
-        "number": 25
-      },
-      "devicetree_overlay": "pilot_pi.dtbo"
+      "devicetree_overlay": "pilot_pi.dtbo",
+      "hardware": {
+        "runcheck": "cat /etc/os-release | grep ID=raspbian",
+        "checkresult": "ID=raspbian"
+      }
     },
     {
       "name": "coral",
@@ -83,7 +59,11 @@
       "tck_pin": {
         "number": 140
       },
-      "devicetree_overlay": "pilot_coral.dtbo"
+      "devicetree_overlay": "pilot_coral.dtbo",
+      "hardware": {
+        "runcheck": "cat /etc/os-release | grep ID=mendel",
+        "checkresult": "ID=mendel"
+      }
     }
   ]
 }

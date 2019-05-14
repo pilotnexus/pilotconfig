@@ -4,28 +4,23 @@ import lazy_import
 import argparse
 import os
 import sys
-import json
-import fnmatch
 import cryptography
 
 # needed until paramiko is fixed
 import warnings
 from cryptography import utils
-warnings.simplefilter("ignore", cryptography.utils.CryptographyDeprecationWarning)
 
+try:
+  warnings.simplefilter("ignore", cryptography.utils.CryptographyDeprecationWarning)
+except:
+  pass
+  
 bugsnag = lazy_import.lazy_module("bugsnag")
-targethardwarelist = {}
 
 from . import arguments
 
 with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'VERSION'), 'r') as myfile:
     version=myfile.read().replace('\n', '')
-
-# load target hardware list
-for root, _dirnames, filenames in os.walk(os.path.dirname(os.path.realpath(__file__))):
-  for filename in fnmatch.filter(filenames, 'targethardware.json'):
-    with open(os.path.join(root, filename)) as obj:
-      targethardwarelist = json.load(obj)['targethardware']
 
 def my_except_hook(exectype, value, traceback):
   if exectype == KeyboardInterrupt:
@@ -62,7 +57,7 @@ def main():
 
   # Parent parser for common arguments
   parent_parser = argparse.ArgumentParser(add_help=False)
-  parent_parser.add_argument('--hardware', dest='hardware', default='rpi', choices=[el['name'] for el in targethardwarelist],
+  parent_parser.add_argument('--hardware', dest='hardware', #choices=[el['name'] for el in targethardwarelist],
                          help='set target hardware')
   parent_parser.add_argument('--server', '-s', default=None, dest='server',
                   help='Alternative URL for the pilot server API to contact')
@@ -106,45 +101,31 @@ def main():
 
   args = argparser.parse_args()
 
-  # set target
-  target = next(x for x in targethardwarelist if x['name'] == 'rpi') # default hardware is rpi
-  if 'hardware' in args:
-    target = next(x for x in targethardwarelist if x['name'] == args.hardware)
-
-
-  # use default passwords if none set
-  if not 'user' in args or ('user' in args and not args.user):
-    args.user = target['defaultuser']
-  
-  if not 'password' in args or ('password' in args and not args.password):
-    args.password = target['defaultpassword']
-
   if args.version:
     print(VERSION)
   elif args.modules:
     from . import moduleinfo
-    sys.exit(moduleinfo.main(args, target))
+    sys.exit(moduleinfo.main(args))
   elif ('subparser_name' in args):
-    print("Target hardware is {}".format(target['fullname']))
     if (args.subparser_name == 'setup'):
       print('Pilot Configuration Tool v' + version)
       from . import pilotsetup
-      sys.exit(pilotsetup.main(args, target))
+      sys.exit(pilotsetup.main(args))
     elif (args.subparser_name == 'fw'):
       if (args.fw_subparser_name == 'build'):
         from . import compiler
-        sys.exit(compiler.main(args, target))
+        sys.exit(compiler.main(args))
       elif (args.fw_subparser_name == 'program'):
         from . import program
-        sys.exit(program.main(args, target))
+        sys.exit(program.main(args))
       elif (args.fw_subparser_name == 'init'):
         from . import project
-        sys.exit(project.main(args, target))
+        sys.exit(project.main(args))
       elif args.show_toplevel:
         print(find_fw_toplevel())
     else:
       from . import pilotsetup
-      sys.exit(pilotsetup.main(parser_a.parse_args(), target))
+      sys.exit(pilotsetup.main(parser_a.parse_args()))
 
 if __name__ == '__main__':
   main()

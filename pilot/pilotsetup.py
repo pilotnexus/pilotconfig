@@ -39,7 +39,7 @@ EXECVP_ENABLED = False
 
 ############## PROC FILE ACCESS #####################
 
-def main(args, target):
+def main(args):
 
   logger = logging.getLogger()
   handler = BugsnagHandler()
@@ -56,7 +56,7 @@ def main(args, target):
       pilotserver.pilot_server = args.server
     
     #PilotDriver
-    pilotdriver = PilotDriver(pilotserver, sbc, target)
+    pilotdriver = PilotDriver(pilotserver, sbc)
 
     #if not pilotdriver.check_raspberry() and not args.host:
     #  print('This does not seem to be a Raspberry Pi. Please use the --host option to remote connect to it.')

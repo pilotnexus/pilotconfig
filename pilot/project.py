@@ -8,7 +8,7 @@ from .PilotServer import PilotServer
 
 from colorama import Fore
 
-def main(args, target):
+def main(args):
   print('This will create a new Pilot firmware project in the current folder')
 
   node_host = args.host
@@ -27,7 +27,7 @@ def main(args, target):
     
   with Sbc(args) as sbc:
     pilotserver = PilotServer(sbc)
-    pilotdriver = PilotDriver(pilotserver, sbc, target)
+    pilotdriver = PilotDriver(pilotserver, sbc)
 
     if args.server != None:
       pilotserver.pilot_server = args.server

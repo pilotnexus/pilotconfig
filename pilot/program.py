@@ -6,7 +6,7 @@ from .Sbc import Sbc
 from .PilotServer import PilotServer
 from .PilotDriver import PilotDriver
 
-def main(args, target):
+def main(args):
 
   hostsfromconfig = False
   #check if a .pilotfwconfig.json file exists and extract hosts
@@ -24,9 +24,9 @@ def main(args, target):
             program(args)
 
   if not hostsfromconfig:
-    program(args, target)
+    program(args)
 
-def program(args, target):
+def program(args):
   with Sbc(args) as sbc:
     # PilotServer
     pilotserver = PilotServer(sbc)
@@ -34,7 +34,7 @@ def program(args, target):
       pilotserver.pilot_server = args.server
     
     #PilotDriver
-    pilotdriver = PilotDriver(pilotserver, sbc, target)
+    pilotdriver = PilotDriver(pilotserver, sbc)
 
     if not pilotdriver.driver_loaded():
       print('Drivers are not loaded. Please use --host if you connect remotely or install pilot drivers first by running sudo pilot setup.')
