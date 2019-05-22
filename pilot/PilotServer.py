@@ -70,7 +70,7 @@ class PilotServer():
     nodeconffile = self.pilot_dir + self.nodeconfname
     nodeconf = None
     try:
-      nodeconf = yaml.load(self.sbc.getFileContent(nodeconffile))
+      nodeconf = yaml.load(self.sbc.getFileContent(nodeconffile), Loader=yaml.FullLoader)
     except:
       nodeconf = None
     return nodeconf

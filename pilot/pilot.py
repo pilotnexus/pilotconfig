@@ -32,16 +32,6 @@ def my_except_hook(exectype, value, traceback):
 
 sys.excepthook = my_except_hook
 
-def find_fw_toplevel():
-  dir = os.getcwd()
-  olddir = ''
-  while dir != olddir:
-    olddir = dir
-    if os.path.isfile(os.path.join(dir, '.pilotfwconfig.json')):
-      return dir
-    dir = os.path.abspath(os.path.join(dir, '..'))
-  return ''    
-
 def main():
   with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'VERSION'), encoding='utf-8') as f:
     VERSION = f.read().strip()
@@ -87,6 +77,7 @@ def main():
   parser_b = subparsers.add_parser('fw', parents=[parent_parser], help="Init/Build/Program custom firmware")
   parser_b.add_argument('--show-toplevel', dest='show_toplevel', action='store_true',
                         help='show top level folder of firmware project')
+  parser_b.add_argument('--show-compilers', dest='show_compilers', action='store_true', help='List all installed compilers for additional firmware (excluding C compiler, this compiler is always installed)')
 
   fw_subparser = parser_b.add_subparsers(dest='fw_subparser_name')
 
@@ -96,7 +87,7 @@ def main():
   parser_b_b = fw_subparser.add_parser('build', parents=[parent_parser], help="Compile additional software into firmware (IEC 61131-3 or C)")
   arguments.compiler_arguments(parser_b_b)
 
-  parser_b_c = fw_subparser.add_parser('program', parents=[parent_parser], help="Remote program PLC")
+  parser_b_c = fw_subparser.add_parser('program', parents=[parent_parser], help="Remote program Pilot Mainboard")
   arguments.program_arguments(parser_b_c)
 
   args = argparser.parse_args()
@@ -108,22 +99,20 @@ def main():
     sys.exit(moduleinfo.main(args))
   elif ('subparser_name' in args):
     if (args.subparser_name == 'setup'):
-      print('Pilot Configuration Tool v' + version)
       from . import pilotsetup
       sys.exit(pilotsetup.main(args))
     elif (args.subparser_name == 'fw'):
-      if (args.fw_subparser_name == 'build'):
+      if 'fw_subparser_name' in args and args.fw_subparser_name == 'build':
         from . import compiler
         sys.exit(compiler.main(args))
-      elif (args.fw_subparser_name == 'program'):
+      elif 'fw_subparser_name' in args and args.fw_subparser_name == 'program':
         from . import program
         sys.exit(program.main(args))
-      elif (args.fw_subparser_name == 'init'):
+      elif 'fw_subparser_name' in args and args.fw_subparser_name == 'init':
         from . import project
         sys.exit(project.main(args))
-      elif args.show_toplevel:
-        print(find_fw_toplevel())
     else:
+      print('No parameters specified, running setup.')
       from . import pilotsetup
       sys.exit(pilotsetup.main(parser_a.parse_args()))
 

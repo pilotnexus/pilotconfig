@@ -1,0 +1,4 @@
+name: Rust
+description: template for Rust code generator
+filter: "*.rs"
+firmware-version: "*"

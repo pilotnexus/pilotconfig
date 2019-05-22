@@ -32,5 +32,5 @@ def compiler_arguments(parser):
                       help='IEC Structured Text File')
 
 def project_arguments(parser):
-  # parser.add_argument('--terminal', '-t', action='store_true', help='forces the terminal version instead of GUI')
+  parser.add_argument('--compiler', dest='compiler', help='Specify compiler to use. Run --show-compilers to get a list of options')
   pass

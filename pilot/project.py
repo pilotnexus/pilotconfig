@@ -5,26 +5,42 @@ import yaml
 from .Sbc import Sbc
 from .PilotDriver import PilotDriver
 from .PilotServer import PilotServer
-
+from . import compiler as c
 from colorama import Fore
 
 def main(args):
+  use_compiler = None
   print('This will create a new Pilot firmware project in the current folder')
 
-  node_host = args.host
   node_user = args.user
   node_password = args.password
 
   if not args.host:
     print('We need a hostname or IP and username/password (ssh) of the Node you want to configure.')
-    node_host = input('Host/IP of Node to get Firmware Configuration from: ')
-    node_user = input('Username (pi): ')
-    node_password = input('Password (raspberry): ')
+    args.host = input('Host/IP of Node to get Firmware Configuration from: ')
 
-    args.host = node_host
-    args.user = node_user if node_user != '' else args.user
-    args.password = node_password if node_password != '' else args.password
-    
+  compilers, _ = c.get_compilers()
+
+  if args.compiler:
+    if next(x for x in compilers if x['name'] == args.compiler) == None:
+      print('Could not find compiler {}. Use --show-compilers to get available compilers.'.format(args.compiler))
+      return 1 
+
+  if not args.compiler:
+    compiler_index = -1
+    if (len(compilers) == 0):
+      print('No compilers found, exiting')
+      return 1
+
+    while (compiler_index < 0 or compiler_index > len(compilers)):
+      print('Please specify the compiler toolchain to use:')
+      for index, compiler in enumerate(compilers):
+        print('[{}] {}: {}'.format(index+1, compiler['name'], compiler['description']))
+      try:
+        compiler_index = int(input('[1-{}]: '.format(len(compilers)))) - 1
+      except: pass
+    args.compiler = compilers[compiler_index]['name']
+
   with Sbc(args) as sbc:
     pilotserver = PilotServer(sbc)
     pilotdriver = PilotDriver(pilotserver, sbc)
@@ -32,7 +48,7 @@ def main(args):
     if args.server != None:
       pilotserver.pilot_server = args.server
 
-    modules = pilotdriver.load_pilot_defs()
+    modules, success = pilotdriver.load_pilot_defs()
     if modules != None:
       for module in modules:
         print('Module {}: {}{}'.format(
@@ -45,7 +61,7 @@ def main(args):
     # create credentials.json
     cred = {}
     try:
-      nodeconf = yaml.load(sbc.getFileContent('/etc/pilot/pilotnode.yml'))
+      nodeconf = yaml.load(sbc.getFileContent('/etc/pilot/pilotnode.yml'), Loader=yaml.FullLoader)
       node = {}
       node['nodeid'] = nodeconf['nodeid']
       node['apikey'] = nodeconf['apikey']
@@ -61,6 +77,7 @@ def main(args):
 
     # create .pilotfwconfig.json
     config = {}
+    config['compiler'] = args.compiler
     config['modules'] = []
 
     for mod in modules:

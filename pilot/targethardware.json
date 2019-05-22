@@ -6,6 +6,7 @@
       "architecture": "cortex-a53_32bit",
       "tty": "/dev/ttyAMA0",
       "apt_source": "deb http://archive.amescon.com/ rpi_raspbian main",
+      "kernelversionre": "Linux (?P<name>.*?) (?P<version>\\d+.\\d+.\\d+-.*?) #(?P<buildnum>\\d+).*?",
       "fullname": "Raspberry Pi",
       "defaultuser": "pi",
       "defaultpassword": "raspberry",
@@ -38,7 +39,8 @@
       "architecture": "cortex-a53_64bit",
       "tty": "/dev/ttymxc0",
       "apt_source": "deb http://archive.amescon.com/ coral_mendel main",
-      "fullname": "Coral Board",
+      "kernelversionre": "Linux (?P<name>.*?) (?P<version>\\d+.\\d+.\\d+-.*?) .*?",
+      "fullname": "Google Coral",
       "defaultuser": "mendel",
       "defaultpassword": "mendel",
       "reset_pin": {

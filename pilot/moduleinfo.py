@@ -36,7 +36,11 @@ def main(args):
       print('we need sudo on remote Node (without interactive authentication)')
       return 2
 
-    modules = pilotdriver.load_pilot_defs()
+    modules, success = pilotdriver.load_pilot_defs()
+    
+    if not success:
+      print('Could not get module data.')
+      return 1
 
     #Print module help
     moduleinfos = pilotdriver.get_help()

@@ -28,8 +28,7 @@ class PilotDriver():
   kernmodule_list = ['pilot', 'pilot_plc', 'pilot_tty',
                      'pilot_rtc', 'pilot_fpga', 'pilot_io', 'pilot_slcd']
 
-  binpath = '{}/bin'.format(os.path.join(
-    os.path.abspath(os.path.dirname(__file__))))
+  binpath = ''
 
   eeproms = {}
   modules = {}
@@ -41,6 +40,9 @@ class PilotDriver():
     self.ps = pilotserver
     self.sbc = sbc
 
+    self.binpath = '{}/bin/{}'.format(os.path.join(
+    os.path.abspath(os.path.dirname(__file__))), self.sbc.target['architecture'])
+
   def get_modules(self):
     memregs = ['uid', 'hid', 'fid']
     strmlist = list(filter(
@@ -51,25 +53,29 @@ class PilotDriver():
     for mod in modlist:
       for memreg in memregs:
         retry = self.retry_count
+        errcount = 0
         while retry > 0:
           retry = retry - 1
           try:
             regfile = self.sbc.cmd(
-                'cat {}/module{}/eeprom/{}'.format(self.pilot_driver_root, mod, memreg))
+                'cat {}/module{}/eeprom/{}'.format(self.pilot_driver_root, mod, memreg), True)
             modlist[mod][memreg] = ''.join(
                 char for char in regfile if str.isprintable(char)).strip()
             break
           except:
             modlist[mod][memreg] = ''
+            errcount = errcount + 1
+            if errcount >= self.retry_count:
+              return modlist, False
             #dbg('could not read {} of module {}'.format(memreg, mod))
-    return modlist
+    return modlist, True
 
   def set_module_fid(self, number, fid):
     self.sbc.setFileContent(self.pilot_driver_root + '/module{}/eeprom/fid'.format(number), fid + '       ')
 
   def load_pilot_defs(self):
     try:
-      self.eeproms = self.get_modules()
+      self.eeproms, success = self.get_modules()
       query = u"""
       {{
         fid(fids:[{}]) {{
@@ -107,14 +113,14 @@ class PilotDriver():
             module['currentfid'] = fid
         else:
           print('error reading modules, please try again')
-          return None
-        return sorted(obj['data']['hid'], key=lambda x: x['module']) if ret == 200 and obj['data']['hid'] != None else None
+          return None, success
+        return sorted(obj['data']['hid'], key=lambda x: x['module']) if ret == 200 and obj['data']['hid'] != None else None, success
       else:
-        return None
+        return None, success
     except:
       e = sys.exc_info()[0]
       print(e)
-    return None
+    return None, success
 
   def driver_loaded(self):
     return self.sbc.cmd_retcode('test -e {}'.format(self.pilot_driver_root)) == 0
@@ -174,27 +180,29 @@ class PilotDriver():
     except:
       pass
 
-
-
   def install_driver(self):
     try:
-      match = re.match(
-          r'Linux (?P<name>.*?) (?P<version>\d+.\d+.\d+-.*?) #(?P<buildnum>\d+).*?', self.sbc.cmd('uname -a'))
+      match = re.match(self.sbc.target['kernelversionre'], self.sbc.cmd('uname -a'))
       if match:
         packagename = "pilot-{}{}".format(match.group('version'),
-                                          match.group('buildnum'))
+                                          match.group('buildnum') if 'buildnum' in match.groupdict() else '')
         print('trying to install package ''{}'''.format(packagename))
-        if self.sbc.cmd_retcode("""sudo sh -c 'echo "{}" > /etc/apt/sources.list.d/amescon.list'""".format(self.target['apt_source'])) != 0:
+        if self.sbc.cmd_retcode("""sudo sh -c 'echo "{}" > /etc/apt/sources.list.d/amescon.list'""".format(self.sbc.target['apt_source'])) != 0:
+          print('Could not add source to /etc/apt/sources.list.d/amescon.list')
+          return 1
+        if self.sbc.cmd_retcode("""sudo sh -c 'wget -qO - http://archive.amescon.com/amescon.asc | sudo apt-key add -'""") != 0:
+          print('Could not get signing keys from amescon keyserver')
           return 1
         self.sbc.cmd_retcode('sudo apt-get update')
-        return self.sbc.cmd_retcode('sudo apt-get install -y --allow-unauthenticated {}'.format(packagename))
+        self.sbc.cmd('sudo apt-get install -y {}'.format(packagename), True)
       else:
         print('Could not detect your linux version')
         return 1
-    except:
-      bugsnag.notify(Exception(sys.exc_info()[0]), user={
+    except Exception as e:
+      bugsnag.notify(e, user={
           "username": self.ps.pilotcfg['username']})
-    return 1
+      return 1
+    return 0
 
   def get_kernel_info(self):
     try:

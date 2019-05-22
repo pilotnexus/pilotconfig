@@ -48,7 +48,8 @@ def main(args):
   logger.addHandler(handler)
 
   logging.getLogger("paramiko").setLevel(logging.ERROR)
-
+  
+  result = 0
   with Sbc(args) as sbc:
     # PilotServer
     pilotserver = PilotServer(sbc)
@@ -87,7 +88,11 @@ def main(args):
       if args.driveronly:
         return 0
 
-      modules = pilotdriver.load_pilot_defs()
+      modules, success = pilotdriver.load_pilot_defs()
+      trywritedefaultfirmware = False
+      if not success:
+        print(Fore.YELLOW, 'Could not read module data. Maybe the firmware is outdated, trying to write base firmware image.')
+        trywritedefaultfirmware = True
       if modules != None:
         if args.source == None:
           while(True):
@@ -97,7 +102,8 @@ def main(args):
               multiple_fids = len(module['fids']) > 1
               if multiple_fids:
                 modules_with_multiple_fids.append(int(module['module']))
-              print('Module {}: {}{} {}'.format(
+              if not trywritedefaultfirmware:
+                print('Module {}: {}{} {}'.format(
                   module['module'], Fore.GREEN, module['currentfid_nicename'], '*' if multiple_fids else ''))
 
             ch = ''
@@ -105,13 +111,13 @@ def main(args):
             if len(modules_with_multiple_fids) > 0:
               print('Modules marked with an Asterisk (*) have multiple firmware configurations')
               print('Press Module Number [{}] to change selected firmware.'.format(modsel))
-            if (args.noninteractive):
+            if (args.noninteractive or trywritedefaultfirmware):
               ch = 'y'
             else:
               ch = input('Do you want to build and program the Pilot Nexus Firmware? (y/n{}): '.format('/'+modsel if len(modules_with_multiple_fids) > 0 else '')).strip().lower()
             if ch == 'y' or ch == 'yes':
               if pilotdriver.build_firmware() == 0:
-                pilotdriver.program()
+                result = pilotdriver.program()
                 pilotdriver.reset_pilot()
               else:
                 print('Could not write firmware')
@@ -126,7 +132,7 @@ def main(args):
               ch = input('0=Cancel, [1-{}]: '.format(len(modules[changemodulenr-1]['fids'])))
               if (ch.isdigit() and int(ch) > 0 and int(ch) <= len(modules[changemodulenr-1]['fids'])):
                 pilotdriver.set_module_fid(changemodulenr, modules[changemodulenr-1]['fids'][int(ch)-1]['fid'])
-                modules = pilotdriver.load_pilot_defs()
+                modules, success = pilotdriver.load_pilot_defs()
             else:
               break
 
@@ -138,13 +144,17 @@ def main(args):
         print('No modules found, is the driver loaded?')
       fwconfig = {}
       fwconfig['modules'] = modules
-      if not args.noninteractive:
+      if not args.noninteractive and not trywritedefaultfirmware and result == 0:
         pilotserver.registernode(fwconfig)
     elif not args.noninteractive:
       pilotserver.registernode(None)
 
-  print ("To get help on how to use the modules, run 'pilot module'")
-  return 0
+  if result == 0:
+    if trywritedefaultfirmware:
+      print("Default firmware written. Run the setup tool again to program firmware for your modules")
+    else:
+      print ("To get help on how to use the modules, run 'pilot --module'")
+  return result
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Setup Pilot Nexus')

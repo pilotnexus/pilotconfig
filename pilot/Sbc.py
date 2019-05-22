@@ -25,24 +25,39 @@ class Sbc():
           self.targethardwarelist = json.load(obj)['targethardware']
 
   def __enter__(self):
+    usecredentials = False
+    if 'user' in self.args and self.args.user and 'password' in self.args and self.args.password:
+      usecredentials = True
     if 'hardware' in self.args and self.args.hardware:
       self.target = next(x for x in self.targethardwarelist if x['name'] == self.args.hardware)
-      self.connect(self.args.user, self.args.password)
+      if usecredentials:
+        self.connect(self.args.user, self.args.password)
+      else:
+        self.connect(self.target['defaultuser'], self.target['defaultpassword'])
     else:
+      connected = False
       for hw in self.targethardwarelist:
         try:
-          user = self.args.user if 'user' in self.args and self.args.user else hw['defaultuser']
-          password = self.args.password if 'password' and self.args.user in self.args else hw['defaultpassword']
+          user = self.args.user if usecredentials else hw['defaultuser']
+          password = self.args.password if usecredentials else hw['defaultpassword']
           self.connect(user, password)
-          print(Fore.GREEN + 'succeeded')
+          connected = True
+          break
+        except: 
+          print(Fore.YELLOW + 'failed')
+      if not connected:
+        print('Could not connect to target')
+        exit(1)
+      for hw in self.targethardwarelist:
+        try:  
           if self.cmd(hw['hardware']['runcheck']).strip() == hw['hardware']['checkresult']:
             self.target = hw
             print("{} detected".format(self.target['fullname']))
             break
         except: 
-          print(Fore.YELLOW + 'failed')
+          pass
     if not self.target:
-      print('Could not detect target hardware, exiting.')
+      print('Could not detect target hardware. If you want to use a remote node use the --host parameter to specify the IP address.')
       if self.remote_client != None:
         self.remote_client.close()
       exit(1)
@@ -60,6 +75,7 @@ class Sbc():
       client.set_missing_host_key_policy(paramiko.WarningPolicy())
       client.connect(self.args.host, username=user, password=password)
       self.remote_client = client
+      print(Fore.GREEN + 'succeeded')
     return self
     
   def need_sudo_pw(self):

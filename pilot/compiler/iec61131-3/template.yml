@@ -1,0 +1,4 @@
+name: IEC 61131-3
+description: template for structured text code generator
+filter: "*.st"
+firmware-version: "*"
