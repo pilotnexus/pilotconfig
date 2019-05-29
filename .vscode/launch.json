@@ -10,7 +10,8 @@
             "request": "launch",
             "module": "pilot.pilot",
             "args": [
-                "fw", "build", "--host", "192.168.1.60", "--workdir", "/tmp/test"
+                "fw", "program", "--workdir", "~/work/rust/stm32test", "--host", "192.168.1.5"
+                // "fw", "build", "--host", "192.168.1.60", "--workdir", "/tmp/test"
                 //"fw", "init", "--host", "192.168.1.60", "--workdir", "/tmp/test"
                 //"setup", "--host", "192.168.101.76", "--user", "mendel", "--password", "mendel"
                 //"fw", "program", "--workdir", "~/work/phoinix/newfw2/", "--host", "192.168.1.38"

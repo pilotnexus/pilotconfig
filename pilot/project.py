@@ -5,7 +5,7 @@ import yaml
 from .Sbc import Sbc
 from .PilotDriver import PilotDriver
 from .PilotServer import PilotServer
-from . import compiler as c
+from . import build 
 from colorama import Fore
 
 def main(args):
@@ -19,7 +19,7 @@ def main(args):
     print('We need a hostname or IP and username/password (ssh) of the Node you want to configure.')
     args.host = input('Host/IP of Node to get Firmware Configuration from: ')
 
-  compilers, _ = c.get_compilers()
+  compilers, _ = build.get_compilers()
 
   if args.compiler:
     if next(x for x in compilers if x['name'] == args.compiler) == None:
@@ -65,7 +65,7 @@ def main(args):
       node = {}
       node['nodeid'] = nodeconf['nodeid']
       node['apikey'] = nodeconf['apikey']
-      node['host'] = node_host
+      node['host'] = args.host
       node['user'] = node_user
       node['password'] = node_password
       cred['nodes'] = [node]

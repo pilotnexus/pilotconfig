@@ -103,8 +103,8 @@ def main():
       sys.exit(pilotsetup.main(args))
     elif (args.subparser_name == 'fw'):
       if 'fw_subparser_name' in args and args.fw_subparser_name == 'build':
-        from . import compiler
-        sys.exit(compiler.main(args))
+        from . import build
+        sys.exit(build.main(args))
       elif 'fw_subparser_name' in args and args.fw_subparser_name == 'program':
         from . import program
         sys.exit(program.main(args))

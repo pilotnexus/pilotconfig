@@ -325,8 +325,7 @@ def parsetemplate(out_path, templatedata):
         with open(os.path.join(out_path, os.path.splitext(os.path.basename(templfile))[0]), 'w') as f:
           f.write(output)          
 
-  
-def main(args):
+def main(args, config):
   config = None
 
   #if _platform == "linux2":
@@ -334,7 +333,11 @@ def main(args):
 
   if args.iec2cdir == None:
     args.iec2cdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'matiec', _platform)
- 
+  
+  if not os.path.isdir(args.iec2cdir):
+    print('Matiec IEC2C Compiler not found in {}. Maybe there is no compiler for your platform?'.format(args.iec2cdir))
+    exit(1)
+
   #if no source path parameter is given try the environment var
   if args.source == None:
     try:
@@ -346,22 +349,6 @@ def main(args):
     except:
       print("No parameter source directory given, no './basefw/stm' folder found and no PILOT_SOURCE environment variable defined, exiting")
       exit(1)
-
-  if args.configfile == None:
-    try:
-      config = os.path.join(args.workdir, '.pilotfwconfig.json') if args.workdir else './.pilotfwconfig.json'
-      if os.path.isfile(config):
-        args.configfile = config
-      else:
-        args.configfile = os.environ['PILOT_CONFIG']
-      print('Using config file ' + args.configfile)
-
-    except:
-      print("Configuration file (usually .pilotfwconfig.json) found, exiting")
-      exit(1)
-
-  tomlfile = os.path.join(args.workdir, 'Cargo.toml') if args.workdir else './Cargo.toml'
-  libcrate = os.path.isfile(tomlfile)
 
   stmmodel = {}
   modules = {}
@@ -461,7 +448,7 @@ def main(args):
   newMakefile = os.path.join(args.target, 'newMakefile')
   makefile = os.path.join(args.target, 'Makefile')
   with open(newMakefile, 'w') as new:
-    new.write('EXTRAFILES='+plcfiles+codefiles+'\n')
+    new.write('EXCLUDE_SRCS=POUS.c\n')
     with open(makefile) as old:
       new.write(old.read())
 
@@ -472,10 +459,3 @@ def main(args):
   subprocess.call(['make', '-C', args.target])
 
   return 0
-
-if (__name__ == "__main__"):
-  parser = argparse.ArgumentParser(
-    description='Compile Pilot PLC and custom code')
-  arguments.compiler_arguments(parser)
-  sys.exit(main(parser.parse_args()))
-

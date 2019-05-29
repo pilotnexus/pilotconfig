@@ -55,39 +55,6 @@ int plc_state = 1;
 /* Help to quit cleanly when init fail at a certain level */
 static int init_level = 0;
 
-void plc_loop(void)
-{
-    if (plc_state == 1)
-    {
-      cycle_current_comm = DWT_CycCounterRead();
-
-      //read inputs
-      read_plc_inputs();
-      cycle_current_read = DWT_CycCounterRead();
-
-      //run code
-      config_run__(__tick);
-      cycle_current_program = DWT_CycCounterRead();
-
-      //write outputs
-      write_plc_outputs();
-      cycle_current_write = DWT_CycCounterRead();
-    
-      //handle subscriptions
-      send_subscribed_plc_variable(find_next_updated_variable());
-      
-      //update cycle time
-      cycle_current = DWT_CycCounterRead();
-      cycle_min = (cycle_min == UINT_MAX) ? cycle_current : ((cycle_current < cycle_min) ? cycle_current : cycle_min);
-      cycle_max = (cycle_current > cycle_max) ? cycle_current : cycle_max;
-    }
-    else
-    {
-      //cycle_min = UINT_MAX;
-      //cycle_max = 0;
-    }
-}
-
 static int GetPlcVariableLength(int number)
 {
 	switch(number)
@@ -232,7 +199,7 @@ uint8_t plc_port_send(uint8_t slot, uint8_t port, uint8_t *data, uint16_t length
   //  pilot_send_data_to_module(slot, port, data[i]);
 }
 
-void init_plc_modules()
+void plc_init()
 {
   /* initialize PLC variables */
   __CURRENT_TIME.tv_nsec = 0;

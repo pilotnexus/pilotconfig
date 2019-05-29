@@ -19,6 +19,22 @@ from colorama import Fore
 from colorama import Style
 from colorama import init
 
+from enum import Enum
+class BuildStep(Enum):
+  Error = -2
+  QueueFull = -1
+  Done = 0
+  Queued = 1
+  ValidateRequest = 2
+  GenerateCpldSource = 3
+  CompileCpldSource = 4
+  CleanStmOutputDirectory = 5
+  GenerateStmSource = 6
+  CompileStmSource = 7
+  PackageFirmware = 8
+  PackageSource = 9
+  Cleanup = 10
+
 class PilotDriver():
   MODULE_COUNT = 4
   retry_count = 2
@@ -296,6 +312,9 @@ class PilotDriver():
       pass
     return None
 
+  def statestring(state):
+    return ('(' + str(state) + ') ').ljust(30)
+
   def build(self):
     try:
       spinner = itertools.cycle(['-', '/', '|', '\\'])
@@ -310,7 +329,15 @@ class PilotDriver():
           print(Fore.GREEN + 'needs compilation')
           sys.stdout.write('compiling firmware ')
           sys.stdout.flush()
+          statestr = lambda state : ('(' + str(state) + ') ').ljust(30)
+          currentstate = BuildStep(ret['status']) 
+          previousstate = currentstate
+          sys.stdout.write(statestr(currentstate))
           while True:
+            currentstate = BuildStep(ret['status'])
+            if currentstate != previousstate:
+              sys.stdout.write('\b' * 30)
+              sys.stdout.write(statestr(currentstate))
             sys.stdout.write(Fore.GREEN + next(spinner))   # write the next character
             sys.stdout.flush()                # flush stdout buffer (actual character display)
             sys.stdout.write('\b')            # erase the last written char
@@ -337,7 +364,7 @@ class PilotDriver():
 
     url, error = self.build()
 
-    if error == None:
+    if error == None and url != None and url != '':
       if not loadbin:
         url = url.replace(gzbinfile, gzsrcfile)
       sys.stdout.write('downloading firmware{}'.format(
@@ -375,9 +402,9 @@ class PilotDriver():
   def build_firmware(self):
     return self.get_firmware(True, self.tmp_dir, False)
 
-  def program_cpld(self, binfile, erase=False):
+  def program_cpld(self, binpath, binfile, erase=False):
     return self.tryrun('erasing CPLD' if erase else 'programming CPLD', 2,
-                 'sudo {}/jamplayer -a{} -g{},{},{},{} {}'.format(self.binpath, 
+                 'sudo {}/jamplayer -a{} -g{},{},{},{} {}'.format(binpath, 
                  'erase' if erase else 'program', 
                  self.sbc.target['tdi_pin']['number'], 
                  self.sbc.target['tms_pin']['number'], 
@@ -387,25 +414,25 @@ class PilotDriver():
 
                  
 
-  def program_mcu(self, binfile): #use 115200, 57600, 38400 baud rates sequentially
-    return self.tryrun('programming MCU', 4, 'sudo {}/stm32flash -w {} -b 115200 -g 0 -x {} -z {} {}'.format(self.binpath, binfile, self.sbc.target['reset_pin']['number'], self.sbc.target['boot_pin']['number'], self.sbc.target['tty']))
+  def program_mcu(self, binpath, binfile): #use 115200, 57600, 38400 baud rates sequentially
+    return self.tryrun('programming MCU', 4, 'sudo {}/stm32flash -w {} -b 115200 -g 0 -x {} -z {} {}'.format(binpath, binfile, self.sbc.target['reset_pin']['number'], self.sbc.target['boot_pin']['number'], self.sbc.target['tty']))
 
   def program(self, program_cpld=True, program_mcu=True, cpld_file=None, mcu_file=None, var_file=None):
     res = 0
+    binpath = self.binpath
     if self.sbc.remote_client:
       self.sbc.cmd_retcode('mkdir -p {}'.format(self.tmp_dir))
       if self.sbc.cmd_retcode('sudo chown -R $USER {}'.format(self.tmp_dir)) == 0:
         with scp.SCPClient(self.sbc.remote_client.get_transport()) as scp_client:
-          scp_client.put(self.binpath + '/' + self.sbc.target['architecture'] + '/jamplayer', remote_path=self.tmp_dir)
-          scp_client.put(self.binpath + '/' + self.sbc.target['architecture'] + '/stm32flash', remote_path=self.tmp_dir)
+          scp_client.put(self.binpath + '/jamplayer', remote_path=self.tmp_dir)
+          scp_client.put(self.binpath + '/stm32flash', remote_path=self.tmp_dir)
+          binpath = self.tmp_dir
           if cpld_file != None:
             scp_client.put(cpld_file, remote_path=os.path.join(self.tmp_dir,'cpld.jam'))
           if mcu_file != None:
             scp_client.put(mcu_file, remote_path=os.path.join(self.tmp_dir, 'stm.bin'))
           if var_file != None:
             scp_client.put(var_file, remote_path=os.path.join(self.tmp_dir, 'variables'))
-
-          self.binpath = self.tmp_dir        
       else:
         print('Error setting permissions to folder {}'.format(self.tmp_dir))
     else:
@@ -417,13 +444,13 @@ class PilotDriver():
         copyfile(var_file, os.path.join(self.tmp_dir, 'variables'))
 
     if program_cpld and res == 0:
-      res = self.program_cpld(os.path.join(self.tmp_dir, 'cpld.jam'), True)
+      res = self.program_cpld(binpath, os.path.join(self.tmp_dir, 'cpld.jam'), True)
 
     if program_mcu and res == 0:
-      self.program_mcu(os.path.join(self.tmp_dir, 'stm.bin'))
+      self.program_mcu(binpath, os.path.join(self.tmp_dir, 'stm.bin'))
 
     if program_cpld and res == 0:
-      res = self.program_cpld(os.path.join(self.tmp_dir, 'cpld.jam'))
+      res = self.program_cpld(binpath, os.path.join(self.tmp_dir, 'cpld.jam'))
 
     self.reload_drivers()
 
@@ -431,6 +458,7 @@ class PilotDriver():
       res = self.tryrun('setting PLC variables', 4, 'sudo cp {}/variables /proc/pilot/plc/varconf/variables'.format(self.tmp_dir))
       self.tryrun('setting PLC variables permanently', 4, 'sudo cp {}/variables /etc/pilot/variables'.format(self.tmp_dir))     
 
+    print(self.reset_pilot())
     return res
 
   def get_help(self):
