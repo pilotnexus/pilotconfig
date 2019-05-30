@@ -1,0 +1,5 @@
+typedef struct {
+{{#each devices}}
+char {{name}}[{{device.size}}];
+{{/each}}
+} plc_dev_t;

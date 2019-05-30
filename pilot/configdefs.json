@@ -3,6 +3,7 @@
 	"moduledefinitions": [
 		{
 			"fid": "o8",
+			"size": 1,
 			"inputsize": 0,
 			"outputsize": 1,
 			"init": "",
@@ -12,6 +13,7 @@
 		},
 		{
 			"fid": "i8",
+			"size": 1,
 			"inputsize": 1,
 			"outputsize": 0,
 			"init": "",
@@ -21,6 +23,7 @@
 		},
  		{
 			"fid": "ai8",
+			"size": 1,
 			"inputsize": 1,
 			"outputsize": 0,
 			"init": "",
@@ -30,6 +33,7 @@
 		},
 		{
 			"fid": "io16",
+			"size": 2,
 			"inputsize": 2,
 			"outputsize": 2,
 			"init": "",
