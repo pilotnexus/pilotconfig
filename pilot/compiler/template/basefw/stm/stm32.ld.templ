@@ -132,10 +132,10 @@ SECTIONS
         PLC located variables section
     */
      /* named section for plc memory mapped device memory */
-    .plc_dev  {{ld.plcaddress}} (NOLOAD):
+    .plc_mem_devices  {{ld.plcaddress}} (NOLOAD):
     {
       . = ALIGN(4);
-      KEEP(*(.plc_dev)) /* without 'KEEP' the garbage collector discards this section */
+      KEEP(*(.plc_mem_devices)) /* without 'KEEP' the garbage collector discards this section */
     } >plc
 
     /* Uninitialized data section (zeroed out by startup code) */

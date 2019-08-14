@@ -84,7 +84,10 @@ def main():
   parser_d_a = fw_subparser.add_parser('init', parents=[parent_parser], help="Initialize a new firmware project")
   arguments.project_arguments(parser_d_a)
 
-  parser_b_b = fw_subparser.add_parser('build', parents=[parent_parser], help="Compile additional software into firmware (IEC 61131-3 or C)")
+  parser_d_b = fw_subparser.add_parser('update', parents=[parent_parser], help="Update base firmware in project")
+  arguments.project_arguments(parser_d_b)
+
+  parser_b_b = fw_subparser.add_parser('build', parents=[parent_parser], help="Compile additional software into firmware (IEC 61131-3 or Rust)")
   arguments.compiler_arguments(parser_b_b)
 
   parser_b_c = fw_subparser.add_parser('program', parents=[parent_parser], help="Remote program Pilot Mainboard")
@@ -108,9 +111,9 @@ def main():
       elif 'fw_subparser_name' in args and args.fw_subparser_name == 'program':
         from . import program
         sys.exit(program.main(args))
-      elif 'fw_subparser_name' in args and args.fw_subparser_name == 'init':
+      elif 'fw_subparser_name' in args and (args.fw_subparser_name == 'init' or args.fw_subparser_name == 'update'):
         from . import project
-        sys.exit(project.main(args))
+        sys.exit(project.main(args, args.fw_subparser_name))
     else:
       print('No parameters specified, running setup.')
       from . import pilotsetup

@@ -1,5 +1,27 @@
+#include "stdint.h"
+
+#ifndef PLC_MEMORY_H
+#define PLC_MEMORY_H
+
+#define BITBAND_SRAM_REF  0x20000000
+#define BITBAND_SRAM_BASE 0x22000000
+#define BITBAND_SRAM(a,b) (*((char *)(BITBAND_SRAM_BASE + ((int)a-BITBAND_SRAM_REF)*32 + (b*4)))) // Convert SRAM address
+
+#define BITBAND_PERI_REF  0x40000000
+#define BITBAND_PERI_BASE 0x42000000
+#define BITBAND_PERI(a,b) (*((char *)(BITBAND_PERI_BASE + ((int)a-BITBAND_PERI_REF)*32 + (b*4)))) // Convert PERI address
+
+{{#each memmodules}}
+{{device.spec.decl.c.decl}}{{/each}}
+
 typedef struct {
-{{#each devices}}
-char {{name}}[{{device.size}}];
+{{#each memmodules}}  {{device.spec.decl.c.name}} m{{device.slot}};
 {{/each}}
 } plc_dev_t;
+
+void plc_init_dev();
+void plc_dev_to_mem();
+void plc_mem_to_dev();
+plc_dev_t * _get_plc_mem_devices_struct();
+
+#endif

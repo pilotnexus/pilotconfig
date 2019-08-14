@@ -46,8 +46,7 @@ class Sbc():
         except: 
           print(Fore.YELLOW + 'failed')
       if not connected:
-        print('Could not connect to target')
-        exit(1)
+        raise Exception('Could not connect to target') 
       for hw in self.targethardwarelist:
         try:  
           if self.cmd(hw['hardware']['runcheck']).strip() == hw['hardware']['checkresult']:
@@ -57,10 +56,9 @@ class Sbc():
         except: 
           pass
     if not self.target:
-      print('Could not detect target hardware. If you want to use a remote node use the --host parameter to specify the IP address.')
       if self.remote_client != None:
         self.remote_client.close()
-      exit(1)
+      raise Exception('Could not detect target hardware. If you want to use a remote node use the --host parameter to specify the IP address.')
     return self
 
   def __exit__(self, exc_type, exc_value, traceback):
@@ -90,9 +88,9 @@ class Sbc():
     if not self.remote_client:
       p = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE,
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                          universal_newlines=True)
+                          )
       output, err = p.communicate()
-
+      output = output.decode('utf-8', 'ignore')
       if throw_on_nonzero_retcode and p.returncode != 0:
         raise Exception('Cound not execute {} \nError: {}'.format(command, err))
 

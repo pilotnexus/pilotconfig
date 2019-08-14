@@ -29,3 +29,10 @@ macro_rules! println {
     }
   )
 }
+
+#[repr(C)]
+pub struct plc_dev_t {
+{{#each memmodules}}
+{{device.name}}: [u8; {{device.spec.size}}];
+{{/each}}
+}

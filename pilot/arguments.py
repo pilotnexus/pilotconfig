@@ -12,10 +12,14 @@ def setup_arguments(parser):
                       help='Installs driver only')
 
 def program_arguments(parser):
+  parser.add_argument('name', metavar='node', type=str, nargs='?',
+                      help='Specify named node to program')
   parser.add_argument('--binary', '-b', default=None, dest='bin',
                       help='Write binary image to the Pilot Microcontroller')
   parser.add_argument('--variables', '-v', default=None, dest='vars',
                       help='Set PLC variables')
+  parser.add_argument('--config', dest='configfile',
+                    default=None, help='module config file (.pilotfwconfig.json)')
 
 def compiler_arguments(parser):
   parser.add_argument('--config', dest='configfile',
@@ -33,4 +37,8 @@ def compiler_arguments(parser):
 
 def project_arguments(parser):
   parser.add_argument('--compiler', dest='compiler', help='Specify compiler to use. Run --show-compilers to get a list of options')
+  parser.add_argument('--config', dest='configfile',
+                      default=None, help='module config file (.pilotfwconfig.json)')
+  parser.add_argument('name', metavar='node', type=str, nargs='?',
+                      help='Specify named node to update firmware code (node is not reprogrammed, it is just used to get the modules)')
   pass

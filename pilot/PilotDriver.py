@@ -10,6 +10,8 @@ itertools = lazy_import.lazy_module("itertools")
 requests = lazy_import.lazy_module("requests")
 bugsnag = lazy_import.lazy_module("bugsnag")
 
+import traceback
+
 from .PilotServer import PilotServer
 from .Sbc import Sbc
 
@@ -78,7 +80,8 @@ class PilotDriver():
             modlist[mod][memreg] = ''.join(
                 char for char in regfile if str.isprintable(char)).strip()
             break
-          except:
+          #except:
+          except Exception as e:
             modlist[mod][memreg] = ''
             errcount = errcount + 1
             if errcount >= self.retry_count:
@@ -176,7 +179,7 @@ class PilotDriver():
         missing_commands = missing_commands + 'timeout '
 
       if missing_commands == '':
-        return self.sbc.cmd("sudo sh -c 'stty -F {0} 115200;timeout 2 cat {0} & sleep 0.5; echo 0 > /sys/class/gpio/gpio{1}/value;wait'".format(self.sbc.target['tty'], reset_pin))
+        return self.sbc.cmd("sudo sh -c 'stty -F {0} 115200;sleep 0.1;timeout 2 cat {0} & sleep 0.5; echo 0 > /sys/class/gpio/gpio{1}/value;wait'".format(self.sbc.target['tty'], reset_pin))
       else:
         return self.sbc.cmd("/sys/class/gpio/gpio{0}/value".format(reset_pin))
       #command = """mkdir -p {0}; echo "#!/usr/bin/env bash
@@ -210,6 +213,7 @@ class PilotDriver():
           print('Could not get signing keys from amescon keyserver')
           return 1
         self.sbc.cmd_retcode('sudo apt-get update')
+        self.sbc.cmd_retcode("sudo apt-get remove '^pilot-.*' -y")
         self.sbc.cmd('sudo apt-get install -y {}'.format(packagename), True)
       else:
         print('Could not detect your linux version')
@@ -308,6 +312,8 @@ class PilotDriver():
       ret, obj = self.ps.query_graphql(query)
       if ret == 200 and obj['data'] and obj['data']['buildstatus']:
         return obj['data']['buildstatus']
+      else:
+        return None
     except:
       pass
     return None
@@ -321,7 +327,7 @@ class PilotDriver():
       sys.stdout.write('checking if firmware is available...')
       sys.stdout.flush()
       ret = self.run_build()
-      if ret != None:
+      if ret is not None:
         if ret['isComplete'] and ret['status'] == 0: #already built
           print(Fore.GREEN + 'available')
           return ret['url'], None
@@ -355,6 +361,8 @@ class PilotDriver():
               return None, 'Error contacting server'
         else:
           return None, 'Error, could not get the build status'
+      else:
+        return None, 'Error, the server could not build your request. Do you have a valid module combination?'
     except:
       return None, sys.exc_info()[0]
 

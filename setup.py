@@ -25,7 +25,7 @@ def package_files(directoryarr):
     return paths
 
 
-extra_files = package_files(['bin', 'matiec', 'plugins', 'template', 'project'])
+extra_files = package_files(['bin', 'compiler', 'plugins', 'devices', 'project'])
 extra_files.append('VERSION')
 extra_files.append('configdefs.json')
 extra_files.append('targethardware.json')

@@ -1,13 +1,14 @@
 def getDevice(model, module, compiler, helpers):
-  return I8Device(model, module, compiler, helpers)
+  return O8Device(model, module, compiler, helpers)
 
 def toGPIO(this, items):
   return 'GPIO' + chr(items+65)
 
-class I8Device():
+class O8Device():
   size = 1
   ctype = 'uint8_t'
   rusttype = 'u8'
+  length = 1
   include = ['stm32f10x.h'] 
   init_source = ''
   dev_to_mem_source = ''
@@ -15,7 +16,7 @@ class I8Device():
   mem_doc = []
 
   decl = {
-    'c': { 'name': 'i8_t', 'decl': 'typedef uint8_t i8_t;' },
+    'c': { 'name': 'o8_t', 'decl': 'typedef uint8_t o8_t;' },
     'rust': { 'name': 'u8', 'decl': '' }
   }
 
@@ -33,9 +34,9 @@ class I8Device():
 
   def compile(self):
     template = self.compiler.compile("""// source for device {{device.name}}
-  {{#each device.hw.Inputs}}
-  BITBAND_SRAM({{hex ../device.absaddress}}, {{IO}}) = BITBAND_PERI({{gpio GPIO}}_BASE + 8, {{Pin}});
+  {{#each device.hw.Outputs}}
+  BITBAND_PERI({{gpio GPIO}}_BASE + 8, {{Pin}}) = BITBAND_SRAM({{hex ../device.absaddress}}, {{IO}});
 {{/each}}
     """)
-    self.dev_to_mem_source = template(self.module, self.helpers)
-    self.mem_doc = [{ "name": "i{}".format(i), "desc": "digital input {}".format(i), "byte": 0, "bit": i, "datatype": "bool", "read": True, "write": False } for i in range(8)]
+    self.mem_to_dev_source = template(self.module, self.helpers)
+    self.mem_doc = [{ "name": "o{}".format(i), "desc": "digital output {}".format(i), "byte": 0, "bit": i, "datatype": "bool", "write": True, "read": False } for i in range(8)]

@@ -1,4 +1,25 @@
 #include "plc_memory.h"
+{{#each memmodules}}{{#each device.spec.include}}#include "{{this}}"
+{{/each}}{{/each}}
 
 // Memory mapped device instance
-volatile plc_dev_t __attribute__((section(".plc_dev"))) plc_mem_devices;
+volatile plc_dev_t __attribute__((section(".plc_mem_devices"))) plc_mem_devices = { 0 };
+
+void plc_init_dev()
+{
+  {{#each memmodules}}{{{device.spec.init_source}}}{{/each}}
+}
+
+void plc_dev_to_mem()
+{
+  {{#each memmodules}}{{{device.spec.dev_to_mem_source}}}{{/each}}
+}
+
+void plc_mem_to_dev()
+{
+  {{#each memmodules}}{{{device.spec.mem_to_dev_source}}}{{/each}}
+}
+
+plc_dev_t * _get_plc_mem_devices_struct() {
+  return (plc_dev_t *) &plc_mem_devices;
+}
