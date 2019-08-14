@@ -31,23 +31,38 @@ def init(config, model):
 def program(config):
   pass
 
+def templateparser(args, dir, model, compiler, helpers):
+  for subdir, dirs, files in os.walk(dir):
+    outdir = os.path.join(args.workdir, os.path.relpath(subdir, dir))
+    for file in files:
+      infile = os.path.join(subdir, file)
+      with open(infile) as f:
+        if infile.endswith('.templ'):
+          template = compiler.compile(f.read())
+          output = template(model, helpers)
+        else:
+          output = f.read()
+        with open(os.path.join(outdir, os.path.splitext(os.path.basename(infile))[0]), 'w+') as f:
+          f.write(output)  
+
 def parsetemplate(out_path, templatedata, dir):
   #printable = set(string.printable)
   #filecontent = filter(lambda x: x in printable, templatefile.read())
   template_path = os.path.join(dir, 'template')
+  compiler = Compiler()
 
-  for _root, _dirs, files in os.walk(template_path):
-    templfiles = map(lambda x: os.path.join(template_path, x) ,filter(lambda x: x.endswith('.templ'), files))
-
-    for templfile in templfiles:
-      with open(templfile) as f:
-        compiler = Compiler()
-        template = compiler.compile(f.read())
-
-        output = template(templatedata)
-
-        with open(os.path.join(out_path, os.path.splitext(os.path.basename(templfile))[0]), 'w') as f:
-          f.write(output)          
+  for subdir, _dirs, files in os.walk(template_path):
+    outdir = os.path.join(out_path, os.path.relpath(subdir, template_path))
+    for file in files:
+      infile = os.path.join(subdir, file)
+      with open(infile) as f:
+        if infile.endswith('.templ'):
+          template = compiler.compile(f.read())
+          output = template(templatedata)
+        #else:
+        #  output = f.read()
+          with open(os.path.join(outdir, os.path.splitext(os.path.basename(infile))[0]), 'w+') as f:
+            f.write(output)  
 
 def main(args, config, model, projectdir, compilerdir):
   

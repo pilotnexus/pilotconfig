@@ -1,20 +1,14 @@
 #[no_mangle]
 extern "C" { 
-  pub fn pilot_usart_send_string ( format: *const u8) ; 
-  pub fn pilot_usart_send_char(c: u8);
-  }
-
-pub fn serial_debug(format: &str) {
-  unsafe {
-      pilot_usart_send_string(format.as_ptr());
-  }
+  pub fn _putchar(c: u8);
+  pub fn _get_plc_mem_devices_struct() -> &'static plc_dev_t;
 }
 
 macro_rules! print {
   ($f:expr) => (
     unsafe {
       for c in $f.chars() { 
-        pilot_usart_send_char(c as u8);
+        _putchar(c as u8);
       }
     }
   )
@@ -24,15 +18,14 @@ macro_rules! println {
   ($f:expr) => (
     print!($f);
     unsafe {
-      pilot_usart_send_char(10);
-      pilot_usart_send_char(13);
+      _putchar(10);
+      _putchar(13);
     }
   )
 }
 
 #[repr(C)]
 pub struct plc_dev_t {
-{{#each memmodules}}
-{{device.name}}: [u8; {{device.spec.size}}];
+{{#each memmodules}}  m{{device.slot}}: {{device.spec.decl.rust.name}},
 {{/each}}
 }
