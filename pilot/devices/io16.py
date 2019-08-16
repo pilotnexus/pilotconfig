@@ -44,8 +44,8 @@ class IO16Device():
       self.module['config'] = { 'direction': directions }
 
     init_str = "// initialization for device {{device.name}}\n"
-    dev_to_mem_str = "// source for device {{device.name}}\n  int32_t {{device.name}}_value;\n"
-    mem_to_dev_str = "// source for device {{device.name}}\n  int32_t {{device.name}}_value;\n"
+    dev_to_mem_str = "// source for device {{device.name}}\n  int16_t {{device.name}}_value;\n"
+    mem_to_dev_str = "// source for device {{device.name}}\n  int16_t {{device.name}}_value;\n"
     # iterate nibbles
     nibbles_read = [True, True, True, True]
     for nibble in self.module['config']['direction']:
@@ -57,8 +57,10 @@ class IO16Device():
         print("direction needs to be 'in' or 'out' in '{}'".format(nibble))
         exit(1)
       offset = int(nibble.split('-')[0])
+      offset_to = int(nibble.split('-')[1])
+
       nibbles_read[int(offset / 4)] = dir == 'in'
-      init_str = init_str + "  pilot_io16_{{device.index}}_set_direction(pilot_io16_block_0_to_3, " + self.direction_to_enum(dir) + ");\n"
+      init_str = init_str + "  pilot_io16_{{device.index}}_set_direction(pilot_io16_block_" + str(offset) + "_to_" + str(offset_to) + ", " + self.direction_to_enum(dir) + ");\n"
 
       for i in range(4):
         self.mem_doc.append({ "name": "{}{}".format(dir[0], offset+i), "desc": "digital {} {}".format('input' if dir == 'in' else 'output', offset+i), "byte": int((offset+i) / 8), "bit": (offset+i) % 8, "datatype": "bool", "write": True if dir == 'out' else False, "read": True if dir == 'in' else False })
@@ -68,12 +70,11 @@ class IO16Device():
     writemask = "0x" + "".join(map(lambda x: '0' if x else 'F', reversed(nibbles_read)))
     
     if readmask != '0x0000':
-      dev_to_mem_str = dev_to_mem_str + """  {{device.name}}_value = pilot_io16_{{device.index}}_get_word(pilot_io16_register_input_register_A);
-  if ({{device.name}}_value >= 0)
-    plc_mem_devices.m{{device.index}} = {{device.name}}_value & """ + readmask + ";\n"
+      dev_to_mem_str = dev_to_mem_str + """  pilot_io16_{{device.index}}_read_register(pilot_io16_register_input_register_A, 2, (uint8_t *)&{{device.name}}_value);
+    plc_mem_devices.m{{device.slot}} |= {{device.name}}_value & """ + readmask + ";\n"
 
     if writemask != '0x0000':
-      mem_to_dev_str = mem_to_dev_str + "  {{device.name}}_value = {{device.name}}_value & " + writemask + ";\n" + "pilot_io16_{{device.index}}_write_register(pilot_io16_register_output_register_A, 2, (uint8_t *)&{{device.name}}_value);"
+      mem_to_dev_str = mem_to_dev_str + "  {{device.name}}_value = plc_mem_devices.m{{device.slot}} & " + writemask + ";\n  " + "pilot_io16_{{device.index}}_write_register(pilot_io16_register_output_register_A, 2, (uint8_t *)&{{device.name}}_value);"
 
     # generate source 
     init_template = self.compiler.compile(init_str)

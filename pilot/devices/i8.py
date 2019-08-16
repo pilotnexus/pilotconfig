@@ -34,7 +34,7 @@ class I8Device():
   def compile(self):
     template = self.compiler.compile("""// source for device {{device.name}}
   {{#each device.hw.Inputs}}
-  BITBAND_SRAM({{hex ../device.absaddress}}, {{IO}}) = BITBAND_PERI({{gpio GPIO}}_BASE + 8, {{Pin}});
+  BITBAND_SRAM(&plc_mem_devices.m{{../device.slot}}, {{IO}}) = BITBAND_PERI({{gpio GPIO}}_BASE + 8, {{Pin}});
 {{/each}}
     """)
     self.dev_to_mem_source = template(self.module, self.helpers)

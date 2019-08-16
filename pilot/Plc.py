@@ -47,7 +47,6 @@ class Plc():
       if dev['spec'] == None:
         print("Warning: No device found for module firmware {}, this module firmware does not have PLC support".format(mod['fid']))
       else:
-        dev['absaddress'] = self.targetdevice['ramaddress'] + self.config['plc_memory_size']
         self.config['plc_memory_size'] = self.config['plc_memory_size'] + dev['spec'].size
         dev['spec'].compile()
 
