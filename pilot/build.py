@@ -18,14 +18,23 @@ def templateparser(args, dir, model, compiler, helpers):
     outdir = os.path.join(args.workdir, os.path.relpath(subdir, dir))
     for file in files:
       infile = os.path.join(subdir, file)
+      outfilename = os.path.basename(infile)
       with open(infile) as f:
         if infile.endswith('.templ'):
           template = compiler.compile(f.read())
           output = template(model, helpers)
+          outfilename = outfilename[:-6] #.replace('.templ', '')
         else:
           output = f.read()
-        with open(os.path.join(outdir, os.path.splitext(os.path.basename(infile))[0]), 'w+') as f:
+        with open(os.path.join(outdir, outfilename), 'w+') as f:
           f.write(output)  
+
+def pluginparser(args, model, compiler, helpers):
+  plugindir = os.path.join(args.workdir, 'plugins')
+  if os.path.isdir(plugindir):
+    dirs = os.listdir(plugindir)
+    for dir in dirs:
+      templateparser(args, os.path.join(plugindir, dir),  model, compiler, helpers )
 
 def _hex(this, items):
     return hex(items)
@@ -66,6 +75,7 @@ def main(args):
     plc = Plc(args, model, config, parser, helpers)
     templateparser(args, os.path.join(os.path.abspath(os.path.dirname(__file__)), 'compiler', 'template'), plc.model, parser, helpers)
 
+    pluginparser(args, plc.model, parser, helpers)
     # language specific implementation for processing module I/O and custom logic
     spec = importlib.util.spec_from_file_location("module.name", os.path.join(compilerdirectory, 'compiler.py'))
     compiler = importlib.util.module_from_spec(spec)

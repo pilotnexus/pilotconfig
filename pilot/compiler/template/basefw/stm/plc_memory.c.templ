@@ -1,4 +1,6 @@
 #include "plc_memory.h"
+#include "string.h"
+
 {{#each memmodules}}{{#each device.spec.include}}#include "{{this}}"
 {{/each}}{{/each}}
 
@@ -7,6 +9,7 @@ volatile plc_dev_t __attribute__((section(".plc_mem_devices"))) plc_mem_devices 
 
 void plc_init_dev()
 {
+  memset((void *)&plc_mem_devices, 0, sizeof(plc_mem_devices));
   {{#each memmodules}}{{{device.spec.init_source}}}{{/each}}
 }
 

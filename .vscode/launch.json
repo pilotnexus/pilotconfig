@@ -10,7 +10,7 @@
             "request": "launch",
             "module": "pilot.pilot",
             "args": [
-                "fw", "build", "--workdir", "~/work/rust/stm32test"
+                "fw", "build", "--workdir", "~/work/rust/stm32test", "pidev"
                 //"fw", "update", "--workdir", "~/work/rust/stm32test_", "devpi"
                 //"fw", "program", "--workdir", "~/work/rust/stm32test"
                 //"fw", "init", "--host", "192.168.1.60", "--workdir", "/tmp/test"

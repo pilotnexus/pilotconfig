@@ -46,7 +46,9 @@ class Sbc():
         except: 
           print(Fore.YELLOW + 'failed')
       if not connected:
-        raise Exception('Could not connect to target') 
+        print('Could not connect to target') 
+        exit(1)
+        #raise Exception('Could not connect to target') 
       for hw in self.targethardwarelist:
         try:  
           if self.cmd(hw['hardware']['runcheck']).strip() == hw['hardware']['checkresult']:
@@ -58,7 +60,9 @@ class Sbc():
     if not self.target:
       if self.remote_client != None:
         self.remote_client.close()
-      raise Exception('Could not detect target hardware. If you want to use a remote node use the --host parameter to specify the IP address.')
+      print('Could not detect target hardware. If you want to use a remote node use the --host parameter to specify the IP address.')
+      #raise Exception('Could not detect target hardware. If you want to use a remote node use the --host parameter to specify the IP address.')
+      exit(1)
     return self
 
   def __exit__(self, exc_type, exc_value, traceback):

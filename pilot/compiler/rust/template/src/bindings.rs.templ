@@ -24,6 +24,9 @@ macro_rules! println {
   )
 }
 
+{{#each memmodules}}
+{{device.spec.decl.rust.decl}}{{/each}}
+
 #[repr(C)]
 pub struct plc_dev_t {
 {{#each memmodules}}  m{{device.slot}}: {{device.spec.decl.rust.name}},
