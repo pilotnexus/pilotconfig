@@ -18,6 +18,9 @@ get_mac = lazy_import.lazy_callable("uuid.getnode")
 Enum = lazy_import.lazy_callable("enum.Enum")
 #from enum import Enum
 
+from gql import gql, Client
+from gql.transport.requests import RequestsHTTPTransport
+
 from colorama import Fore
 from colorama import Style
 from colorama import init
@@ -33,11 +36,13 @@ class RegisterNodeStatus(Enum):
   MAC_ALREADY_USED = 4
 
 class PilotServer():
-  pilot_server = 'https://api.pilotnexus.io/v1'
-  api_path = '/query'
+  pilot_server = 'https://gql-testing.pilotnexus.io/v1/graphql'
+  oauth_token_url = "https://amescon.eu.auth0.com/oauth/token"
+  oauth_device_code_url = "https://amescon.eu.auth0.com/oauth/device/code"
+
   pilot_home_dir = os.path.expanduser('~/.pilot')
   authfile = os.path.join(pilot_home_dir, 'auth.json')
-  pilotcfg = {'username': '', 'token': ''}
+
   pilot_dir = '/etc/pilot'
   nodeconfname = '/pilotnode.yml'
 
@@ -46,10 +51,12 @@ class PilotServer():
 
   keys = None
   tokenset = None
+  decoded = None
 
   terminal = True
-
   sbc = None
+
+  open_transport = None
 
   def __init__(self, sbc: Sbc):
     self.sbc = sbc
@@ -59,6 +66,7 @@ class PilotServer():
     try:
       with open(self.authfile) as authfile:
         self.tokenset = json.load(authfile)
+        self.decode()
     except:
       pass
     
@@ -68,50 +76,26 @@ class PilotServer():
     except:
       pass
 
-  def query_graphql(self, s, apikey=None):
-    try:
-      headers = {}
+  #def loadnodeconf(self):
+  #  nodeconffile = self.pilot_dir + self.nodeconfname
+  #  nodeconf = None
+  #  try:
+  #    nodeconf = yaml.load(self.sbc.getFileContent(nodeconffile), Loader=yaml.FullLoader)
+  #  except:
+  #    nodeconf = None
+  #  return nodeconf
 
-      if apikey:
-        headers = {
-            'Authorization': 'Node-ApiKey ' + apikey
-        }
-
-      res = requests.post(self.pilot_server + self.api_path,
-                          headers=headers,
-                          json={"query": s})
-
-      return res.status_code, res.json()
-    except:
-      type, value, traceback = sys.exc_info()
-      if type is requests.exceptions.ConnectionError:
-        print('Cannot connect to server!')
-        bugsnag.notify(Exception('Connection Error - cannot connect to server ' +
-                                self.pilot_server))
-      else:
-        bugsnag.notify(Exception(type))
-      return 0, value
-
-  def loadnodeconf(self):
-    nodeconffile = self.pilot_dir + self.nodeconfname
-    nodeconf = None
-    try:
-      nodeconf = yaml.load(self.sbc.getFileContent(nodeconffile), Loader=yaml.FullLoader)
-    except:
-      nodeconf = None
-    return nodeconf
-
-  def savenodeconf(self, nodeconf):
-    nodeconffile = self.pilot_dir + self.nodeconfname
-    nodeconfcontent = yaml.dump(nodeconf, default_flow_style=False)
-    return self.sbc.setFileContent(nodeconffile, nodeconfcontent)
+  #def savenodeconf(self, nodeconf):
+  #  nodeconffile = self.pilot_dir + self.nodeconfname
+  #  nodeconfcontent = yaml.dump(nodeconf, default_flow_style=False)
+  #  return self.sbc.setFileContent(nodeconffile, nodeconfcontent)
 
   def authenticate(self):
     payload = {'client_id': self.client_id, 'scope':'openid email offline_access', 'prompt': 'consent' }
     headers = { 'content-type': "application/x-www-form-urlencoded" }
 
     try:
-      response = requests.post("https://amescon.eu.auth0.com/oauth/device/code", data=payload, headers=headers).json()
+      response = requests.post(self.oauth_device_code_url, data=payload, headers=headers).json()
     
       print("\n\n")
       print("Open {}{}{} and enter".format(Style.BRIGHT, response['verification_uri'], Style.NORMAL))
@@ -122,13 +106,13 @@ class PilotServer():
       print("note: this code expires in {} minutes".format(response['expires_in'] / 60))
 
       payload2 = { 'grant_type': "urn:ietf:params:oauth:grant-type:device_code", 
-                   'client_id': payload['client_id'], 'device_code': response['device_code'] }
+                   'client_id': self.client_id, 'device_code': response['device_code'] }
 
       done = None
       interval = int(response['interval'])
 
       while (not done):
-        response2 = requests.post("https://amescon.eu.auth0.com/oauth/token", data=payload2, headers=headers).json()
+        response2 = requests.post(self.oauth_token_url, data=payload2, headers=headers).json()
         if 'error' in response2:
           if response2['error'] == 'authorization_pending':
             time.sleep(interval)
@@ -144,35 +128,94 @@ class PilotServer():
         elif 'access_token' in response2:
           print(Fore.GREEN + "\n\nYour device was sucessfully authorized.")
           self.tokenset = response2
+          self.decode()
           with open(self.authfile, 'w') as authfile:
             json.dump(self.tokenset, authfile)
 
     except Exception as e: 
-      print('Error authenticating the device {}'.format(e))
+      print(Fore.RED + 'Error authenticating the device {}'.format(e))
       print(e)
+
+  def refresh(self):
+    try:
+      if self.tokenset != None and 'refresh_token' in self.tokenset
+        headers = { 'content-type': "application/x-www-form-urlencoded" }
+        payload = { 'grant_type': "refresh_token", 
+                    'client_id': self.client_id,
+                    'refresh_token': self.tokenset['refresh_token']
+                  }
+        response = requests.post(self.oauth_token_url, data=payload, headers=headers).json()
+
+        console.log(response)
+        if 'access_token' in response:
+          response['refresh_token'] = self.tokenset['refresh_token']
+          self.tokenset = response
+          self.decode()
+          return True
+    except:
+      print(Fore.RED + 'Error getting refresh token {}'.format(e))
+      print(e)
+
+    return False
   
   def decode(self):
+    self.decoded = None
     if self.tokenset != None and self.keys != None:
       try:
         pubkey = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(self.keys))
-        return  jwt.decode(self.tokenset['access_token'], pubkey, algorithms='RS256', audience = self.audience) #, audience=self.config.CLIENT_ID) 
+        self.decode = jwt.decode(self.tokenset['access_token'], pubkey, algorithms='RS256', audience = self.audience) #, audience=self.config.CLIENT_ID) 
       except Exception as e:
-        print('error decoding')
+        print(Fore.RED + 'error decoding token')
         print(e)
-    return None
+  
+  def get_token():
+    if self.decoded == None:
+      self.authenticate()
+    
+    if self.decoded == None:
+      print(Fore.RED + 'Error, cannot authenticate')
+      exit(1)
+    
+    expires = int(decoded['exp'] - time.time())
+    
+    #print('expires in {} seconds ({} hours)'.format(expires, str(datetime.timedelta(seconds=expires))))
+
+    if expires < 60: # expires in less than 60 seconds
+      if not self.refresh():
+        print(Fore.RED + 'Cannot refresh authentication token, please authenticate again')
+        self.authenticate()
+          if self.decoded == None:
+            print(Fore.RED + 'Error, cannot authenticate')
+            exit(1)
+
+    # here we should have a valid access token
+    return 'Bearer {}'.format(self.tokenset['access_token'])
+
+  def query(self, query, isPublic=False):
+    try:
+      transport = None
+      if isPublic:
+        transport = RequestsHTTPTransport( url=self.pilot_server, use_json=True )
+      else:
+        transport = RequestsHTTPTransport( url=self.pilot_server, use_json=True, headers={ 'Authorization': self.get_token() } )
+
+      client = Client( transport=open_transport, fetch_schema_from_transport=True )
+      return True, client.execute(query)
+    except:
+      print(Fore.RED + 'Could not query server')
+    
+    return False, {}
 
 
   def registernode(self, fwconfig):
-    if self.tokenset == None:
-      self.authenticate()
-    
-    decoded = self.decode()
-    if decoded != None:
-      expires = int(decoded['exp'] - time.time())
-      print('expires in {} seconds ({} hours)'.format(expires, str(datetime.timedelta(seconds=expires))))
 
-    
-    
-    
-
+    query = gql("""
+    {
+      pilot_node
+      {
+        name
+      }
+    }
+    """)
+    print(prot_client.execute(query))
 

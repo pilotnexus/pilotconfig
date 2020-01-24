@@ -33,7 +33,7 @@ extra_files.append('targethardware.json')
 setup(
   name='pilot-config',
   version=version,
-  description='Pilot Command Line Utility',
+  description='Pilot Automation Command Line Utility',
   long_description=long_description,
   author='Daniel Amesberger',
   author_email='daniel.amesberger@amescon.com',
@@ -62,7 +62,10 @@ setup(
                     'bugsnag',
                     'colorama',
                     'paramiko',
-                    'scp'
+                    'scp',
+                    'pyjwt',
+                    'qrcode_terminal',
+                    'gql'
                     ],
   python_requires='>=3',
   entry_points={  # Optional

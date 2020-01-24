@@ -97,43 +97,43 @@ class PilotDriver():
       self.eeproms, success = self.get_modules()
       query = u"""
       {{
-        fid(fids:[{}]) {{
-        fid
-        name
+        pilot_fid(where: {{fid: {{_in: [{}]}} }}) {{
+          fid
+          name
         }}
-        hid(hids: [{}]) {{
-          module
+        pilot_hid(where: {{hid: {{_in: [{}]}} }}) {
           hid
           title
           subtitle
           description
-        fids {{
-          fid
-          name
-          isdefault
-        }}
+          hid2fids {{
+            fid {{
+              fid
+              name
+            }}
+            isdefault
+          }}
         }}
       }}
       """.format(
           ','.join(['"{}"'.format(value['fid'])
                     for key, value in self.eeproms.items() if value['fid'] != '']),
-          ','.join(['{{number: {}, hid: "{}"}}'.format(key, value['hid'])
-                    for key, value in self.eeproms.items()])
+          ','.join(['"{}"'.format(value['hid'])
+                    for key, value in self.eeproms.items() if value['hid'] != ''])
       )
-      ret, obj = self.ps.query_graphql(query)
+      ret, obj = self.ps.query(query)
 
-      if ret == 200:
-        fidmap = {v['fid'].strip(): v['name'] for v in obj['data']['fid']}
+      if ret == True:
+        fidmap = {v['fid'].strip(): v['name'] for v in obj['pilot_fid']}
 
-        if obj['data']['hid']:
-          for module in obj['data']['hid']:
-            fid = self.eeproms[int(module['module'])]['fid']
-            module['currentfid_nicename'] = fidmap[fid] if fid in fidmap and fid != '' else self.emptystr
-            module['currentfid'] = fid
-        else:
-          print('error reading modules, please try again')
-          return None, success
-        return sorted(obj['data']['hid'], key=lambda x: x['module']) if ret == 200 and obj['data']['hid'] != None else None, success
+        for hid in obj['pilot_hid']:
+          for module in self.eeproms:
+            if module['hid'] == hid['hid']:
+              fid = module['fid']
+              hid['currentfid_nicename'] = fidmap[fid] if fid in fidmap and fid != '' else self.emptystr
+              hid['currentfid'] = fid
+        #return sorted(obj['hid'], key=lambda x: x['module']) if ret == 200 and obj['data']['hid'] != None else None, success
+        return None, success
       else:
         return None, success
     except:
