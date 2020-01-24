@@ -1,9 +1,9 @@
 import argparse
 
 # class imports
-from .PilotDriver import PilotDriver
-from .PilotServer import PilotServer
-from .Sbc import Sbc
+from .pilotdriver import PilotDriver
+from .pilotserver import PilotServer
+from .sbc import Sbc
 
 from colorama import Fore
 from colorama import Style

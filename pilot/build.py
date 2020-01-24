@@ -8,7 +8,7 @@ from distutils.dir_util import copy_tree
 from shutil import copyfile, move
 import yaml
 import importlib.util
-from .Plc import Plc
+from .plc import Plc
 from . import helper
 import lazy_import
 Compiler = lazy_import.lazy_callable("pybars.Compiler")

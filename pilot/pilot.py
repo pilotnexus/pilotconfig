@@ -100,6 +100,7 @@ def main():
   elif args.modules:
     from . import moduleinfo
     sys.exit(moduleinfo.main(args))
+
   elif ('subparser_name' in args):
     if (args.subparser_name == 'setup'):
       from . import pilotsetup

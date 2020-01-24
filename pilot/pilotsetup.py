@@ -26,9 +26,9 @@ from colorama import Style
 from colorama import init
 
 # class imports
-from .PilotDriver import PilotDriver
-from .PilotServer import PilotServer
-from .Sbc import Sbc
+from .pilotdriver import PilotDriver
+from .pilotserver import PilotServer
+from .sbc import Sbc
 
 ############### INIT ###################
 
@@ -49,6 +49,7 @@ def main(args):
 
   logging.getLogger("paramiko").setLevel(logging.ERROR)
   
+  trywritedefaultfirmware = False
   result = 0
   try:
     with Sbc(args) as sbc:
@@ -64,7 +65,7 @@ def main(args):
       #  print('This does not seem to be a Raspberry Pi. Please use the --host option to remote connect to it.')
       #  return 2
 
-      if os.getuid() != 0 and not args.host:
+      if not args.host and os.getuid() != 0:
         print('Please run with sudo permissions.')
         return 2
 
@@ -81,7 +82,10 @@ def main(args):
         ret = pilotdriver.check_driver()
         if ret != 0:
           if ret == 1:
-            print('Reboot required')
+            if args.host:
+              print('Reboot of remote machine required')
+            else:
+              print('Reboot required')
             return 0
           return 1
       
@@ -90,7 +94,6 @@ def main(args):
           return 0
 
         modules, success = pilotdriver.load_pilot_defs()
-        trywritedefaultfirmware = False
         if not success:
           print(Fore.YELLOW, 'Could not read module data. Maybe the firmware is outdated, trying to write base firmware image.')
           trywritedefaultfirmware = True

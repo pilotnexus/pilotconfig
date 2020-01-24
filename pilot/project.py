@@ -2,9 +2,9 @@ import os
 import distutils
 import json
 import yaml
-from .Sbc import Sbc
-from .PilotDriver import PilotDriver
-from .PilotServer import PilotServer
+from .sbc import Sbc
+from .pilotdriver import PilotDriver
+from .pilotserver import PilotServer
 from . import helper 
 from colorama import Fore
 

@@ -12,8 +12,8 @@ bugsnag = lazy_import.lazy_module("bugsnag")
 
 import traceback
 
-from .PilotServer import PilotServer
-from .Sbc import Sbc
+from .pilotserver import PilotServer
+from .sbc import Sbc
 
 from shutil import copyfile
 

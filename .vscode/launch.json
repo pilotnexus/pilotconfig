@@ -10,12 +10,12 @@
             "request": "launch",
             "module": "pilot.pilot",
             "args": [
-                "fw", "build", "--workdir", "~/work/rust/stm32test", "pidev"
+                //"fw", "build", "--workdir", "~/work/rust/stm32test", "pidev"
                 //"fw", "update", "--workdir", "~/work/rust/stm32test_", "devpi"
                 //"fw", "program", "--workdir", "~/work/rust/stm32test"
                 //"fw", "init", "--host", "192.168.1.60", "--workdir", "/tmp/test"
                 //"setup", "--host", "192.168.101.76", "--user", "mendel", "--password", "mendel"
-                //"setup", "--host", "192.168.101.69"
+                "setup", "--host", "192.168.1.26", "--node"
                 //"fw", "program", "--workdir", "~/work/phoinix/newfw2/", "--host", "192.168.1.38"
                 //"fw", "init", "--workdir", "/tmp/tempfw", "--host", "192.168.101.63"
             ],
@@ -33,7 +33,7 @@
             "type": "python",
             "request": "attach",
             "port": 5678,
-            "host": "192.168.101.69"
+            "host": "192.168.101.69",
             "pathMappings": [
                 {
                     "localRoot": "${workspaceFolder}",  // You may also manually specify the directory containing your source code.

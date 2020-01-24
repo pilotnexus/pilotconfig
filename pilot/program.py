@@ -3,9 +3,9 @@ import json
 import argparse
 from . import arguments
 from . import helper 
-from .Sbc import Sbc
-from .PilotServer import PilotServer
-from .PilotDriver import PilotDriver
+from .sbc import Sbc
+from .pilotserver import PilotServer
+from .pilotdriver import PilotDriver
 
 
 def main(args):
