@@ -12,10 +12,13 @@ bugsnag = lazy_import.lazy_module("bugsnag")
 
 import traceback
 
+from pathlib import Path
+
 from .pilotserver import PilotServer
 from .sbc import Sbc
 
 from shutil import copyfile
+from gql import gql 
 
 from colorama import Fore
 from colorama import Style
@@ -95,51 +98,48 @@ class PilotDriver():
   def load_pilot_defs(self):
     try:
       self.eeproms, success = self.get_modules()
-      query = u"""
-      {{
-        pilot_fid(where: {{fid: {{_in: [{}]}} }}) {{
+      variables = {
+        'fids': ['{}'.format(value['fid'])
+                    for key, value in self.eeproms.items() if value['fid'] != ''],
+        'hids': ['{}'.format(value['hid'])
+                    for key, value in self.eeproms.items() if value['hid'] != '']
+      }
+
+      obj = self.ps.query(gql("""
+      query get_fids($fids: [bpchar!], $hids: [bpchar!]) {
+        pilot_fid(where: {fid: {_in: $fids} }) {
           fid
           name
-        }}
-        pilot_hid(where: {{hid: {{_in: [{}]}} }}) {
+        }
+        pilot_hid(where: {hid: {_in: $hids} }) {
           hid
           title
           subtitle
           description
-          hid2fids {{
-            fid {{
+          hid2fids {
+            fid {
               fid
               name
-            }}
+            }
             isdefault
-          }}
-        }}
-      }}
-      """.format(
-          ','.join(['"{}"'.format(value['fid'])
-                    for key, value in self.eeproms.items() if value['fid'] != '']),
-          ','.join(['"{}"'.format(value['hid'])
-                    for key, value in self.eeproms.items() if value['hid'] != ''])
-      )
-      ret, obj = self.ps.query(query)
+          }
+        }
+      }
+      """), variables)
 
-      if ret == True:
-        fidmap = {v['fid'].strip(): v['name'] for v in obj['pilot_fid']}
+      module = [{
+                  'module': key,
+                  'currentfid': value['fid'],
+                  'hid': value['hid'],
+                  'currentfid_nicename': next(iter(y['name']  for y in filter(lambda x: x['fid'].strip() == value['fid'].strip(), obj['pilot_fid'])), value['fid'].strip()),
+                  'fids': next(iter([{'isdefault': x['isdefault'], 'fid': x['fid']['fid'], 'name': x['fid']['name']} for x in y['hid2fids']] for y in filter(lambda x: x['hid'].strip() == value['hid'].strip(), obj['pilot_hid'])), []),
+                } for key, value in self.eeproms.items()]
 
-        for hid in obj['pilot_hid']:
-          for module in self.eeproms:
-            if module['hid'] == hid['hid']:
-              fid = module['fid']
-              hid['currentfid_nicename'] = fidmap[fid] if fid in fidmap and fid != '' else self.emptystr
-              hid['currentfid'] = fid
-        #return sorted(obj['hid'], key=lambda x: x['module']) if ret == 200 and obj['data']['hid'] != None else None, success
-        return None, success
-      else:
-        return None, success
+      return module, success
     except:
       e = sys.exc_info()[0]
       print(e)
-    return None, success
+    return {}, success
 
   def driver_loaded(self):
     return self.sbc.cmd_retcode('test -e {}'.format(self.pilot_driver_root)) == 0
@@ -279,43 +279,43 @@ class PilotDriver():
     return ok
 
   def run_build(self):
+    modules = [{"number": key, "fid": value['fid']} for key, value in self.eeproms.items() if value['fid'] != '']
+    variables = {"request": { "modules": modules}}
     try:
-      query = u"""
-      mutation {{
-        build(modules: [{}]) {{
-          id
-          isComplete
-          status
-          url
-        }}
-      }}
-      """.format(','.join(['{{number: {}, uid: "{}", fid: "{}"}}'.format(key, value['uid'], value['fid']) for key, value in self.eeproms.items() if value['fid'] != '']))
-      ret, obj = self.ps.query_graphql(query)
-      if ret == 200 and obj['data'] and obj['data']['build']:
-        return obj['data']['build']
-    except:
-      pass
+      obj = self.ps.query(gql(u"""
+      mutation createBuild($request: jsonb) {
+        insert_pilot_build(objects: { request: $request}) {
+          returning {
+            id
+          }
+        }
+      }
+      """),variables)   # .format(','.join(['{{number: {}, uid: "{}", fid: "{}"}}'.format(key, value['uid'], value['fid']) for key, value in self.eeproms.items() if value['fid'] != '']))
+
+      if 'insert_pilot_build' in obj and 'returning' in obj['insert_pilot_build'] and len(obj['insert_pilot_build']['returning']) > 0:
+        return obj['insert_pilot_build']['returning'][0]['id']
+    except Exception as e:
+      print(e)
     return None
 
   def build_status(self, id):
     try:
-      query = u"""
-      {{
-        buildstatus(id: {}) {{
-          id
-          isComplete
-          status
-          url
-        }}
-      }}
-      """.format(id)
-      ret, obj = self.ps.query_graphql(query)
-      if ret == 200 and obj['data'] and obj['data']['buildstatus']:
-        return obj['data']['buildstatus']
+      query = gql(u"""
+        query getbuild($id: Int) {
+          pilot_build(where: {id: {_eq: $id}}) {
+            iscomplete
+            status
+            relativeurl
+          }
+        }
+      """)
+      obj = self.ps.query(query, {"id": id})
+      if 'pilot_build' in obj and len(obj['pilot_build']) > 0:
+        return obj['pilot_build'][0]
       else:
         return None
-    except:
-      pass
+    except Exception as e:
+      print(e)
     return None
 
   def statestring(state):
@@ -326,12 +326,16 @@ class PilotDriver():
       spinner = itertools.cycle(['-', '/', '|', '\\'])
       sys.stdout.write('checking if firmware is available...')
       sys.stdout.flush()
-      ret = self.run_build()
-      if ret is not None:
-        if ret['isComplete'] and ret['status'] == 0: #already built
+      id = self.run_build()
+      # wait a second to process
+      time.sleep(1)
+      if id is not None:
+        ret = self.build_status(id)
+
+        if ret != None and ret['iscomplete'] and ret['status'] == 0: #already built
           print(Fore.GREEN + 'available')
-          return ret['url'], None
-        elif ret['id'] > 0:
+          return ret['relativeurl'], None
+        else:
           print(Fore.GREEN + 'needs compilation')
           sys.stdout.write('compiling firmware ')
           sys.stdout.flush()
@@ -347,10 +351,10 @@ class PilotDriver():
             sys.stdout.write(Fore.GREEN + next(spinner))   # write the next character
             sys.stdout.flush()                # flush stdout buffer (actual character display)
             sys.stdout.write('\b')            # erase the last written char
-            time.sleep(1)
-            ret = self.build_status(ret['id'])
+            time.sleep(5)
+            ret = self.build_status(id)
             if ret != None:
-              if ret['isComplete']:
+              if ret['iscomplete']:
                 if ret['status'] == 0:
                   sys.stdout.write('\b')
                   print('...' + Fore.GREEN + 'done')
@@ -359,8 +363,6 @@ class PilotDriver():
                   return None, 'Could not create firmware'
             else:
               return None, 'Error contacting server'
-        else:
-          return None, 'Error, could not get the build status'
       else:
         return None, 'Error, the server could not build your request. Do you have a valid module combination?'
     except:
@@ -370,9 +372,10 @@ class PilotDriver():
     gzbinfile = 'firmware.tar.gz'
     gzsrcfile = 'firmware_src.tar.gz'
 
-    url, error = self.build()
+    relativeurl, error = self.build()
 
-    if error == None and url != None and url != '':
+    if error == None and relativeurl != None and relativeurl != '':
+      url = "https://firmware.pilotnexus.io/" + relativeurl
       if not loadbin:
         url = url.replace(gzbinfile, gzsrcfile)
       sys.stdout.write('downloading firmware{}'.format(
@@ -411,19 +414,17 @@ class PilotDriver():
     return self.get_firmware(True, self.tmp_dir, False)
 
   def program_cpld(self, binpath, binfile, erase=False):
-    return self.tryrun('erasing CPLD' if erase else 'programming CPLD', 2,
-                 'sudo {}/jamplayer -a{} -g{},{},{},{} {}'.format(binpath, 
-                 'erase' if erase else 'program', 
-                 self.sbc.target['tdi_pin']['number'], 
-                 self.sbc.target['tms_pin']['number'], 
-                 self.sbc.target['tdo_pin']['number'], 
-                 self.sbc.target['tck_pin']['number'], 
-                 binfile))
-
-                 
+    cmd = 'sudo chmod +x {0}/jamplayer; sudo {0}/jamplayer -a{1} -g{2},{3},{4},{5} {6}'.format(binpath, 
+          'erase' if erase else 'program', 
+          self.sbc.target['tdi_pin']['number'], 
+          self.sbc.target['tms_pin']['number'], 
+          self.sbc.target['tdo_pin']['number'], 
+          self.sbc.target['tck_pin']['number'], 
+          binfile)
+    return self.tryrun('erasing CPLD' if erase else 'programming CPLD', 3, cmd)
 
   def program_mcu(self, binpath, binfile): #use 115200, 57600, 38400 baud rates sequentially
-    return self.tryrun('programming MCU', 4, 'sudo {}/stm32flash -w {} -b 115200 -g 0 -x {} -z {} {}'.format(binpath, binfile, self.sbc.target['reset_pin']['number'], self.sbc.target['boot_pin']['number'], self.sbc.target['tty']))
+    return self.tryrun('programming MCU', 4, 'sudo chmod +x {0}/stm32flash; sudo {0}/stm32flash -w {1} -b 115200 -g 0 -x {2} -z {3} {4}'.format(binpath, binfile, self.sbc.target['reset_pin']['number'], self.sbc.target['boot_pin']['number'], self.sbc.target['tty']))
 
   def program(self, program_cpld=True, program_mcu=True, cpld_file=None, mcu_file=None, var_file=None):
     res = 0
@@ -433,6 +434,7 @@ class PilotDriver():
       if self.sbc.cmd_retcode('sudo chown -R $USER {}'.format(self.tmp_dir)) == 0:
         with scp.SCPClient(self.sbc.remote_client.get_transport()) as scp_client:
           scp_client.put(self.binpath + '/jamplayer', remote_path=self.tmp_dir)
+          scp_client.put(self.binpath + '/stm32flash', remote_path=self.tmp_dir)
           scp_client.put(self.binpath + '/stm32flash', remote_path=self.tmp_dir)
           binpath = self.tmp_dir
           if cpld_file != None:
@@ -452,13 +454,13 @@ class PilotDriver():
         copyfile(var_file, os.path.join(self.tmp_dir, 'variables'))
 
     if program_cpld and res == 0:
-      res = self.program_cpld(binpath, os.path.join(self.tmp_dir, 'cpld.jam'), True)
+      res = self.program_cpld(binpath, Path(self.tmp_dir).joinpath('cpld.jam').as_posix(), True)
 
     if program_mcu and res == 0:
-      self.program_mcu(binpath, os.path.join(self.tmp_dir, 'stm.bin'))
+      self.program_mcu(binpath, Path(self.tmp_dir).joinpath('stm.bin').as_posix())
 
     if program_cpld and res == 0:
-      res = self.program_cpld(binpath, os.path.join(self.tmp_dir, 'cpld.jam'))
+      res = self.program_cpld(binpath, Path(self.tmp_dir).joinpath('cpld.jam').as_posix())
 
     self.reload_drivers()
 

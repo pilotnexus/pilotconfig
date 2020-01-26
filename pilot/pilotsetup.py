@@ -148,9 +148,20 @@ def main(args):
           print('No modules found, is the driver loaded?')
         fwconfig = {}
         fwconfig['modules'] = modules
-        if not args.noninteractive and not trywritedefaultfirmware and result == 0:
-          pilotserver.registernode(fwconfig)
-      elif not args.noninteractive:
+
+        #check if node is registered
+        if not trywritedefaultfirmware:
+          node = pilotserver.getnode()
+          if node != None:
+            print("Your node is registered as '{}'".format(node['name']))
+            pilotserver.updatenode(fwconfig)
+
+          elif not args.noninteractive and not trywritedefaultfirmware and nodeid == None:
+            ch = input("Node is not registered, do you want to register it with the Pilot Cloud? [y/n]: ")
+            if (ch == 'y' or ch == 'yes'):
+              pilotserver.registernode(fwconfig)
+
+      elif not args.noninteractive: # --node param
         pilotserver.registernode(None)
   except Exception as error:
     print(error)

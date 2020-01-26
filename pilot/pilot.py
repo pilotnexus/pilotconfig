@@ -65,7 +65,8 @@ def main():
                          help='Get version')
   argparser.add_argument('-m', '--modules', dest='modules', action='store_true',
                          help='Get info on modules')
-
+  argparser.add_argument('-a', '--api', dest='api', action='store_true',
+                         help='Run Api Endpoint instead of CLI')
   # Subparsers
   subparsers = argparser.add_subparsers(dest='subparser_name')
 
