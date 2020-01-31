@@ -6,6 +6,7 @@ from .sbc import Sbc
 from .pilotdriver import PilotDriver
 from .pilotserver import PilotServer
 from . import helper 
+import importlib.util
 from colorama import Fore
 
 def download_base_firmware(args):
@@ -90,31 +91,41 @@ def init(args):
         module['slot'] = mod['module']
         module['fid'] = mod['currentfid']
         module['fid_nicename'] = mod['currentfid_nicename']
-        module['hid'] = mod['hid']
-        module['title'] = mod['title']
-        module['subtitle'] = mod['subtitle']
-        module['description'] = mod['description']
+        if 'hid' in mod and 'title' in mod and 'subtitle' in mod and 'description' in mod:
+          module['hid'] = mod['hid']
+          module['title'] = mod['title']
+          module['subtitle'] = mod['subtitle']
+          module['description'] = mod['description']
 
         # TODO: move to plugin
-        if module['fid'] == 'io16':
-          module['config'] = { 'direction': {'0_3': 'in', '4_7': 'in', '8_11': 'in', '12_15': 'in'} }
+        devicefile = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'devices', module['fid'] + '.py') 
+        if os.path.isfile(devicefile):
+          spec = importlib.util.spec_from_file_location("module.name", devicefile)
+          device = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(device)
+          module['config'] = device.default_config()
+        #if module['fid'] == 'io16':
+        #  module['config'] = { 'direction': {'0_3': 'in', '4_7': 'in', '8_11': 'in', '12_15': 'in'} }
         config['modules'].append(module)
+
+    if args.host:
+      config['hosts'] = [{'name': 'default', 'host': args.host}]
 
     with open(os.path.join(args.workdir, '.pilotfwconfig.json') if args.workdir else './.pilotfwconfig.json', 'w') as configfile:
       json.dump(config, configfile)
 
     # copy default project files
-    targetpath = os.path.join(args.workdir, 'src') if args.workdir else './src'
-    distutils.dir_util.copy_tree(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'project', 'default'), targetpath)
+    targetpath = os.path.join(args.workdir) if args.workdir else './'
+    distutils.dir_util.copy_tree(os.path.join(os.path.dirname(os.path.realpath(__file__)),'project', args.compiler.lower(), 'default'), targetpath)
   
-    print("Project generated:")
-    print( """{}
-    ├─ src/
-    │  ├─ program.st    /* IEC 61131-3 code */
-    │  └─ *.c, *.h      /* custom C code compiled into firmware image */
-    ├─ .pilotfwconfig.json      /* firmware configuration (memory mapping, module configuration, etc.) */
-    ├─ credentials.json /* authentication credentials (sensitive data) */
-    └─ basefw/          /* firmware base code folder */""".format(args.workdir if args.workdir else os.getcwd()))
+    print("Project generated")
+    #print( """{}
+    #├─ src/
+    #│  ├─ program.st    /* IEC 61131-3 code */
+    #│  └─ *.c, *.h      /* custom C code compiled into firmware image */
+    #├─ .pilotfwconfig.json      /* firmware configuration (memory mapping, module configuration, etc.) */
+    #├─ credentials.json /* authentication credentials (sensitive data) */
+    #└─ basefw/          /* firmware base code folder */""".format(args.workdir if args.workdir else os.getcwd()))
   except Exception as error:
     print(error)
     exit(1) 

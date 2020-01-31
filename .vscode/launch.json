@@ -13,9 +13,10 @@
                 //"fw", "build", "--workdir", "~/work/rust/stm32test", "pidev"
                 //"fw", "update", "--workdir", "~/work/rust/stm32test_", "devpi"
                 //"fw", "program", "--workdir", "~/work/rust/stm32test"
-                //"fw", "init", "--host", "192.168.1.60", "--workdir", "/tmp/test"
+                "fw", "init", "--host", "192.168.101.69", "--workdir", "~/work/rust/test"
+                //"fw", "build", "--host", "192.168.101.69", "--workdir", "~/work/rust/test"
                 //"setup", "--host", "192.168.101.76", "--user", "mendel", "--password", "mendel"
-                "setup", "--host", "192.168.1.26"
+                //"setup", "--host", "192.168.1.26"
                 //"fw", "program", "--workdir", "~/work/phoinix/newfw2/", "--host", "192.168.1.38"
                 //"fw", "init", "--workdir", "/tmp/tempfw", "--host", "192.168.101.63"
             ],

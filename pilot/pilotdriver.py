@@ -82,7 +82,14 @@ class PilotDriver():
                 'cat {}/module{}/eeprom/{}'.format(self.pilot_driver_root, mod, memreg), True)
             modlist[mod][memreg] = ''.join(
                 char for char in regfile if str.isprintable(char)).strip()
-            break
+            
+            if memreg == 'fid': # additional plausibility checks
+              if len(list(filter(lambda x: ord(x) > 255, regfile))) > 0:
+                modlist[mod][memreg] = ''
+              else:
+                break
+            else:
+              break
           #except:
           except Exception as e:
             modlist[mod][memreg] = ''

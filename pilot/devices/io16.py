@@ -4,6 +4,9 @@ def getDevice(model, module, compiler, helpers):
 def toGPIO(this, items):
   return 'GPIO' + chr(items+65)
 
+def default_config():
+  return { 'direction':  {'0-3': 'in', '4-7': 'in', '8-11': 'in', '12-15': 'in'} }
+
 class IO16Device():
   size = 2
   include = ['io16.h'] 
@@ -32,6 +35,7 @@ class IO16Device():
     self.helpers = {'gpio': toGPIO, **helpers}
     self.compiler = compiler
     self.model = model
+  
 
   def direction_to_enum(self, dir):
     if dir == 'out':

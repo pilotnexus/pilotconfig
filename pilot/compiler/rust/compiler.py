@@ -53,6 +53,7 @@ def parsetemplate(out_path, templatedata, dir):
 
   for subdir, _dirs, files in os.walk(template_path):
     outdir = os.path.join(out_path, os.path.relpath(subdir, template_path))
+
     for file in files:
       infile = os.path.join(subdir, file)
       with open(infile) as f:

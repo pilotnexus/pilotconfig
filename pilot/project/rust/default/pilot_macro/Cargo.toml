@@ -1,0 +1,16 @@
+[package]
+name = "pilot_macro"
+version = "0.1.0"
+authors = ["Daniel Amesberger <daniel.amesberger@amescon.com>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "0.15.39"
+quote = "0.6"
+proc-macro2 = { version = "0.4.24", default-features = false }
+lazy_static = "1.2.0"
+itertools = "*"
+regex = "1"

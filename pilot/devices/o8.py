@@ -4,6 +4,9 @@ def getDevice(model, module, compiler, helpers):
 def toGPIO(this, items):
   return 'GPIO' + chr(items+65)
 
+def default_config():
+  return {}
+
 class O8Device():
   size = 1
   ctype = 'uint8_t'
