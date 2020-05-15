@@ -48,8 +48,8 @@ class IO16Device():
       self.module['config'] = { 'direction': directions }
 
     init_str = "// initialization for device {{device.name}}\n"
-    dev_to_mem_str = "// source for device {{device.name}}\n  int16_t {{device.name}}_value = 0;\n"
-    mem_to_dev_str = "// source for device {{device.name}}\n  int16_t {{device.name}}_value = 0;\n"
+    dev_to_mem_str = "// source for device {{device.name}}\n  int16_t {{device.name}}_value;\n"
+    mem_to_dev_str = "// source for device {{device.name}}\n  int16_t {{device.name}}_value;\n"
     # iterate nibbles
     nibbles_read = [True, True, True, True]
     for nibble in self.module['config']['direction']:
@@ -75,7 +75,7 @@ class IO16Device():
     
     if readmask != '0x0000':
       dev_to_mem_str = dev_to_mem_str + """  pilot_io16_{{device.index}}_read_register(pilot_io16_register_input_register_A, 2, (uint8_t *)&{{device.name}}_value);
-  plc_mem_devices.m{{device.slot}} &= """ + writemask + ";\n  plc_mem_devices.m{{device.slot}} |= {{device.name}}_value & """ + readmask + ";\n"
+  plc_mem_devices.m{{device.slot}} |= {{device.name}}_value & """ + readmask + ";\n"
 
     if writemask != '0x0000':
       mem_to_dev_str = mem_to_dev_str + "  {{device.name}}_value = plc_mem_devices.m{{device.slot}} & " + writemask + ";\n  " + "pilot_io16_{{device.index}}_write_register(pilot_io16_register_output_register_A, 2, (uint8_t *)&{{device.name}}_value);"

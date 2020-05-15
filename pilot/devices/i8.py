@@ -39,6 +39,6 @@ class I8Device():
   {{#each device.hw.Inputs}}
   BITBAND_SRAM(&plc_mem_devices.m{{../device.slot}}, {{IO}}) = BITBAND_PERI({{gpio GPIO}}_BASE + 8, {{Pin}});
 {{/each}}
-    """)
+  """)
     self.dev_to_mem_source = template(self.module, self.helpers)
     self.mem_doc = [{ "name": "i{}".format(i), "desc": "digital input {}".format(i), "byte": 0, "bit": i, "datatype": "bool", "read": True, "write": False } for i in range(8)]

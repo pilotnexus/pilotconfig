@@ -24,9 +24,9 @@ class Plc():
     mem_modules = self.init_memory_mapped_modules()
 
   def init_memory_mapped_modules(self):
-    memmodules = self.config["modules"]
+    allmodules = self.config["modules"]
     if 'plugins' in self.config:
-      memmodules = memmodules + self.config['plugins']
+      allmodules = allmodules + self.config['plugins']
 
     # Initialize device data 
     # create device properties
@@ -34,12 +34,16 @@ class Plc():
     # name - name to be used in code gen
     # absaddress - absolute RAM address in MCU
     # NOTE that 'Slot' in spec is zero based whereas 'slot' is 1 based.
+    memmodules = []
     self.config['plc_memory_size'] = 0
-    for mod in memmodules:
+    for mod in allmodules:
       dev = {}
       mod['device'] = dev
-      dev['hw'] = next(iter(next(iter([v for k, v in self.model.items() if isinstance(v, list) and 
+      try: # will fail if module is not supported by PLC firmware
+        dev['hw'] = next(iter(next(iter([v for k, v in self.model.items() if isinstance(v, list) and 
                [x for x in v if k != 'Modules' and 'Slot' in x and 'slot' in mod and x['Slot']+1 == int(mod['slot'])]]))))
+      except:
+        dev['hw'] = {}
       dev['name'] = "m{}_{}".format(mod['slot'], mod['fid']) # TODO naming for plugins
       dev['slot'] = mod['slot']
       dev['index'] = int(mod['slot']) - 1
@@ -49,6 +53,7 @@ class Plc():
       else:
         self.config['plc_memory_size'] = self.config['plc_memory_size'] + dev['spec'].size
         dev['spec'].compile()
+        memmodules.append(mod)
 
     # memory size in kb
     plcmemsize = int((self.config['plc_memory_size']  + 1024 - 1) / 1024)

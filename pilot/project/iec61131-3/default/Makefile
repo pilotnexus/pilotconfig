@@ -9,7 +9,7 @@ fw-local:
 	docker run -v ${PWD}/fwbase:/out pilotbuild:1.0.0 build --module1 o8 --module3 fpga --plcenable
 
 fw:
-	pilot setup --host 192.168.101.78 --source ./fwbase
+	pilot setup --node 192.168.101.78 --source ./fwbase
 
 plc:
 	pilot build --source ./fwbase/stm/ --config .pilotfwconfig.json test.st motors.c motors.h

@@ -65,7 +65,8 @@ setup(
                     'scp',
                     'pyjwt',
                     'qrcode_terminal',
-                    'gql'
+                    'gql',
+                    'graphql-core<3.0.0'
                     ],
   python_requires='>=3',
   entry_points={  # Optional

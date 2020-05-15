@@ -13,12 +13,14 @@
                 //"fw", "build", "--workdir", "~/work/rust/stm32test", "pidev"
                 //"fw", "update", "--workdir", "~/work/rust/stm32test_", "devpi"
                 //"fw", "program", "--workdir", "~/work/rust/stm32test"
-                "fw", "init", "--host", "192.168.101.69", "--workdir", "~/work/rust/test"
-                //"fw", "build", "--host", "192.168.101.69", "--workdir", "~/work/rust/test"
-                //"setup", "--host", "192.168.101.76", "--user", "mendel", "--password", "mendel"
-                //"setup", "--host", "192.168.1.26"
-                //"fw", "program", "--workdir", "~/work/phoinix/newfw2/", "--host", "192.168.1.38"
-                //"fw", "init", "--workdir", "/tmp/tempfw", "--host", "192.168.101.63"
+                //"fw", "init", "--node", "192.168.101.69", "--workdir", "~/work/rust/test4"
+                //"fw", "init", "--workdir", "~/work/rust/test3"
+                "fw", "build", "--workdir", "~/work/rust/test5"
+                //"fw", "build", "--node", "192.168.101.69", "--workdir", "~/work/rust/test"
+                //"setup", "--node", "192.168.101.76", "--user", "mendel", "--password", "mendel"
+                //"setup", "--node", "192.168.101.68", "--user", "pi", "--password", "raspberry"
+                //"fw", "program", "--workdir", "~/work/phoinix/newfw2/", "--node", "192.168.1.38"
+                //"fw", "init", "--workdir", "/tmp/tempfw", "--node", "192.168.101.63"
             ],
             "console": "integratedTerminal"
         },
@@ -34,7 +36,7 @@
             "type": "python",
             "request": "attach",
             "port": 5678,
-            "host": "192.168.101.69",
+            "node": "192.168.101.69",
             "pathMappings": [
                 {
                     "localRoot": "${workspaceFolder}",  // You may also manually specify the directory containing your source code.

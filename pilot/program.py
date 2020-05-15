@@ -9,7 +9,7 @@ from .pilotdriver import PilotDriver
 
 
 def main(args):
-  args = helper.get_host_from_config(args)
+  args = helper.get_node_from_config(args)
   program(args)
 
 def program(args):
@@ -24,11 +24,11 @@ def program(args):
       pilotdriver = PilotDriver(pilotserver, sbc)
 
       if not pilotdriver.driver_loaded():
-        print('Drivers are not loaded. Please use --host if you connect remotely or install pilot drivers first by running sudo pilot setup.')
+        print('Drivers are not loaded. Please use --node to specify node IP if you connect remotely or install pilot drivers first by running sudo pilot setup.')
         return 2
 
-      #if not pilotdriver.check_raspberry() and not args.host:
-      #  print('This does not seem to be a Raspberry Pi. Please use the --host option to remote connect to it.')
+      #if not pilotdriver.check_raspberry() and not args.node:
+      #  print('This does not seem to be a Raspberry Pi. Please use the --node option to remote connect to it.')
       #  return 2
 
       vars = None
@@ -53,7 +53,7 @@ def program(args):
       else:
         print('You need to specify an image file to write with the --binary attribute.')
         exit(1)
-      pilotdriver.program(program_cpld=False, program_mcu=True, mcu_file=args.bin, var_file=vars)
+      pilotdriver.program(program_cpld=False, program_mcu=True, mcu_file=args.bin, var_file=vars, bootmsg=args.wait_bootmsg)
   except Exception as error:
     print(error)
 

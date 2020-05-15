@@ -2,8 +2,8 @@ def setup_arguments(parser):
   # parser.add_argument('--terminal', '-t', action='store_true', help='forces the terminal version instead of GUI')
   parser.add_argument('--source', '-c', default=None, dest='source',
                       help='Download Sourcecode only')
-  parser.add_argument('--node', '-n', dest='node', action='store_true',
-                      help='Configure node only')
+  parser.add_argument('--regnode', '-n', dest='regnode', action='store_true',
+                      help='Register node')
   parser.add_argument('--reset', '-r', default=None, action='store_const', const='reset', dest='reset',
                       help='Resets the Pilot Mainboard')
   parser.add_argument('--yes', '-y', default=None, action='store_const', const='noninteractive', dest='noninteractive',

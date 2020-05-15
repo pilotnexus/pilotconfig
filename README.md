@@ -14,5 +14,5 @@ Upgrade:
 Run:
 `sudo pilot setup`
 to setup your system or
-`pilot setup --host [IP] --user [user] --password [password]`
+`pilot setup --node [IP] --user [user] --password [password]`
 to setup the firmware remotely

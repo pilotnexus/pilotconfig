@@ -4,24 +4,24 @@ import yaml
 import hashlib
 BLOCKSIZE = 65536
 
-def get_host_from_config(args):
-  #check if a .pilotfwconfig.json file exists and extract hosts
+def get_node_from_config(args):
+  #check if a .pilotfwconfig.json file exists and extract nodes
   config = get_config(args)
-  if 'hosts' in config and isinstance(config['hosts'], list):
-    for host in config['hosts']:
-      if 'name' in args and args.name != None and 'name' in host:
-        if args.name == host['name']:
+  if 'nodes' in config and isinstance(config['nodes'], list):
+    for node in config['nodes']:
+      if 'name' in args and args.name != None and 'name' in node:
+        if args.name == node['name']:
           print("Using specified node name '{}'".format(args.name))
         else:
           continue
-      hostsfromconfig = True
-      args.host = host['host']
-      if 'user' in host:
-        args.user = host['user']
-      if 'user' in host:
-        args.password = host['password']
-      if 'hardware' in host:
-        args.hardware = host['hardware']
+      nodesfromconfig = True
+      args.node = node['node']
+      if 'user' in node:
+        args.user = node['user']
+      if 'user' in node:
+        args.password = node['password']
+      if 'hardware' in node:
+        args.hardware = node['hardware']
   
   return args
 

@@ -51,22 +51,24 @@ def main():
                          help='set target hardware')
   parent_parser.add_argument('--server', '-s', default=None, dest='server',
                   help='Alternative URL for the pilot server API to contact')
-  parent_parser.add_argument('--host', '-o', default=None, dest='host',
-                         help='Hostname to remote configure')
+  parent_parser.add_argument('--node', '-o', default=None, dest='node',
+                         help='Node to configure remotely')
   parent_parser.add_argument('--user', '-u', default='', dest='user',
                          help='Remote SSH User')
   parent_parser.add_argument('--password', '-p', default='', dest='password',
                          help='Remote SSH Password')
   parent_parser.add_argument('--workdir', '-d', default=os.getcwd(), dest='workdir',
-                         help='set working directory')
+                         help='Set working directory')
+  parent_parser.add_argument('--wait_bootmsg', '-w', dest='wait_bootmsg', action='store_true',
+                         help='Wait for Pilot boot message and display after reboot')
 
   argparser = argparse.ArgumentParser(description='Pilot Command-Line Interface')
   argparser.add_argument('-v', '--version', dest='version',action='store_true',
                          help='Get version')
-  argparser.add_argument('-m', '--modules', dest='modules', action='store_true',
-                         help='Get info on modules')
-  argparser.add_argument('-a', '--api', dest='api', action='store_true',
-                         help='Run Api Endpoint instead of CLI')
+  # argparser.add_argument('-m', '--modules', dest='modules', action='store_true',
+  #                        help='Get info on modules')
+  #argparser.add_argument('-a', '--api', dest='api', action='store_true',
+  #                       help='Run Api Endpoint instead of CLI')
   # Subparsers
   subparsers = argparser.add_subparsers(dest='subparser_name')
 
@@ -98,10 +100,9 @@ def main():
 
   if args.version:
     print(VERSION)
-  elif args.modules:
-    from . import moduleinfo
-    sys.exit(moduleinfo.main(args))
-
+  #elif args.modules:
+  #  from . import moduleinfo
+  #  sys.exit(moduleinfo.main(args))
   elif ('subparser_name' in args):
     if (args.subparser_name == 'setup'):
       from . import pilotsetup

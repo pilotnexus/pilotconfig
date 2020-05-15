@@ -132,7 +132,7 @@ class PilotDriver():
           }
         }
       }
-      """), variables)
+      """), variables, True)
 
       module = [{
                   'module': key,
@@ -172,39 +172,33 @@ class PilotDriver():
     print(Fore.RED + 'failed')
     return 1
 
-  def reset_pilot(self):
+  def reset_pilot(self, wait_bootmsg=False):
     try:
+      if not wait_bootmsg:
+        print('Resetting MCU...', end='')
+      sys.stdout.flush()
       reset_pin = self.sbc.target['reset_pin']['number']
       self.sbc.cmd('sudo sh -c \'[ ! -f /sys/class/gpio/gpio{0}/value ] && echo "{0}" > /sys/class/gpio/export\''.format(reset_pin))
       self.sbc.cmd('sudo sh -c \'echo "out" > /sys/class/gpio/gpio{}/direction\''.format(reset_pin))
       self.sbc.cmd('sudo sh -c \'echo -n "1" > /sys/class/gpio/gpio{}/value\''.format(reset_pin))
       time.sleep(2)
-      missing_commands = ''
-      if self.sbc.cmd_retcode('command -v stty') != 0:
-        missing_commands = missing_commands + 'stty '
-      if self.sbc.cmd_retcode('command -v timeout') != 0:
-        missing_commands = missing_commands + 'timeout '
+      if wait_bootmsg:
+        missing_commands = ''
+        if self.sbc.cmd_retcode('command -v stty') != 0:
+          missing_commands = missing_commands + 'stty '
+        if self.sbc.cmd_retcode('command -v timeout') != 0:
+          missing_commands = missing_commands + 'timeout '
 
-      if missing_commands == '':
-        return self.sbc.cmd("sudo sh -c 'stty -F {0} 115200;sleep 0.1;timeout 2 cat {0} & sleep 0.5; echo 0 > /sys/class/gpio/gpio{1}/value;wait'".format(self.sbc.target['tty'], reset_pin))
+        if missing_commands == '':
+          return self.sbc.cmd("sudo sh -c 'stty -F {0} 921600;sleep 0.1;timeout 2 cat {0} & sleep 0.5; echo 0 > /sys/class/gpio/gpio{1}/value;wait'".format(self.sbc.target['tty'], reset_pin))
+        else:
+          return self.sbc.cmd("/sys/class/gpio/gpio{0}/value".format(reset_pin))
       else:
-        return self.sbc.cmd("/sys/class/gpio/gpio{0}/value".format(reset_pin))
-      #command = """mkdir -p {0}; echo "#!/usr/bin/env bash
-      #  sudo sh -c \'[ ! -f /sys/class/gpio/gpio{2}/value ] && echo "{2}" > /sys/class/gpio/export\'
-      #  sudo sh -c \'echo "out" > /sys/class/gpio/gpio{2}/direction\'
-      #  sudo sh -c \'echo -n "1" > /sys/class/gpio/gpio{2}/value\'
-      #  sleep 2
-      #  sudo sh -c \'stty -F {1} 115200\'
-      #  sudo sh -c \'timeout 2 cat {1} > {0}/fwboot.txt &\' 
-      #  sudo sh -c \'echo 0 > /sys/class/gpio/gpio{2}/value\'
-      #  wait
-      #  sleep 1
-      #  sudo chown $USER:$USER {0}/fwboot.txt" > {0}/reset.sh; chmod +x {0}/reset.sh """.format(self.tmp_dir, self.sbc.target['tty'], reset_pin)
-      #self.sbc.cmd(command)
-      #self.sbc.cmd("sudo sh -c '{}/reset.sh'".format(self.tmp_dir))
-      #return self.sbc.getFileContent('{}/fwboot.txt'.format(self.tmp_dir)); 
+        self.sbc.cmd('sudo sh -c \'echo -n "0" > /sys/class/gpio/gpio{}/value\''.format(reset_pin))
+        print(Fore.GREEN + 'done')
     except:
-      pass
+      print(Fore.RED + 'failed')
+    return ''
 
   def install_driver(self):
     try:
@@ -226,8 +220,8 @@ class PilotDriver():
         print('Could not detect your linux version')
         return 1
     except Exception as e:
-      bugsnag.notify(e, user={
-          "username": self.ps.pilotcfg['username']})
+      # bugsnag.notify(e, user={
+      #     "username": self.ps.pilotcfg['username']})
       return 1
     return 0
 
@@ -297,7 +291,7 @@ class PilotDriver():
           }
         }
       }
-      """),variables)   # .format(','.join(['{{number: {}, uid: "{}", fid: "{}"}}'.format(key, value['uid'], value['fid']) for key, value in self.eeproms.items() if value['fid'] != '']))
+      """),variables, True)   # .format(','.join(['{{number: {}, uid: "{}", fid: "{}"}}'.format(key, value['uid'], value['fid']) for key, value in self.eeproms.items() if value['fid'] != '']))
 
       if 'insert_pilot_build' in obj and 'returning' in obj['insert_pilot_build'] and len(obj['insert_pilot_build']['returning']) > 0:
         return obj['insert_pilot_build']['returning'][0]['id']
@@ -316,7 +310,7 @@ class PilotDriver():
           }
         }
       """)
-      obj = self.ps.query(query, {"id": id})
+      obj = self.ps.query(query, {"id": id}, True)
       if 'pilot_build' in obj and len(obj['pilot_build']) > 0:
         return obj['pilot_build'][0]
       else:
@@ -365,7 +359,7 @@ class PilotDriver():
                 if ret['status'] == 0:
                   sys.stdout.write('\b')
                   print('...' + Fore.GREEN + 'done')
-                  return ret['url'], None
+                  return ret['relativeurl'], None
                 else:
                   return None, 'Could not create firmware'
             else:
@@ -429,11 +423,17 @@ class PilotDriver():
           self.sbc.target['tck_pin']['number'], 
           binfile)
     return self.tryrun('erasing CPLD' if erase else 'programming CPLD', 3, cmd)
+  
+  def serial_used(self):
+    res = self.sbc.cmd('sudo fuser -v {0}'.format(self.sbc.target['tty']))
+    if len(res.strip()) > 0:
+      return self.tryrun('killing process accessing tty', 2, 'sudo fuser -k {0}; sleep 1'.format(self.sbc.target['tty']))
+    return True
 
   def program_mcu(self, binpath, binfile): #use 115200, 57600, 38400 baud rates sequentially
     return self.tryrun('programming MCU', 4, 'sudo chmod +x {0}/stm32flash; sudo {0}/stm32flash -w {1} -b 115200 -g 0 -x {2} -z {3} {4}'.format(binpath, binfile, self.sbc.target['reset_pin']['number'], self.sbc.target['boot_pin']['number'], self.sbc.target['tty']))
 
-  def program(self, program_cpld=True, program_mcu=True, cpld_file=None, mcu_file=None, var_file=None):
+  def program(self, program_cpld=True, program_mcu=True, cpld_file=None, mcu_file=None, var_file=None, bootmsg=False):
     res = 0
     binpath = self.binpath
     if self.sbc.remote_client:
@@ -464,18 +464,19 @@ class PilotDriver():
       res = self.program_cpld(binpath, Path(self.tmp_dir).joinpath('cpld.jam').as_posix(), True)
 
     if program_mcu and res == 0:
-      self.program_mcu(binpath, Path(self.tmp_dir).joinpath('stm.bin').as_posix())
+      self.serial_used()
+      res = self.program_mcu(binpath, Path(self.tmp_dir).joinpath('stm.bin').as_posix())
 
     if program_cpld and res == 0:
       res = self.program_cpld(binpath, Path(self.tmp_dir).joinpath('cpld.jam').as_posix())
 
+    print(self.reset_pilot(bootmsg))
     self.reload_drivers()
 
-    if var_file != None:
+    if res == 0 and var_file != None:
       res = self.tryrun('setting PLC variables', 4, 'sudo cp {}/variables /proc/pilot/plc/varconf/variables'.format(self.tmp_dir))
-      self.tryrun('setting PLC variables permanently', 4, 'sudo cp {}/variables /etc/pilot/variables'.format(self.tmp_dir))     
+      self.tryrun('setting PLC variables permanently', 4, 'sudo mkdir -p /etc/pilot; sudo cp {}/variables /etc/pilot/variables'.format(self.tmp_dir))     
 
-    print(self.reset_pilot())
     return res
 
   def get_help(self):

@@ -35,9 +35,9 @@ def init(args):
   node_user = args.user
   node_password = args.password
 
-  if not args.host:
-    print('We need a hostname or IP and username/password (ssh) of the Node you want to configure.')
-    args.host = input('Host/IP of Node to get Firmware Configuration from: ')
+  if not args.node:
+    print('We need a nodename or IP and username/password (ssh) of the Node you want to configure.')
+    args.node = input('node/IP of Node to get Firmware Configuration from: ')
 
   compilers, _ = helper.get_compilers()
 
@@ -70,7 +70,7 @@ def init(args):
     #  node = {}
     #  node['nodeid'] = nodeconf['nodeid']
     #  node['apikey'] = nodeconf['apikey']
-    #  node['host'] = args.host
+    #  node['node'] = args.node
     #  node['user'] = node_user
     #  node['password'] = node_password
     #  cred['nodes'] = [node]
@@ -108,8 +108,8 @@ def init(args):
         #  module['config'] = { 'direction': {'0_3': 'in', '4_7': 'in', '8_11': 'in', '12_15': 'in'} }
         config['modules'].append(module)
 
-    if args.host:
-      config['hosts'] = [{'name': 'default', 'host': args.host}]
+    if args.node:
+      config['nodes'] = [{'name': 'default', 'node': args.node}]
 
     with open(os.path.join(args.workdir, '.pilotfwconfig.json') if args.workdir else './.pilotfwconfig.json', 'w') as configfile:
       json.dump(config, configfile)
@@ -127,12 +127,13 @@ def init(args):
     #├─ credentials.json /* authentication credentials (sensitive data) */
     #└─ basefw/          /* firmware base code folder */""".format(args.workdir if args.workdir else os.getcwd()))
   except Exception as error:
+    print('An error occured creathing the project')
     print(error)
     exit(1) 
 
 def update(args):
   print("Updating base firmware")
-  args = helper.get_host_from_config(args)
+  args = helper.get_node_from_config(args)
   toplevel = helper.find_fw_toplevel(args)
   if toplevel != '':
     args.workdir = toplevel

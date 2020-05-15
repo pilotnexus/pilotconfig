@@ -61,31 +61,34 @@ def main(args):
       #PilotDriver
       pilotdriver = PilotDriver(pilotserver, sbc)
 
-      #if not pilotdriver.check_raspberry() and not args.host:
-      #  print('This does not seem to be a Raspberry Pi. Please use the --host option to remote connect to it.')
+      #if not pilotdriver.check_raspberry() and not args.node:
+      #  print('This does not seem to be a Raspberry Pi. Please use the --node option to remote connect to it.')
       #  return 2
 
-      if not args.host and os.getuid() != 0:
+      if not args.node and os.getuid() != 0:
         print('Please run with sudo permissions.')
         return 2
 
-      if not args.node:
+      if not args.regnode:
         if sbc.need_sudo_pw():
           print('we need sudo on remote machine (without interactive authentication)')
           return 2
 
         if (args.reset):
           print('Resetting Pilot Mainboard')
-          print(pilotdriver.reset_pilot())
+          print(pilotdriver.reset_pilot(args.wait_bootmsg))
           return 0
 
         ret = pilotdriver.check_driver()
         if ret != 0:
           if ret == 1:
-            if args.host:
-              print('Reboot of remote machine required')
+            if args.node:
+              print('Reboot of remote Node required')
             else:
               print('Reboot required')
+            ch = input("Do you want to reboot now? [y/n]: ")
+            if (ch == 'y' or ch == 'yes'):
+              sbc.reboot()
             return 0
           return 1
       
@@ -118,11 +121,10 @@ def main(args):
               if (args.noninteractive or trywritedefaultfirmware):
                 ch = 'y'
               else:
-                ch = input('Do you want to build and program the Pilot Nexus Firmware? (y/n{}): '.format('/'+modsel if len(modules_with_multiple_fids) > 0 else '')).strip().lower()
+                ch = input('Do you want to build and program the Pilot Nexus Firmware? [y/n{}]: '.format('/'+modsel if len(modules_with_multiple_fids) > 0 else '')).strip().lower()
               if ch == 'y' or ch == 'yes':
                 if pilotdriver.build_firmware() == 0:
-                  result = pilotdriver.program()
-                  pilotdriver.reset_pilot()
+                  result = pilotdriver.program(bootmsg=args.wait_bootmsg)
                 else:
                   print('Could not write firmware')
                 
@@ -151,17 +153,23 @@ def main(args):
 
         #check if node is registered
         if not trywritedefaultfirmware:
-          node = pilotserver.getnode()
-          if node != None:
-            print("Your node is registered as '{}'".format(node['name']))
-            pilotserver.updatenode(fwconfig)
-
-          elif not args.noninteractive and not trywritedefaultfirmware and nodeid == None:
-            ch = input("Node is not registered, do you want to register it with the Pilot Cloud? [y/n]: ")
+          if pilotserver.decoded == None:
+            ch = input("You not logged in to access the Pilot Nexus Cloud, do you want to authenticate? [y/n]: ") 
             if (ch == 'y' or ch == 'yes'):
-              pilotserver.registernode(fwconfig)
+              pilotserver.authenticate()
 
-      elif not args.noninteractive: # --node param
+          if pilotserver.decoded != None:
+            node = pilotserver.getnode()
+            if node != None:
+              print("Your node is registered as '{}'".format(node['name']))
+              pilotserver.updatenode(fwconfig)
+
+            elif not args.noninteractive and not trywritedefaultfirmware and nodeid == None:
+              ch = input("Node is not registered, do you want to register it with the Pilot Cloud? [y/n]: ")
+              if (ch == 'y' or ch == 'yes'):
+                pilotserver.registernode(fwconfig)
+
+      elif not args.noninteractive: # --regnode param
         pilotserver.registernode(None)
   except Exception as error:
     print(error)
@@ -170,8 +178,8 @@ def main(args):
   if result == 0:
     if trywritedefaultfirmware:
       print("Default firmware written. Run the setup tool again to program firmware for your modules")
-    else:
-      print ("To get help on how to use the modules, run 'pilot --module'")
+    #else:
+    #  print ("To get help on how to use the modules, run 'pilot --module'")
   return result
 
 if __name__ == '__main__':

@@ -39,11 +39,12 @@ class PilotServer():
   oauth_token_url = "https://amescon.eu.auth0.com/oauth/token"
   oauth_device_code_url = "https://amescon.eu.auth0.com/oauth/device/code"
 
-  pilot_home_dir = os.path.expanduser('~/.pilot')
-  authfile = os.path.join(pilot_home_dir, 'auth.json')
+  pilot_dir = '/etc/pilot/'
+  nodeconfname = 'pilotnode.yml'
+  authfilename = 'auth.json'
 
-  pilot_dir = '/etc/pilot'
-  nodeconfname = '/pilotnode.yml'
+  pilot_home_dir = os.path.expanduser('~/.pilot')
+  authfile = os.path.join(pilot_home_dir, authfilename)
 
   client_id = 'hG0Kh6oMY6A2dMUjyjAbTQPTcd8syl58'
   audience = [ "https://api.pilotnexus.io", "https://amescon.eu.auth0.com/userinfo" ]
@@ -53,7 +54,7 @@ class PilotServer():
   decoded = None
 
   terminal = True
-  sbc: Sbc = None
+  sbc = None
 
   def __init__(self, sbc: Sbc):
     self.sbc = sbc
@@ -66,12 +67,6 @@ class PilotServer():
     except:
       pass
 
-    try:
-      with open(self.authfile) as authfile:
-        self.tokenset = json.load(authfile)
-        self.decode()
-    except:
-      pass
     
 
   def loadnodeconf(self):
@@ -82,13 +77,31 @@ class PilotServer():
     except:
       nodeconf = None
     return nodeconf
+  
+  def loadnodeauth(self):
+    nodeauthfile = self.pilot_dir + self.authfilename
+    nodeauth = None
+    try:
+      nodeauth = yaml.load(self.sbc.getFileContent(nodeauthfile), Loader=yaml.FullLoader)
+    except:
+      nodeauth = None
+    return nodeauth
 
-  def savenodeconf(self, nodeconf):
-    nodeconffile = self.pilot_dir + self.nodeconfname
-    nodeconfcontent = yaml.dump(nodeconf, default_flow_style=False)
-    return self.sbc.setFileContent(nodeconffile, nodeconfcontent)
+  def savenodeauth(self, nodeauth):
+    nodeauthfile = self.pilot_dir + self.authfilename
+    nodeauthcontent = yaml.dump(nodeauth, default_flow_style=False)
+    return self.sbc.setFileContent(nodeauthfile, nodeauthcontent)
 
   def authenticate(self):
+
+    # check if there is an node authfile on the host
+    nodeauth = self.loadnodeauth()
+    if nodeauth != None: #there is one, load
+      self.tokenset = nodeauth
+      self.decode()
+      if self.decoded != None: # token was ok
+        return
+
     payload = {'client_id': self.client_id, 'scope':'openid email offline_access', 'prompt': 'consent' }
     headers = { 'content-type': "application/x-www-form-urlencoded" }
 
@@ -106,7 +119,7 @@ class PilotServer():
       payload2 = { 'grant_type': "urn:ietf:params:oauth:grant-type:device_code", 
                    'client_id': self.client_id, 'device_code': response['device_code'] }
 
-      done: bool = False
+      done = False
       interval = int(response['interval'])
 
       while (not done):
@@ -129,6 +142,8 @@ class PilotServer():
           self.decode()
           with open(self.authfile, 'w') as authfile:
             json.dump(self.tokenset, authfile)
+          if nodeauth == None: # node authentication file does not exist
+            self.savenodeauth(response2)
 
     except Exception as e: 
       print(Fore.RED + 'Error authenticating the device {}'.format(e))
@@ -176,6 +191,14 @@ class PilotServer():
         print(e)
   
   def get_token(self):
+    if self.tokenset == None:
+      try:
+        with open(self.authfile) as authfile:
+          self.tokenset = json.load(authfile)
+          self.decode()
+      except:
+        pass
+
     if self.decoded == None:
       self.authenticate()
     

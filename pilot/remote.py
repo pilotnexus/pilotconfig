@@ -23,14 +23,14 @@ def sq(x, response):
 @gen.coroutine
 def run():
     # First we set up the provider
-    provider = yield connect("ws://localhost:6020/deepstream")
+    provider = yield connect("ws://localnode:6020/deepstream")
     yield provider.login({"username": "A"})
     provider.on('error', lambda msg, event, topic: print('a provider error occured'))
 
     yield provider.rpc.provide("sq", sq)
 
     # Then we set up the consumer
-    consumer = yield connect("ws://localhost:6020/deepstream")
+    consumer = yield connect("ws://localnode:6020/deepstream")
     yield consumer.login({"username": "B"})
     consumer.on('error', lambda msg, event, topic: print('a consumer error occured'))
 

@@ -60,8 +60,8 @@ class Sbc():
     if not self.target:
       if self.remote_client != None:
         self.remote_client.close()
-      print('Could not detect target hardware. If you want to use a remote node use the --host parameter to specify the IP address.')
-      #raise Exception('Could not detect target hardware. If you want to use a remote node use the --host parameter to specify the IP address.')
+      print('Could not detect target hardware. If you want to use a remote node use the --node parameter to specify the IP address.')
+      #raise Exception('Could not detect target hardware. If you want to use a remote node use the --node parameter to specify the IP address.')
       exit(1)
     return self
 
@@ -70,12 +70,12 @@ class Sbc():
       self.remote_client.close()
 
   def connect(self, user, password):
-    if 'host' in self.args and self.args.host != None:
-      print('trying to connect to {} with user {}...'.format(self.args.host, user), end='')
+    if 'node' in self.args and self.args.node != None:
+      print('trying to connect to {} with user {}...'.format(self.args.node, user), end='')
       client = paramiko.SSHClient()
       client.load_system_host_keys()
       client.set_missing_host_key_policy(paramiko.WarningPolicy())
-      client.connect(self.args.host, username=user, password=password)
+      client.connect(self.args.node, username=user, password=password)
       self.remote_client = client
       print(Fore.GREEN + 'succeeded')
     return self
@@ -125,6 +125,8 @@ class Sbc():
       chan.close()
       return ret
 
+  def reboot(self):
+    return self.cmd_retcode('sudo reboot')
 
   def getFileContent(self, file):
     return self.cmd('sudo cat {}'.format(file), True)

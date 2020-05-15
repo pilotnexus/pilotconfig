@@ -36,10 +36,18 @@ class O8Device():
     self.model = model
 
   def compile(self):
-    template = self.compiler.compile("""// source for device {{device.name}}
-  {{#each device.hw.Outputs}}  
+    inputs_template = self.compiler.compile("""// input source for device {{device.name}}
+  {{#each device.hw.Inputs}}
+  BITBAND_SRAM(&plc_mem_devices.m{{../device.slot}}, {{IO}}) = BITBAND_PERI({{gpio GPIO}}_BASE + 8, {{Pin}});
+{{/each}}
+    """)
+
+    outputs_template = self.compiler.compile("""// output source for device {{device.name}}
+  {{#each device.hw.Outputs}}
   GPIO_OUT_SET({{gpio GPIO}}_BASE, {{Pin}}, BITBAND_SRAM(&plc_mem_devices.m{{../device.slot}}, {{IO}}));
 {{/each}}
-  """)
-    self.mem_to_dev_source = template(self.module, self.helpers)
-    self.mem_doc = [{ "name": "o{}".format(i), "desc": "digital output {}".format(i), "byte": 0, "bit": i, "datatype": "bool", "write": True, "read": False } for i in range(8)]
+    """)
+    self.dev_to_mem_source = inputs_template(self.module, self.helpers)
+    self.mem_to_dev_source = outputs_template(self.module, self.helpers)
+    self.mem_doc = [{ "name": "i{}".format(i), "desc": "digital input {}".format(i), "byte": 0, "bit": i, "datatype": "bool", "read": True, "write": False } for i in range(4)]
+    self.mem_doc.append([{ "name": "o{}".format(i), "desc": "digital output {}".format(i), "byte": 0, "bit": i, "datatype": "bool", "write": True, "read": False } for i in range(4)])

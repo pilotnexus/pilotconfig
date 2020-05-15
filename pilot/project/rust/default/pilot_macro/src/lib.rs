@@ -182,7 +182,7 @@ pub fn var_communication(item: TokenStream) -> TokenStream {
 
   #[no_mangle]
   unsafe fn plc_run(_cycles: u64) {{
-    run(&{static_varname}, _cycles);
+    run(&mut {static_varname}, _cycles);
   }}
 
   #[no_mangle]
@@ -209,19 +209,35 @@ pub fn var_communication(item: TokenStream) -> TokenStream {
   }}
 
   #[no_mangle]
-  unsafe fn plc_read_from_variable(number: u16, buffer: *mut u8, _size: i32) -> i32
+  unsafe fn plc_read_from_variable(num: u16, subvalue: u8, buffer: *mut u8, _size: i32) -> i32
   {{
+    let number: u16 = num & 0xFFF;
     match plc_varnumber_to_variable(number) {{
-      Some(v) => {{ v.to_buffer(buffer); v.len() }},
+      Some(v) => {{
+        let len: i32;
+        if num & 0x8000 > 0
+        {{
+          v.set_subscribed(true);
+        }}
+        if num & 0x4000 > 0
+        {{
+          v.set_subscribed(false);
+        }}
+        len = v.to_buffer(buffer, subvalue);
+        if subvalue == 1 && v.is_dirty() {{
+          v.clear_dirty_or_update();
+        }}
+        len
+      }},
       None => 0
     }} 
   }}
 
   #[no_mangle]
-  unsafe fn plc_write_to_variable(number: u16, buffer: *mut u8, _size: i32) -> i32
+  unsafe fn plc_write_to_variable(number: u16, subvalue: u8, buffer: *mut u8, _size: i32) -> i32
   {{
     match plc_varnumber_to_variable(number) {{
-      Some(v) => {{ (*v).from_buffer(buffer); v.len() }},
+      Some(v) => (*v).from_buffer(buffer, subvalue),
       None => 0
     }}
   }}
@@ -229,7 +245,28 @@ pub fn var_communication(item: TokenStream) -> TokenStream {
   #[no_mangle]
   unsafe fn plc_find_next_updated_variable() -> i32
   {{
-    return -1;
+    static VAR_COUNT: u16 = 20; //{varcount};
+    static mut CUR_VAR_INDEX: u16 = 0;
+    let mut ret: i32 = -1;
+
+    for _n in 0..VAR_COUNT {{
+      let dirty = match plc_varnumber_to_variable(CUR_VAR_INDEX) {{
+        Some(v) => if v.get_subscribed() {{ v.is_dirty() }} else {{ false }},
+        None => false
+      }};
+
+      if dirty {{
+        ret = CUR_VAR_INDEX as i32;
+        break;
+      }}
+
+      //increment
+      CUR_VAR_INDEX = CUR_VAR_INDEX + 1;
+      if CUR_VAR_INDEX > (VAR_COUNT-1) {{
+        CUR_VAR_INDEX = 0;
+      }}
+    }}
+    ret 
   }}
 
   #[no_mangle]
@@ -259,7 +296,7 @@ pub fn var_communication(item: TokenStream) -> TokenStream {
   unsafe fn plc_write_variables(_buffer: *mut u8, _count: i32)
   {{
   }}
-"#, static_varname = static_varname, static_vardeclaration = static_vardeclaration, vars = plc_var_matches, read = plc_read_from_mem, write = plc_write_to_mem);
+"#, static_varname = static_varname, static_vardeclaration = static_vardeclaration, vars = plc_var_matches, varcount = varlist.len(), read = plc_read_from_mem, write = plc_write_to_mem);
 
   //eprintln!("{}", out);
 

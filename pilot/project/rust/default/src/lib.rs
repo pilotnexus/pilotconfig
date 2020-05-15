@@ -4,8 +4,9 @@ extern crate pilot_types;
 extern crate pilot_macro;
 
 mod pilot;
+mod variables;
 use pilot::*;
-use pilot::variables::*;
+use variables::*;
 use pilot_macro::*;
 use core::panic::PanicInfo;
 use pilot_types::var::*;
@@ -14,7 +15,7 @@ include!("pilot/bindings.rs");
 var_communication!();
 
 /// Initialization, executed once at startup
-fn init(_vars: &pilot::variables::PlcVars) {
+fn init(_vars: &PlcVars) {
   println!("Hello form Rust!");
 }
 

@@ -26,11 +26,11 @@ def main(args):
       pilotdriver = PilotDriver(pilotserver, sbc)
 
       if not pilotdriver.driver_loaded():
-        print('Drivers are not loaded. Please use --host if you connect remotely or install pilot drivers first by running sudo pilot setup.')
+        print('Drivers are not loaded. Please use --node if you connect remotely or install pilot drivers first by running sudo pilot setup.')
         return 2
 
-      #if not pilotdriver.check_raspberry() and not args.host:
-      #  print('This does not seem to be a Raspberry Pi. Please use the --host option to remote connect to it.')
+      #if not pilotdriver.check_raspberry() and not args.node:
+      #  print('This does not seem to be a Raspberry Pi. Please use the --node option to remote connect to it.')
       #  return 2
 
       if sbc.need_sudo_pw():

@@ -1,6 +1,5 @@
 pub mod bindings;
 pub mod macros;
-pub mod variables;
 
 #[no_mangle]
 extern "C" { 

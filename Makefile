@@ -1,12 +1,12 @@
-run: guard-PILOT_DEVENV_PI_HOST
-	python3 -m pilot.pilot setup --host $(PILOT_DEVENV_PI_HOST)
+run: guard-PILOT_DEVENV_PI_node
+	python3 -m pilot.pilot setup --node $(PILOT_DEVENV_PI_node)
 upload:
 	rm -f dist/*
 	python3 setup.py sdist bdist_wheel
 	twine upload dist/*
 
-deploy: guard-PILOT_DEVENV_PI_HOST
-	sshpass -p raspberry rsync -av --exclude 'node_modules*' ./pilot pi@$(PILOT_DEVENV_PI_HOST):~/pilot-config
+deploy: guard-PILOT_DEVENV_PI_node
+	sshpass -p raspberry rsync -av --exclude 'node_modules*' ./pilot pi@$(PILOT_DEVENV_PI_node):~/pilot-config
 
 guard-%:
 	@if [ "${${*}}" = "" ]; then \

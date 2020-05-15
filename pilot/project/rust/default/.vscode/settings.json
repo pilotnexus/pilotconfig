@@ -1,0 +1,6 @@
+{
+  "files.exclude": {
+    "**/basefw": true,
+    "**/target": true
+  }
+}
