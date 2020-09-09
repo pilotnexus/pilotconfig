@@ -8,9 +8,9 @@ edition = "2018"
 proc-macro = true
 
 [dependencies]
-syn = "0.15.39"
-quote = "0.6"
-proc-macro2 = { version = "0.4.24", default-features = false }
+syn = { version = "1.0.11", features = ["full", "extra-traits"] }
+quote = "1.0"
+proc-macro2 = { version = "1.0.13", default-features = false }
 lazy_static = "1.2.0"
-itertools = "*"
-regex = "1"
+itertools = "0.9.0"
+regex = "1.3.7"

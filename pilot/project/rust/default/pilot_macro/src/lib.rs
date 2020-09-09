@@ -1,48 +1,42 @@
-extern crate proc_macro;
-extern crate proc_macro2;
-extern crate syn;
+use lazy_static::lazy_static;
 
-#[macro_use]
-extern crate lazy_static;
-
+use proc_macro::TokenStream;
+use proc_macro2::Span;
+use quote::{quote, ToTokens};
 use std::collections::HashMap;
-use std::env;
-use std::fs::OpenOptions;
 use std::io::Write;
-use std::path::Path;
 use std::sync::Mutex;
+use syn::{parse_macro_input, DeriveInput, Ident, ItemStatic};
 
-use itertools::Itertools;
-use regex::Regex;
+mod pilot_bindings;
+mod root_var;
+mod var_communication;
+mod var_derive;
 
-use proc_macro::*;
-use syn::{DataStruct, DeriveInput};
-
-
-extern "C" { 
-  pub fn _putchar(c: u8);
+extern "C" {
+    pub fn _putchar(c: u8);
 }
 
 #[allow(unused_macros)]
 macro_rules! print {
-  ($f:expr) => (
-    unsafe {
-      for c in $f.chars() { 
-        _putchar(c as u8);
-      }
-    }
-  )
+    ($f:expr) => {
+        unsafe {
+            for c in $f.chars() {
+                _putchar(c as u8);
+            }
+        }
+    };
 }
 
 #[allow(unused_macros)]
 macro_rules! println {
-  ($f:expr) => (
-    print!($f);
-    unsafe {
-      _putchar(10);
-      _putchar(13);
-    }
-  )
+    ($f:expr) => {
+        print!($f);
+        unsafe {
+            _putchar(10);
+            _putchar(13);
+        }
+    };
 }
 
 lazy_static! {
@@ -50,263 +44,91 @@ lazy_static! {
         let m = HashMap::new();
         Mutex::new(m)
     };
-
-    static ref VEC: Mutex<Vec<(u32, String)>> = {
-        let m = Vec::new();
-        Mutex::new(m)
-    };
-
     static ref BINDINGS: Mutex<Vec<(bool, bool, String, String)>> = {
         let m = Vec::new();
         Mutex::new(m)
     };
-
     static ref ROOT: Mutex<Option<String>> = Mutex::new(None);
-
     static ref IECVARS: HashMap<&'static str, &'static str> = {
-      let mut vars = HashMap::new();
-      vars.insert("AtomicU32","UDINT");
-      vars.insert("AtomicI32","DINT");
-      vars.insert("AtomicU16","UINT");
-      vars.insert("AtomicI16","INT");
-      vars.insert("AtomicU8","USINT");
-      vars.insert("AtomicI8","SINT");
-      vars.insert("AtomicBool","BOOL");
-      vars.insert("u32","UDINT");
-      vars.insert("i32","DINT");
-      vars.insert("u16","UINT");
-      vars.insert("i16","INT");
-      vars.insert("u8","USINT");
-      vars.insert("i8","SINT");
-      vars.insert("bool","BOOL");
-      vars
+        let mut vars = HashMap::new();
+        vars.insert("AtomicU32", "UDINT");
+        vars.insert("AtomicI32", "DINT");
+        vars.insert("AtomicU16", "UINT");
+        vars.insert("AtomicI16", "INT");
+        vars.insert("AtomicU8", "USINT");
+        vars.insert("AtomicI8", "SINT");
+        vars.insert("AtomicBool", "BOOL");
+        vars.insert("u32", "UDINT");
+        vars.insert("i32", "DINT");
+        vars.insert("u16", "UINT");
+        vars.insert("i16", "INT");
+        vars.insert("u8", "USINT");
+        vars.insert("i8", "SINT");
+        vars.insert("bool", "BOOL");
+        vars
     };
 }
 
-fn generate_vars(varnr: &mut u32, qualifier: String, structname: String, map: &HashMap<String, Vec<(String, String, Option<String>)>>, f: &mut std::fs::File) {
-  //eprintln!("trying {}", &structname);
-  for (name, ty, vartype) in map.get(&structname).unwrap_or_else(|| panic!("element {} not found", structname)) {
-    if ty == "Var" {
-      let mut varlist = VEC.lock().unwrap();
-      let varname = match qualifier.as_str() { "" => name.clone(), _ => format!("{}.{}", qualifier, name)};
-      eprintln!("{}, {:?}, {:?}", varname, vartype, IECVARS.get(vartype.clone().unwrap().as_str()));
-      writeln!(f, "{0};VAR;CONFIG.RESOURCE1.{1};CONFIG.RESOURCE1.{1};{2};", varnr, varname.clone(), IECVARS.get(vartype.clone().unwrap().as_str()).unwrap()).expect("Could not write variable file");
-      varlist.push( (*varnr, varname.clone()) );
-      *varnr += 1;
-    }
-    else {
-      let child_qualifier = match qualifier.as_str() {
-        "" => name.clone(),
-        _ => format!("{}.{}", qualifier, name)
-      }; 
+fn generate_vars(
+    varnr: &mut u16,
+    qualifier: String,
+    structname: String,
+    map: &HashMap<String, Vec<(String, String, Option<String>)>>,
+    f: &mut std::fs::File,
+) -> Vec<(u16, proc_macro2::TokenStream)> {
+    let mut varlist = Vec::new();
+    //eprintln!("trying {}", &structname);
+    for (name, ty, vartype) in map
+        .get(&structname)
+        .unwrap_or_else(|| panic!("element {} not found", structname))
+    {
+        let name_ident = Ident::new(&name, Span::call_site());
+        if ty == "Var" {
+            let varname = match qualifier.as_str() {
+                "" => quote!(#name_ident),
+                _ => quote!(#qualifier.#name_ident),
+            };
+            eprintln!(
+                "{}, {:?}, {:?}",
+                varname,
+                vartype,
+                IECVARS.get(vartype.clone().unwrap().as_str())
+            );
+            writeln!(
+                f,
+                "{0};VAR;CONFIG.RESOURCE1.{1};CONFIG.RESOURCE1.{1};{2};",
+                varnr,
+                varname.clone(),
+                IECVARS.get(vartype.clone().unwrap().as_str()).unwrap()
+            )
+            .expect("Could not write variable file");
+            varlist.push((*varnr, varname.clone()));
+            *varnr += 1;
+        } else {
+            let child_qualifier = match qualifier.as_str() {
+                "" => name.clone(),
+                _ => format!("{}.{}", qualifier, name),
+            };
 
-      generate_vars(varnr, child_qualifier, ty.clone(), map, f);
+            generate_vars(varnr, child_qualifier, ty.clone(), map, f);
+        }
     }
-  }
+    varlist
 }
 
-#[doc="Defines communication structures, define after var structs"]
+#[doc = "Defines communication structures, define after var structs"]
 #[proc_macro]
-pub fn var_communication(item: TokenStream) -> TokenStream {
-  let mut varnr = 0;
-  let map: &HashMap<String, Vec<(String, String, Option<String>)>> = &*HASHMAP.lock().unwrap();
-  let root = (ROOT.lock().unwrap())
-    .clone()
-    .expect("No root element defined");
-
-  let (static_varname, static_vardeclaration): (String, String) = match item.to_string().trim() {
-    "" => (String::from("VARS"), format!("static mut VARS: PlcVars = {}::new();", root)),
-    n => (String::from(n), String::new()),
-  };
-
-  let out_dir = match env::var("PILOT_OUT_DIR") {
-    Ok(dir) => dir,
-    Err(err) => panic!("Error getting working directory for variable output (environement variable PILOT_OUT_DIR) {}", err) 
-  };
-
-  //open variable file
-  let dest_path = Path::new(&out_dir).join("VARIABLES.csv");
-  let mut f = OpenOptions::new()
-    .write(true)
-    .create(true)
-    .truncate(true)
-    .open(&dest_path)
-    .unwrap();
-
-  generate_vars(&mut varnr, String::new(), root.clone(), map, &mut f);
-
-  let varlist: &Vec<(u32, String)> = &*(VEC.lock().unwrap());
-  //eprintln!("{:?}", varlist);
-  let mut plc_var_matches = String::new(); 
-  for (nr, name) in varlist {
-    plc_var_matches += &String::from(format!("{nr} => {{ Some(&mut ({static_varname}.{name})) }},\n        ", nr = nr, static_varname = static_varname, name = name));
-  }
- 
-  //
-  let bindings = &*(BINDINGS.lock().unwrap());
-  let mut plc_read_from_mem = String::new();
-  let mut plc_write_to_mem = String::new();
-
-  for (read, write, fqn, target) in bindings {
-    let parts = target.split(":").collect::<Vec<&str>>();
-    eprintln!("{:?}", parts);
-    if *read {
-      plc_read_from_mem += &match parts.len() {
-        1 => format!("VARS.{}.set(plc_mem.{});\n", fqn, parts[0]),
-        2 => format!("VARS.{}.set((plc_mem.{} & 0x{:X}) > 0);\n", fqn, parts[0], 1 << parts[1].parse::<i32>().unwrap()),
-        _ => panic!("Cannot process more than one bit adress operator (:)")
-      };
-    }
-
-    if *write {
-      plc_write_to_mem += &match parts.len() {
-        1 => format!("plc_mem.{} = VARS.{}.get();\n", parts[0], fqn),
-        2 => format!("match VARS.{0}.get() {{ true => {{ plc_mem.{1} |= 0x{2:X}; }}, false => {{ plc_mem.{1} &= 0x{3:X}; }} }};\n", fqn, parts[0], 1 << parts[1].parse::<u16>().unwrap() as u16, !(1 << parts[1].parse::<u16>().unwrap()) as u16),
-        _ => panic!("Cannot process more than one bit adress operator (:)")
-      };
-    }
-
-    //VARS.children.var0_2.set((plc_mem.m3[0] & 0x1) > 0);
-  }
-
-  eprintln!("plc_mem_to_var():\n{}", plc_read_from_mem);
-  eprintln!("plc_var_to_mem():\n{}", plc_write_to_mem);
-
-  let out = format!(r#"
-  {static_vardeclaration}
-
-  #[no_mangle]
-  unsafe fn plc_init() {{
-    init(&{static_varname});
-  }}
-
-  #[no_mangle]
-  unsafe fn plc_run(_cycles: u64) {{
-    run(&mut {static_varname}, _cycles);
-  }}
-
-  #[no_mangle]
-  unsafe fn plc_varnumber_to_variable(number: u16) -> Option<&'static mut MemVar> 
-  {{
-    match number {{
-      {vars}
-      _ => {{
-        return None;
-      }}
-    }}
-  }}
-
-  #[no_mangle]
-  unsafe fn plc_mem_to_var() {{
-    let plc_mem: &mut pilot::bindings::plc_dev_t = _get_plc_mem_devices_struct();
-    {read}
-  }}
-
-  #[no_mangle]
-  unsafe fn plc_var_to_mem() {{
-    let plc_mem: &mut pilot::bindings::plc_dev_t = _get_plc_mem_devices_struct();
-    {write}
-  }}
-
-  #[no_mangle]
-  unsafe fn plc_read_from_variable(num: u16, subvalue: u8, buffer: *mut u8, _size: i32) -> i32
-  {{
-    let number: u16 = num & 0xFFF;
-    match plc_varnumber_to_variable(number) {{
-      Some(v) => {{
-        let len: i32;
-        if num & 0x8000 > 0
-        {{
-          v.set_subscribed(true);
-        }}
-        if num & 0x4000 > 0
-        {{
-          v.set_subscribed(false);
-        }}
-        len = v.to_buffer(buffer, subvalue);
-        if subvalue == 1 && v.is_dirty() {{
-          v.clear_dirty_or_update();
-        }}
-        len
-      }},
-      None => 0
-    }} 
-  }}
-
-  #[no_mangle]
-  unsafe fn plc_write_to_variable(number: u16, subvalue: u8, buffer: *mut u8, _size: i32) -> i32
-  {{
-    match plc_varnumber_to_variable(number) {{
-      Some(v) => (*v).from_buffer(buffer, subvalue),
-      None => 0
-    }}
-  }}
-
-  #[no_mangle]
-  unsafe fn plc_find_next_updated_variable() -> i32
-  {{
-    static VAR_COUNT: u16 = 20; //{varcount};
-    static mut CUR_VAR_INDEX: u16 = 0;
-    let mut ret: i32 = -1;
-
-    for _n in 0..VAR_COUNT {{
-      let dirty = match plc_varnumber_to_variable(CUR_VAR_INDEX) {{
-        Some(v) => if v.get_subscribed() {{ v.is_dirty() }} else {{ false }},
-        None => false
-      }};
-
-      if dirty {{
-        ret = CUR_VAR_INDEX as i32;
-        break;
-      }}
-
-      //increment
-      CUR_VAR_INDEX = CUR_VAR_INDEX + 1;
-      if CUR_VAR_INDEX > (VAR_COUNT-1) {{
-        CUR_VAR_INDEX = 0;
-      }}
-    }}
-    ret 
-  }}
-
-  #[no_mangle]
-  unsafe fn plc_port_config(_slot: u8, _port: u8, _baud: u16)
-  {{
-  }}
-
-  #[no_mangle]
-  unsafe fn plc_configure_read_variables(_variables: *mut u8, _count: i32) -> i32
-  {{
-    return 0;
-  }}
-
-  #[no_mangle]
-  unsafe fn plc_configure_write_variables(_variables: *mut u8, _count: i32) -> i32
-  {{
-    return 0;
-  }}
-
-  #[no_mangle]
-  unsafe fn plc_read_variables(_buffer: *mut u8) -> i32
-  {{
-    return 0;
-  }}
-
-  #[no_mangle]
-  unsafe fn plc_write_variables(_buffer: *mut u8, _count: i32)
-  {{
-  }}
-"#, static_varname = static_varname, static_vardeclaration = static_vardeclaration, vars = plc_var_matches, varcount = varlist.len(), read = plc_read_from_mem, write = plc_write_to_mem);
-
-  //eprintln!("{}", out);
-
-  out.parse().unwrap()
+pub fn var_communication(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as Option<syn::Ident>);
+    let tokens = var_communication::expand(&input)
+        .unwrap_or_else(|err| err.to_compile_error())
+        .into();
+    eprintln!("TOKENS: {}", tokens);
+    tokens
 }
 
-fn extract_type_from_var(ty: &syn::Type) -> Option<&syn::Type> {
-    use syn::punctuated::Pair;
-    use syn::token::Colon2;
-    use syn::{GenericArgument, Path, PathArguments, PathSegment};
+fn extract_type_from_var(ty: &syn::Type) -> Option<syn::Type> {
+    use syn::{GenericArgument, Path, PathArguments};
 
     fn extract_type_path(ty: &syn::Type) -> Option<&Path> {
         match *ty {
@@ -317,7 +139,7 @@ fn extract_type_from_var(ty: &syn::Type) -> Option<&syn::Type> {
 
     // TODO store (with lazy static) the vec of string
     // TODO maybe optimization, reverse the order of segments
-    fn extract_option_segment(path: &Path) -> Option<Pair<&PathSegment, &Colon2>> {
+    let extract_option_segment = |path: &Path| {
         let idents_of_path = path
             .segments
             .iter()
@@ -330,126 +152,46 @@ fn extract_type_from_var(ty: &syn::Type) -> Option<&syn::Type> {
         vec!["Var|"]
             .into_iter()
             .find(|s| &idents_of_path == *s)
-            .and_then(|_| path.segments.last())
-    }
+            .and_then(|_| path.segments.last().map(|ty| ty.clone()))
+    };
 
     extract_type_path(ty)
         .and_then(|path| extract_option_segment(path))
         .and_then(|pair_path_segment| {
-            let type_params = &pair_path_segment.into_value().arguments;
+            let type_params = &pair_path_segment.arguments;
             // It should have only on angle-bracketed param ("<String>"):
             match *type_params {
-                PathArguments::AngleBracketed(ref params) => params.args.first(),
+                PathArguments::AngleBracketed(ref params) => params.args.first().map(Clone::clone),
                 _ => None,
             }
         })
-        .and_then(|generic_arg| match *generic_arg.into_value() {
-            GenericArgument::Type(ref ty) => Some(ty),
+        .and_then(|generic_arg| match generic_arg {
+            GenericArgument::Type(ty) => Some(ty),
             _ => None,
         })
 }
 
 fn parse_path(path: &syn::Path) -> String {
-  for p in path.segments.iter() {
-    return p.ident.to_string();
-  }
-  panic!("No path found");
+    for p in path.segments.iter() {
+        return p.ident.to_string();
+    }
+    panic!("No path found");
 }
 
 /// Derives a struct for PLC Var usage (Var<_> values)
 #[proc_macro_derive(Var, attributes(root, bind))]
-pub fn var_struct(item: TokenStream) -> TokenStream {
-  const ROOT_ATTR_NAME: &'static str = "root";
-  const BIND_ATTR_NAME: &'static str = "bind";
-  let ast: DeriveInput = syn::parse(item.clone()).expect("Couldn't parse for var_struct");
-  let mut map = HASHMAP.lock().unwrap();
-  let mut m: Vec<(String, String, Option<String>)> = Vec::new();
-  let name = ast.ident.to_string();
-  let mut initializers = Vec::new();
-
-  // Is it a struct?
-  if let syn::Data::Struct(DataStruct { ref fields, .. }) = ast.data {
-    // Looks for state_change attriute (our attribute)
-    if let Some(ref _a) = ast
-      .attrs
-      .iter()
-      .find(|a| parse_path(&a.path) == ROOT_ATTR_NAME)
-    {
-      //eprintln!("Found root on {}", name);
-      *(ROOT.lock().unwrap()) = Some(name.clone());
-    }
-    for f in fields.iter() {
-      let vartype = match extract_type_from_var(&f.ty) {
-        Some(p) => match p {
-          syn::Type::Path(s) => Some(parse_path(&s.path)),
-          _ => panic!("type needs to be path"),
-        },
-        None => None
-      };
-      //eprintln!("type is {:?}", vartype);
-
-      //look for bind attributes
-      if let Some(b) = f.attrs.iter().find(|a| parse_path(&a.path) == BIND_ATTR_NAME) {
-        let mut bindings = BINDINGS.lock().unwrap(); 
-        let tts_str = b.tts.to_string().replace(&['(', ')', ' '][..], "");
-        for v in tts_str.split(",")
-            .map(|item| item.split("=>").next_tuple::<(&str, &str)>().expect("Cannot extract tuple, are you missing the => operator?"))
-            {
-              let re = Regex::new(r"\|(?P<rw>.*?)\|(?P<fqn>.*)").unwrap();
-              let result = re.captures(v.0).unwrap();
-              let fqn = format!("{}{}{}", &result["fqn"], if let 0 = &result["fqn"].len() { "" } else { "." }, f.ident.clone().unwrap().to_string());
-              eprintln!("rw: {} fqn: {}", &result["rw"], fqn);
-              let read: bool = &result["rw"] == "read";
-              let write: bool = &result["rw"] == "write";
-              bindings.push((read, write, fqn, String::from(v.1))); //push to vec, create owned string copies
-            }
-        eprintln!("{:?}", bindings);
-      }
-
-      let ty = match &f.ty {
-        syn::Type::Path(s) => parse_path(&s.path),
-        _ => panic!("Can only implement path in struct"),
-      };
-
-      let constructortype = match &vartype {
-        Some(t) => format!("{}::<{}>", ty.clone(), t.clone()),
-        None => ty.clone()
-      };
-
-      initializers.push(format!(
-        "{}: {}::new()",
-        f.ident.clone().unwrap().to_string(),
-        constructortype,
-      ));
-      m.push( (f.ident.clone().unwrap().to_string(), ty.clone(), vartype) );
-    }
-  } else {
-    // Nope. This is an Enum. We cannot handle these!
-    panic!("#[var_struct] is only defined for structs, not for enums!");
-  }
-  map.insert(name.clone(), m);
-
-  let x = format!(
-    r#"
-    impl {structname} {{
-      pub const fn new() -> {structname} {{
-        {structname} {{ {initializer }}}
-      }}
-    }}
-    "#,
-    structname = name,
-    initializer = initializers.join(", ")
-  );
-
-   //eprintln!("{}", x);
-
-  x.parse().expect("Generated invalid tokens")
+pub fn derive_var(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let map = &mut HASHMAP.lock().unwrap();
+    var_derive::expand(&input, map)
+        .unwrap_or_else(|err| err.to_compile_error())
+        .into()
 }
 
 #[proc_macro_attribute]
 pub fn log_entry_and_exit(args: TokenStream, input: TokenStream) -> TokenStream {
-  let x = format!(
-    r#"
+    let x = format!(
+        r#"
         fn dummy() {{
             println!("entering");
             println!("args tokens: {{}}", {args});
@@ -457,9 +199,120 @@ pub fn log_entry_and_exit(args: TokenStream, input: TokenStream) -> TokenStream 
             println!("exiting");
         }}
     "#,
-    args = args.into_iter().count(),
-    input = input.into_iter().count(),
-  );
+        args = args.into_iter().count(),
+        input = input.into_iter().count(),
+    );
 
-  x.parse().expect("Generated invalid tokens")
+    x.parse().expect("Generated invalid tokens")
+}
+
+/// The `#[root]` attribute is used to mark a static variable as the root of the PLC variables.
+///
+/// This attribute makes all fields of type `Var` contained in the annotated static accessible
+/// from the outside. It also activates the `bind_*` attributes on the fields (see the
+/// `PilotBindings` derive macro).
+///
+/// The marked static must be a struct that implements or derives the `PilotBindings` trait. Only a
+/// single static can be marked as root.
+///
+/// ## Example
+///
+/// ```
+/// #[root_var]
+/// static mut VARS: PlcVars = PlcVars::new();
+///
+/// // See docs for `PilotBindings` derive macro
+/// #[derive(PilotBindings)]
+/// pub struct PlcVars {
+///     #[bind_read(m1.0)]
+///     pub i8_0: Var<bool>,
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn root_var(attr: TokenStream, item: TokenStream) -> TokenStream {
+    parse_macro_input!(attr as syn::parse::Nothing);
+    let input = parse_macro_input!(item as ItemStatic);
+    let generated = root_var::expand(&input).unwrap_or_else(|err| err.to_compile_error());
+
+    eprintln!("ROOT_VAR TOKENS: {}", generated);
+
+    let mut item = input.into_token_stream();
+    item.extend(generated);
+    item.into()
+}
+
+/// This derive macro generates an implementation of the `PilotBindings` trait using `bind_*`
+/// attributes.
+///
+/// By deriving the `PilotBindings` trait, all fields of type `Var` are accessible from the outside.
+/// Fields of that type can be also bind to a field of an input or output module through
+/// `#[bind_read]` or `#[bind_write]` attributes. The following syntax variants exist:
+///
+/// - `#[bind_read(m3.5)]`: Reads from the annotated variable of type `Var<bool>` resolve to the
+///   value of bit 5 of module `m3`.
+/// - `#[bind_write(m2.7)]`: Writes to the variable of type `Var<bool>` set the value of bit 7
+///   of `m2`.
+///
+/// Planned variants that are not yet supported:
+/// - `#[bind_read(m3)]`: Reads from the annotated variable of type `Var<u8>` resolve to the
+///   value of module `m3`.
+/// - `#[bind_write(m3)]`: Writes to the annotated variable of type `Var<u8>` set the value of
+///   module `m3`.
+///
+/// It is possible to annotate a field with both `#[bind_read]` and `#[bind_write]` attributes:
+///
+/// ```
+/// #[derive(PilotBindings)]
+/// pub struct IOModule {
+///     #[bind_read(m1.0)]
+///     #[bind_write(m2.0)]
+///     pub io0: Var<bool>,
+/// }
+/// ```
+///
+/// ## Compound Types
+///
+/// Instead of specifying all fields in a single struct, it is possible to specify fields that
+/// refer to other structs that also implement/derive the `PilotBindings` trait:
+///
+/// ```
+/// #[derive(PilotBindings)]
+/// pub struct PlcVars {
+///     /* Example for hieracical var structure */
+///     #[bind_read]
+///     pub inputs: IOModule,
+///     #[bind_write]
+///     pub outputs: IOModule,
+///
+///     #[bind_read(m1.0)]
+///     pub i8_0: Var<bool>,
+/// }
+/// ```
+///
+/// Fields that refer to other structs must be annotated with argument-less `#[bind_read]` and/or
+/// `#[bind_write]` attributes. These attributes specify whether the `#[bind_read]`/`#[bind_write]`
+/// attributes of the referenced struct should apply or not. For the above example, only the
+/// `#[bind_read]` attributes of the `IOModule` struct apply for the `inputs` fields and only the
+/// `#[bind_write]` attributes apply to the `outputs` field.
+///
+/// ## Ignoring Fields
+///
+/// The macro requires that all fields are either of type `Var` or are annotated with a `bind_*`
+/// attribute. Other fields need to be explicitly ignored through a `#[bind_ignore]` attribute.
+/// This requirement ensures that one can't accidentally forget to add a `#[bind_*]` attributes
+/// on fields that refer other structs such as the `inputs` fields in the example above.
+///
+/// ## Limitations
+///
+/// Since macro expansion happens before type analysis, the detection of fields of type `Var`
+/// uses simple string matching. That means that specifying the field type using a path does
+/// not work currently (e.g. `struct Test { io0: pilot_types::var::Var<bool>, }`).
+#[proc_macro_derive(PilotBindings, attributes(bind_read, bind_write, bind_ignore))]
+pub fn derive_var_new(item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as DeriveInput);
+    let tokens = pilot_bindings::expand(&input).unwrap_or_else(|err| err.to_compile_error());
+
+    eprintln!("VAR_NEW TOKENS: {}", tokens);
+
+    tokens.into()
 }

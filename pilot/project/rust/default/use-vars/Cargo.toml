@@ -1,0 +1,13 @@
+[package]
+name = "use-vars"
+version = "0.1.0"
+authors = ["Philipp Oppermann <dev@phil-opp.com>"]
+edition = "2018"
+links = "pilot"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+[build-dependencies]
+llvm-tools = "0.1.1"

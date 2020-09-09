@@ -1,4 +1,4 @@
 #![no_std]
 
-pub mod var;
 pub mod macros;
+pub mod var;
