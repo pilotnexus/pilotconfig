@@ -26,11 +26,18 @@ class Sbc():
 
   def __enter__(self):
     usecredentials = False
-    if 'user' in self.args and self.args.user and 'password' in self.args and self.args.password:
+    usekeyfile = False
+    if 'user' in self.args and self.args.user and 'sshkey_file' in self.args and self.args.sshkey_file != '/':
+      if self.args.sshkey_file == None:
+        self.args.sshkey_file = os.path.expanduser('~/.ssh/id_rsa.pub')
+      usekeyfile = True
+    elif 'user' in self.args and self.args.user and 'password' in self.args and self.args.password:
       usecredentials = True
     if 'hardware' in self.args and self.args.hardware:
       self.target = next(x for x in self.targethardwarelist if x['name'] == self.args.hardware)
-      if usecredentials:
+      if usekeyfile:
+        self.connect_with_key(self.args.user, self.args.sshkey_file)
+      elif usecredentials:
         self.connect(self.args.user, self.args.password)
       else:
         self.connect(self.target['defaultuser'], self.target['defaultpassword'])
@@ -39,9 +46,13 @@ class Sbc():
       for hw in self.targethardwarelist:
         try:
           user = self.args.user if usecredentials else hw['defaultuser']
-          password = self.args.password if usecredentials else hw['defaultpassword']
-          self.connect(user, password)
-          connected = True
+          if usekeyfile:
+            self.connect_with_key(user, self.args.sshkey_file)
+            connected = True
+          else:
+            password = self.args.password if usecredentials else hw['defaultpassword']
+            self.connect(user, password)
+            connected = True
           break
         except: 
           print(Fore.YELLOW + 'failed')
@@ -69,12 +80,25 @@ class Sbc():
     if self.remote_client != None:
       self.remote_client.close()
 
+  def connect_with_key(self, user, key_filename):
+    if 'node' in self.args and self.args.node != None:
+      print('trying to connect to {} with user {} using keyfile {}...'.format(self.args.node, user, key_filename), end='')
+      client = paramiko.SSHClient()
+      client.load_system_host_keys()
+      #client.set_missing_host_key_policy(paramiko.WarningPolicy())
+      client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+      client.connect(self.args.node, username=user, key_filename=key_filename)
+      self.remote_client = client
+      print(Fore.GREEN + 'succeeded')
+    return self
+
   def connect(self, user, password):
     if 'node' in self.args and self.args.node != None:
       print('trying to connect to {} with user {}...'.format(self.args.node, user), end='')
       client = paramiko.SSHClient()
       client.load_system_host_keys()
-      client.set_missing_host_key_policy(paramiko.WarningPolicy())
+      #client.set_missing_host_key_policy(paramiko.WarningPolicy())
+      client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
       client.connect(self.args.node, username=user, password=password)
       self.remote_client = client
       print(Fore.GREEN + 'succeeded')

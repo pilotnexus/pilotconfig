@@ -78,6 +78,11 @@ class PilotServer():
       nodeconf = None
     return nodeconf
   
+  def savenodeconf(self, nodeconf):
+    nodeconffile = self.pilot_dir + self.nodeconfname
+    nodeconfcontent = yaml.dump(nodeconf, default_flow_style=False)
+    return self.sbc.setFileContent(nodeconffile, nodeconfcontent)
+  
   def loadnodeauth(self):
     nodeauthfile = self.pilot_dir + self.authfilename
     nodeauth = None

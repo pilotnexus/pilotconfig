@@ -2,9 +2,9 @@
 
 from __future__ import print_function  # disables annoying pylint print warning
 
+import linecache
 import lazy_import
 from . import arguments
-
 sys = lazy_import.lazy_module("sys")
 json = lazy_import.lazy_module("json")
 re = lazy_import.lazy_module("re")
@@ -164,7 +164,7 @@ def main(args):
               print("Your node is registered as '{}'".format(node['name']))
               pilotserver.updatenode(fwconfig)
 
-            elif not args.noninteractive and not trywritedefaultfirmware and nodeid == None:
+            elif not args.noninteractive and not trywritedefaultfirmware:
               ch = input("Node is not registered, do you want to register it with the Pilot Cloud? [y/n]: ")
               if (ch == 'y' or ch == 'yes'):
                 pilotserver.registernode(fwconfig)
@@ -173,6 +173,14 @@ def main(args):
         pilotserver.registernode(None)
   except Exception as error:
     print(error)
+    exc_type, exc_obj, tb = sys.exc_info()
+    f = tb.tb_frame
+    lineno = tb.tb_lineno
+    filename = f.f_code.co_filename
+    linecache.checkcache(filename)
+    line = linecache.getline(filename, lineno, f.f_globals)
+    print('EXCEPTION IN ({}, LINE {} "{}"): {}'.format(filename, lineno, line.strip(), exc_obj))
+
     exit(1) 
 
   if result == 0:
