@@ -32,9 +32,10 @@ def templateparser(args, dir, model, compiler, helpers):
 def pluginparser(args, model, compiler, helpers):
   plugindir = os.path.join(args.workdir, 'plugins')
   if os.path.isdir(plugindir):
-    dirs = os.listdir(plugindir)
-    for dir in dirs:
-      templateparser(args, os.path.join(plugindir, dir),  model, compiler, helpers )
+    #dirs = os.listdir(plugindir)
+    #for dir in dirs:
+    #  templateparser(args, os.path.join(plugindir, dir),  model, compiler, helpers )
+    templateparser(args, plugindir,  model, compiler, helpers )
 
 def _hex(this, items):
     return hex(items)
