@@ -61,8 +61,9 @@ class PilotDriver():
     self.ps = pilotserver
     self.sbc = sbc
 
-    self.binpath = '{}/bin/{}'.format(os.path.join(
-    os.path.abspath(os.path.dirname(__file__))), self.sbc.target['architecture'])
+    if sbc is not None:
+      self.binpath = '{}/bin/{}'.format(os.path.join(
+      os.path.abspath(os.path.dirname(__file__))), self.sbc.target['architecture'])
 
   def get_modules(self):
     memregs = ['uid', 'hid', 'fid']
@@ -102,16 +103,16 @@ class PilotDriver():
   def set_module_fid(self, number, fid):
     self.sbc.setFileContent(self.pilot_driver_root + '/module{}/eeprom/fid'.format(number), fid + '       ')
 
-  def load_pilot_defs(self):
+  def getmodules(self, mod):
+    self.eeproms = mod
     try:
-      self.eeproms, success = self.get_modules()
       variables = {
         'fids': ['{}'.format(value['fid'])
-                    for key, value in self.eeproms.items() if value['fid'] != ''],
+                    for key, value in mod.items() if value['fid'] != ''],
         'hids': ['{}'.format(value['hid'])
-                    for key, value in self.eeproms.items() if value['hid'] != '']
+                    for key, value in mod.items() if value['hid'] != '']
       }
-
+    
       obj = self.ps.query(gql("""
       query get_fids($fids: [bpchar!], $hids: [bpchar!]) {
         pilot_fid(where: {fid: {_in: $fids} }) {
@@ -134,19 +135,27 @@ class PilotDriver():
       }
       """), variables, True)
 
-      module = [{
+      self.modules = [{
                   'module': key,
                   'currentfid': value['fid'],
                   'hid': value['hid'],
                   'currentfid_nicename': next(iter(y['name']  for y in filter(lambda x: x['fid'].strip() == value['fid'].strip(), obj['pilot_fid'])), value['fid'].strip()),
                   'fids': next(iter([{'isdefault': x['isdefault'], 'fid': x['fid']['fid'], 'name': x['fid']['name']} for x in y['hid2fids']] for y in filter(lambda x: x['hid'].strip() == value['hid'].strip(), obj['pilot_hid'])), []),
-                } for key, value in self.eeproms.items()]
+                } for key, value in mod.items()]
 
-      return module, success
+      return self.modules, True
     except:
       e = sys.exc_info()[0]
       print(e)
-    return {}, success
+    return {}, False
+
+  def load_pilot_defs(self):
+    success = False
+    try:
+      eeproms, success = self.get_modules()
+      return self.getmodules(eeproms)
+    except:
+      return {}, False
 
   def driver_loaded(self):
     return self.sbc.cmd_retcode('test -e {}'.format(self.pilot_driver_root)) == 0

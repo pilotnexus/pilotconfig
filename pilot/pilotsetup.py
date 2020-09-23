@@ -2,7 +2,6 @@
 
 from __future__ import print_function  # disables annoying pylint print warning
 
-import linecache
 import lazy_import
 from . import arguments
 sys = lazy_import.lazy_module("sys")
@@ -129,7 +128,7 @@ def main(args):
                   print('Could not write firmware')
                 
                 break
-              elif ch.isdigit() and int(ch) in range(1, pilotdriver.MODULE_COUNT) and len(modules_with_multiple_fids) > 0:
+              elif ch.isdigit() and int(ch) in range(1, pilotdriver.MODULE_COUNT+1) and len(modules_with_multiple_fids) > 0:
                 changemodulenr = int(ch)
                 print()
                 print('Select Firmware for Module {}:'.format(changemodulenr))
@@ -173,14 +172,6 @@ def main(args):
         pilotserver.registernode(None)
   except Exception as error:
     print(error)
-    exc_type, exc_obj, tb = sys.exc_info()
-    f = tb.tb_frame
-    lineno = tb.tb_lineno
-    filename = f.f_code.co_filename
-    linecache.checkcache(filename)
-    line = linecache.getline(filename, lineno, f.f_globals)
-    print('EXCEPTION IN ({}, LINE {} "{}"): {}'.format(filename, lineno, line.strip(), exc_obj))
-
     exit(1) 
 
   if result == 0:

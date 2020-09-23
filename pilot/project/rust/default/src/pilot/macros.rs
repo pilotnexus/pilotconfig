@@ -1,10 +1,26 @@
+use core::fmt;
+
+pub struct SerialWriter;
+
+impl fmt::Write for SerialWriter {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        unsafe {
+            crate::pilot::_putchar(0x27); // start of logstring
+            for c in s.chars() {
+                crate::pilot::_putchar(c as u8);
+            }
+        }
+        Ok(())
+    }
+}
+
 #[macro_export]
 macro_rules! print {
     ($f:expr) => {
         unsafe {
-            _putchar(0x27); // start of logstring
+            crate::pilot::_putchar(0x27); // start of logstring
             for c in $f.chars() {
-                _putchar(c as u8);
+                crate::pilot::_putchar(c as u8);
             }
         }
     };
@@ -15,8 +31,8 @@ macro_rules! println {
     ($f:expr) => {
         print!($f);
         unsafe {
-            _putchar(10);
-            _putchar(13);
+            crate::pilot::_putchar(10);
+            crate::pilot::_putchar(13);
         }
     };
 }

@@ -1,5 +1,4 @@
 {
-  "python.pythonPath": "/usr/bin/python3",
   "files.exclude": {
     "**/build": true,
     "**/__pycache__": true
@@ -8,5 +7,6 @@
     "**/build": true,
     "**/__pycache__": true
   },
-  "python.jediEnabled": false,
+"python.jediEnabled": false,
+"python.languageServer": "Microsoft",
 }

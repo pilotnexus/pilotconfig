@@ -16,24 +16,28 @@ pub fn expand(item: &ItemStatic) -> Result<TokenStream> {
         };
 
         #[no_mangle]
-        unsafe fn plc_init() {
-            init(&#static_varname);
+        unsafe fn plc_init(main_loop: extern "C" fn(*mut u8)) {
+            init(|state: &mut State| {
+                let state_ptr: *mut State = state;
+                main_loop(state_ptr.cast());
+            });
         }
 
         #[no_mangle]
-        unsafe fn plc_run(cycles: u64) {
-            run(&mut #static_varname, cycles);
+        unsafe fn plc_run(state: *mut u8, cycles: u64) {
+            // ensure correct function signature
+            let run_fn: fn (state: &mut State, u64) = run;
+            run_fn(&mut *(state as *mut State), cycles);
         }
 
-        #[no_mangle]
-        unsafe fn plc_varnumber_to_variable(number: u16) -> Option<&'static mut MemVar> {
-            crate::pilot::bindings::PilotBindings::plc_varnumber_to_variable(&mut #static_varname, number)
+        unsafe fn plc_varnumber_to_variable(number: u16) -> Option<&'static MemVar> {
+            crate::pilot::bindings::PilotBindings::plc_varnumber_to_variable(&#static_varname, number)
         }
 
         #[no_mangle]
         unsafe fn plc_mem_to_var() {
             let plc_mem: &pilot::bindings::plc_dev_t = _get_plc_mem_devices_struct();
-            crate::pilot::bindings::PilotBindings::set_from_pilot_bindings(&mut #static_varname, plc_mem);
+            crate::pilot::bindings::PilotBindings::set_from_pilot_bindings(&#static_varname, plc_mem);
         }
 
         #[no_mangle]

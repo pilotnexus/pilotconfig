@@ -43,7 +43,7 @@ pub fn expand(node: &DeriveInput) -> Result<TokenStream> {
 
             const VARIABLES: &'static [crate::pilot::bindings::VariableInfo] = &[#(#variables),*];
 
-            fn set_from_pilot_bindings(&mut self, plc_mem: &crate::pilot::bindings::plc_dev_t) {
+            fn set_from_pilot_bindings(&self, plc_mem: &crate::pilot::bindings::plc_dev_t) {
                 #(#set_from_pilot_bindings)*
             }
 
@@ -51,7 +51,7 @@ pub fn expand(node: &DeriveInput) -> Result<TokenStream> {
                 #(#write_to_pilot_bindings)*
             }
 
-            fn plc_varnumber_to_variable(&mut self, number: u16) -> Option<&mut dyn MemVar> {
+            fn plc_varnumber_to_variable(&self, number: u16) -> Option<&dyn MemVar> {
                 match number {
                     #(#plc_varnumber_to_variable)*
                     #(#plc_varnumber_to_variable_inner_fields)*
@@ -109,7 +109,7 @@ fn assign_field_numbers(s: &DataStruct) -> Result<NumberAssignment> {
 
         // assign the current `field_num` to this `Var` field
         plc_varnumber_to_variable.push(quote! {
-            #field_num => Some(&mut self.#field_name),
+            #field_num => Some(&self.#field_name),
         });
 
         // extract the inner field type of the `Var` field (e.g. `bool` for `Var<bool>`)
@@ -185,7 +185,7 @@ fn assign_field_numbers(s: &DataStruct) -> Result<NumberAssignment> {
         // subtract the offset because each struct uses local field numbering starting at 0.
         plc_varnumber_to_variable_inner_fields.push(quote! {
             num if num >= #offset && num < (#offset + #field_as_trait::MAX_FIELD_NUM) => {
-                #field_as_trait::plc_varnumber_to_variable(&mut self.#field_name, num - #offset)
+                #field_as_trait::plc_varnumber_to_variable(&self.#field_name, num - #offset)
             }
         });
 
@@ -318,7 +318,7 @@ fn generate_bindings(s: &DataStruct) -> Result<Bindings> {
                         // generate code to forward the implementation to the
                         // `set_from_pilot_bindings` implementation of the referenced struct
                         set_from_pilot_bindings.push(quote! {
-                            crate::pilot::bindings::PilotBindings::set_from_pilot_bindings(&mut self.#field_name, plc_mem);
+                            crate::pilot::bindings::PilotBindings::set_from_pilot_bindings(&self.#field_name, plc_mem);
                         });
                     } else {
                         return Err(Error::new_spanned(

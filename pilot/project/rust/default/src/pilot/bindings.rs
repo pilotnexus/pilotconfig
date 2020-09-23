@@ -13,12 +13,9 @@ pub trait PilotBindings {
     const MAX_FIELD_NUM: u16;
     const VARIABLES: &'static [VariableInfo];
 
-    fn set_from_pilot_bindings(&mut self, plc_mem: &plc_dev_t);
+    fn set_from_pilot_bindings(&self, plc_mem: &plc_dev_t);
     fn write_to_pilot_bindings(&self, plc_mem: &mut plc_dev_t);
-    fn plc_varnumber_to_variable(
-        &mut self,
-        number: u16,
-    ) -> Option<&mut dyn pilot_types::var::MemVar>;
+    fn plc_varnumber_to_variable(&self, number: u16) -> Option<&dyn pilot_types::var::MemVar>;
 }
 
 #[derive(Debug)]

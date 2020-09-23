@@ -5,62 +5,58 @@ extern crate pilot_types;
 
 pub use pilot_macro::*;
 
-mod pilot;
-mod variables;
-use core::panic::PanicInfo;
+use async_util::raw_waker;
+use core::{
+    fmt::Write,
+    panic::PanicInfo,
+    pin::Pin,
+    task::{Context, Waker},
+};
+use futures::future::{FusedFuture, FutureExt};
+use macros::SerialWriter;
+use main_task::main_task;
 use pilot::*;
+use pilot_macro::root_var;
 use pilot_types::var::*;
-use variables::*;
+use variables::PlcVars;
+
+mod async_util;
+mod main_task;
+mod pilot;
+mod time;
+mod variables;
 
 #[root_var]
-static mut TEST: PlcVars = <PlcVars>::new();
+pub static VARS: PlcVars = <PlcVars>::new();
 
 include!("pilot/bindings.rs");
-//var_communication!();
+
+pub struct State<'a> {
+    future: Pin<&'a mut dyn FusedFuture<Output = ()>>,
+}
 
 /// Initialization, executed once at startup
-fn init(_vars: &PlcVars) {
+fn init(main_loop: impl FnOnce(&mut State)) {
     println!("Hello form Rust!");
+
+    let future = main_task().fuse();
+    futures::pin_mut!(future);
+    let mut state = State { future };
+    // writeln!(SerialWriter, "State: {:#p}", &mut state).unwrap();
+
+    main_loop(&mut state);
 }
 
 /// Program Loop
-fn run(_vars: &mut PlcVars, _us: u64) {
-    //timer demo
-    static mut TIMER_START: u64 = 18_446_744_073_709_551_615u64;
+fn run(state: &mut State, us: u64) {
+    time::set_system_time(us);
 
-    on_posedge!(_vars.inputs.io0, _vars.start => {
-      println!("Started");
-      _vars.start.set(false);
-      unsafe {
-        TIMER_START = _us;
-      }
-    });
+    let waker = unsafe { Waker::from_raw(raw_waker()) };
+    let mut context = Context::from_waker(&waker);
 
-    let elapsed = unsafe { _us - TIMER_START };
-    if elapsed < 8_000_000 {
-        _vars.demo_o1.set(true);
-        match elapsed {
-            d if d < 1_000_000 => _vars.outputs.io0.set(true),
-            d if d < 2_000_000 => _vars.outputs.io1.set(true),
-            d if d < 3_000_000 => _vars.outputs.io2.set(true),
-            d if d < 4_000_000 => _vars.outputs.io3.set(true),
-            d if d < 5_000_000 => _vars.outputs.io4.set(true),
-            d if d < 6_000_000 => _vars.outputs.io5.set(true),
-            d if d < 7_000_000 => _vars.outputs.io6.set(true),
-            d if d < 8_000_000 => _vars.outputs.io7.set(true),
-            _ => (),
-        }
-    } else {
-        _vars.demo_o1.set(false);
-        _vars.outputs.io0.set(false);
-        _vars.outputs.io1.set(false);
-        _vars.outputs.io2.set(false);
-        _vars.outputs.io3.set(false);
-        _vars.outputs.io4.set(false);
-        _vars.outputs.io5.set(false);
-        _vars.outputs.io6.set(false);
-        _vars.outputs.io7.set(false);
-    }
+    if state.future.as_mut().poll(&mut context).is_ready() {
+        // println!("Future done");
+    };
 }
 
 #[panic_handler]

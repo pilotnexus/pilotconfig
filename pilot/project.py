@@ -10,23 +10,43 @@ import importlib.util
 from colorama import Fore
 
 def download_base_firmware(args):
-  with Sbc(args) as sbc:
-    pilotserver = PilotServer(sbc)
-    pilotdriver = PilotDriver(pilotserver, sbc)
+  modules = {}
+  eeproms = {}
+  detect_modules = True 
+  for mod in range(1, PilotDriver.MODULE_COUNT+1):
+    modarg = 'm{}'.format(mod)
+    if modarg in args and getattr(args, modarg) is not None:
+      detect_modules = False
+      eeproms[mod] = {'uid': 0, 'hid': '', 'fid': getattr(args,modarg)}
 
-    if args.server != None:
-      pilotserver.pilot_server = args.server
+  if detect_modules:        
+    if not args.node:
+      print('We need a nodename or IP and username/password (ssh) of the Node you want to configure.')
+      args.node = input('node/IP of Node to get Firmware Configuration from: ')
 
-    modules, success = pilotdriver.load_pilot_defs()
-    if modules != None:
-      for module in modules:
-        print('Module {}: {}{}'.format(
-            module['module'], Fore.GREEN, module['currentfid_nicename']))
+    with Sbc(args) as sbc:
+      pilotserver = PilotServer(sbc)
+      pilotdriver = PilotDriver(pilotserver, sbc)
 
-    if pilotdriver.get_firmware(False, os.path.join(args.workdir, 'basefw') if args.workdir else './basefw', True) != 0:
-      print(Fore.RED + 'Could not download firmware source!')
-      exit(1)
-    return modules
+      if args.server != None:
+        pilotserver.pilot_server = args.server
+
+      modules, success = pilotdriver.load_pilot_defs()
+  else:
+    pilotserver = PilotServer(None)
+    pilotdriver = PilotDriver(pilotserver, None)
+    modules, success = pilotdriver.getmodules(eeproms)
+
+  if modules != None:
+    for module in modules:
+      print('Module {}: {}{}'.format(
+          module['module'], Fore.GREEN, module['currentfid_nicename']))
+  if pilotdriver.get_firmware(False, os.path.join(args.workdir, 'basefw') if args.workdir else './basefw', True) != 0:
+    print(Fore.RED + 'Could not download firmware source!')
+    exit(1)
+
+
+  return modules
 
 def init(args):
   use_compiler = None
@@ -34,10 +54,6 @@ def init(args):
 
   node_user = args.user
   node_password = args.password
-
-  if not args.node:
-    print('We need a nodename or IP and username/password (ssh) of the Node you want to configure.')
-    args.node = input('node/IP of Node to get Firmware Configuration from: ')
 
   compilers, _ = helper.get_compilers()
 
@@ -127,7 +143,7 @@ def init(args):
     #├─ credentials.json /* authentication credentials (sensitive data) */
     #└─ basefw/          /* firmware base code folder */""".format(args.workdir if args.workdir else os.getcwd()))
   except Exception as error:
-    print('An error occured creathing the project')
+    print('An error occured creating the project')
     print(error)
     exit(1) 
 

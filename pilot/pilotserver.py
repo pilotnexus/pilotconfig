@@ -317,3 +317,4 @@ class PilotServer():
     description = input("Enter a description for this node: ")
 
     self.updatenode(fwconfig, name, description)
+  
