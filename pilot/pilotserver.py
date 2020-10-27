@@ -35,7 +35,7 @@ class RegisterNodeStatus(Enum):
   MAC_ALREADY_USED = 4
 
 class PilotServer():
-  pilot_server = 'https://gql-testing.pilotnexus.io/v1/graphql'
+  pilot_server = 'https://gql.pilotnexus.io/v1/graphql'
   oauth_token_url = "https://amescon.eu.auth0.com/oauth/token"
   oauth_device_code_url = "https://amescon.eu.auth0.com/oauth/device/code"
 

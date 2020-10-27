@@ -24,7 +24,7 @@ pub fn expand(item: &ItemStatic) -> Result<TokenStream> {
         }
 
         #[no_mangle]
-        unsafe fn plc_run(state: *mut u8, cycles: u64) {
+        unsafe fn plc_run(state: *mut u32, cycles: u64) {
             // ensure correct function signature
             let run_fn: fn (state: &mut State, u64) = run;
             run_fn(&mut *(state as *mut State), cycles);

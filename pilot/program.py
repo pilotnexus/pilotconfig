@@ -53,7 +53,7 @@ def program(args):
       else:
         print('You need to specify an image file to write with the --binary attribute.')
         exit(1)
-      pilotdriver.program(program_cpld=False, program_mcu=True, mcu_file=args.bin, var_file=vars, bootmsg=args.wait_bootmsg)
+      pilotdriver.program(program_cpld=(args.all==True), program_mcu=True, mcu_file=args.bin, var_file=vars, bootmsg=args.wait_bootmsg)
   except Exception as error:
     print(error)
 

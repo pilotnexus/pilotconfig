@@ -9,7 +9,7 @@ use pilot_types::var::*;
 
 #[derive(PilotBindings)]
 pub struct PlcVars {
-   
+     pub io16_0: Var<bool>  
 }
 
 

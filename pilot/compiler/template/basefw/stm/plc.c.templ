@@ -18,10 +18,10 @@ void plc_write_outputs()
   plc_mem_to_dev();
 }
 
-void plc_internal_init()
+void plc_internal_init(int *plc_state, void (*main_loop)(void *)) 
 {
   plc_init_dev();
-  plc_init();
+  plc_init(main_loop);
 }
 
 #ifndef EXTERNAL_PLC
@@ -29,13 +29,15 @@ void plc_internal_init()
 void config_run__() {}
 void config_init__() {}
 
-void plc_init() {
+void plc_init(void (*main_loop)(void *)) 
+  main_loop();
 }
 
 void plc_run(uint64_t tick)
 {
   config_run__(tick);
 }
+
 void plc_mem_to_var() {}
 void plc_var_to_mem() {}
 

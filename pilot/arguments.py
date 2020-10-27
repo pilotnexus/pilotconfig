@@ -22,6 +22,8 @@ def program_arguments(parser):
                       help='Set PLC variables')
   parser.add_argument('--config', dest='configfile',
                     default=None, help='module config file (.pilotfwconfig.json)')
+  parser.add_argument('--all', action='store_const', default=False,
+                      const=True, help='Program CPLD as well')
 
 def compiler_arguments(parser):
   parser.add_argument('--config', dest='configfile',
