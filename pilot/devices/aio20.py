@@ -1,5 +1,5 @@
 def getDevice(model, module, compiler, helpers):
-  return I8Device(model, module, compiler, helpers)
+  return AIO20Device(model, module, compiler, helpers)
 
 def toGPIO(this, items):
   return 'GPIO' + chr(items+65)
@@ -7,7 +7,7 @@ def toGPIO(this, items):
 def default_config():
   return {}
 
-class I8Device():
+class AIO20Device():
   size = 1
   ctype = 'uint16_t[16]'
   rusttype = 'u8'
@@ -39,7 +39,8 @@ class I8Device():
   uint16_t r4;
   uint16_t aio14;
   uint16_t aio15;
-} aio20_t;"""},
+} aio20_t;
+"""},
     'rust': { 'name': 'Aio20', 'decl': """#[repr(C)]
 pub struct Aio20 { 
   pub aio1: u16,
@@ -62,7 +63,8 @@ pub struct Aio20 {
   r4: u16,
   pub aio14: u16,
   pub aio15: u16,
-}""" }
+}
+""" }
   }
 
   module = None

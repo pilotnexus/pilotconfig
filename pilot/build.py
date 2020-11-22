@@ -30,7 +30,7 @@ def templateparser(args, dir, model, compiler, helpers):
           f.write(output)  
 
 def pluginparser(args, model, compiler, helpers):
-  plugindir = os.path.join(args.workdir, 'plugins')
+  plugindir = os.path.join(args.workdir, 'plugins', 'template')
   if os.path.isdir(plugindir):
     #dirs = os.listdir(plugindir)
     #for dir in dirs:

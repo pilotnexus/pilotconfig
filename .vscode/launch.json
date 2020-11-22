@@ -23,7 +23,7 @@
                 //"fw", "program", "--workdir", "~/work/phoinix/newfw2/", "--node", "192.168.1.38"
                 //"fw", "init", "--workdir", "/tmp/tempfw", "--node", "192.168.1.14", "--sshkey"
                 //"fw", "init", "--workdir", "/tmp/tempfw", "--module1", "io16", "--module2", "aio20", "--module4", "fpga"
-                "fw", "build", "--workdir", "/tmp/tempfw"
+                "fw", "build", "--workdir", "~/work/phoenix-head-firmware"
             ],
             "console": "integratedTerminal"
         },

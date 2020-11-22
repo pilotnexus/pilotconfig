@@ -13,8 +13,10 @@ class Plc():
   config = {}
   compiler = None
   helpers = None
+  args = {}
 
   def __init__(self, args, model, config, compiler, helpers):
+    self.args = args
     self.config = config
     self.model = model
     self.compiler = compiler
@@ -72,6 +74,13 @@ class Plc():
     
   def getDevice(self, module):
     devicefile = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'devices', module['fid'] + '.py') 
+    if not os.path.isfile(devicefile): # not found in devices, check in plugins folder
+      devicefile = os.path.join(self.args.workdir, 'plugins', module['plugin'] + '.py') 
+      if (os.path.isfile(devicefile)): # plugin exists, add plugin to model
+        if not 'plugins' in self.model:
+          self.model['plugins'] = {}
+        self.model['plugins']['dcmctrl'] = { 'module': module }
+
     if os.path.isfile(devicefile):
       spec = importlib.util.spec_from_file_location("module.name", devicefile)
       device = importlib.util.module_from_spec(spec)

@@ -7,6 +7,12 @@
     "**/build": true,
     "**/__pycache__": true
   },
-"python.jediEnabled": false,
-"python.languageServer": "Microsoft",
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/target": true
+  },
+  "python.jediEnabled": false,
+  "python.languageServer": "Microsoft",
+  "python.pythonPath": "/bin/python3",
 }

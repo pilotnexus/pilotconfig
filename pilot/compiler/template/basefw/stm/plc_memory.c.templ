@@ -1,9 +1,6 @@
 #include "plc_memory.h"
 #include "string.h"
 
-{{#each memmodules}}{{#each device.spec.include}}#include "{{this}}"
-{{/each}}{{/each}}
-
 // Memory mapped device instance
 volatile plc_dev_t __attribute__((section(".plc_mem_devices"))) plc_mem_devices = { 0 };
 

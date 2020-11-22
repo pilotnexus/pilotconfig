@@ -113,15 +113,12 @@ def init(args):
           module['subtitle'] = mod['subtitle']
           module['description'] = mod['description']
 
-        # TODO: move to plugin
         devicefile = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'devices', module['fid'] + '.py') 
         if os.path.isfile(devicefile):
           spec = importlib.util.spec_from_file_location("module.name", devicefile)
           device = importlib.util.module_from_spec(spec)
           spec.loader.exec_module(device)
           module['config'] = device.default_config()
-        #if module['fid'] == 'io16':
-        #  module['config'] = { 'direction': {'0_3': 'in', '4_7': 'in', '8_11': 'in', '12_15': 'in'} }
         config['modules'].append(module)
 
     if args.node:

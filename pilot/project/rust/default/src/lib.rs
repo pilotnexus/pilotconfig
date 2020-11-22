@@ -1,4 +1,6 @@
 #![no_std]
+#![allow(unused_imports)]
+#![allow(dead_code)]
 
 extern crate pilot_macro;
 extern crate pilot_types;
