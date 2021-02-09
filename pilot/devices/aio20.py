@@ -81,7 +81,7 @@ pub struct Aio20 {
 
   def compile(self):
     dev_to_mem_str = """// source for device {{device.name}}
-  single_ended_adc_read_all({{device.index}}, (uint8_t *) &plc_mem_devices.m{{device.slot}}); 
+  plc_mem_devices.m{{device.slot}}_status |= single_ended_adc_read_all({{device.index}}, (uint8_t *) &plc_mem_devices.m{{device.slot}}); 
   """
     dev_to_mem_template = self.compiler.compile(dev_to_mem_str)
     self.dev_to_mem_source = dev_to_mem_template(self.module, self.helpers)

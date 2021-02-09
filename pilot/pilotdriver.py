@@ -483,7 +483,7 @@ class PilotDriver():
     self.reload_drivers()
 
     if res == 0 and var_file != None:
-      res = self.tryrun('setting PLC variables', 4, 'sudo cp {}/variables /proc/pilot/plc/varconf/variables'.format(self.tmp_dir))
+      res = self.tryrun('setting PLC variables', 4, 'sudo cp {}/variables /proc/pilot/plc/varconfig'.format(self.tmp_dir))
       self.tryrun('setting PLC variables permanently', 4, 'sudo mkdir -p /etc/pilot; sudo cp {}/variables /etc/pilot/variables'.format(self.tmp_dir))     
 
     return res

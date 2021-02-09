@@ -16,11 +16,15 @@
 #define GPIO_IN_GET(a,b) BITBAND_PERI(a+8, b)
 #define GPIO_OUT_SET(a,b,c) c ? (*((uint32_t *)(a+0x10)) = (1 << b)) : (*((uint32_t *)(a+0x14)) = (1 << b))
 
-{{#each memmodules}}
-{{device.spec.decl.c.decl}}{{/each}}
+{{#each uniquemodules}}
+{{device.spec.decl.c.decl}}
+{{/each}}
 
-typedef struct {
+typedef struct  __attribute__((__packed__)) {
 {{#each memmodules}}  {{device.spec.decl.c.name}} m{{device.slot}}{{device.spec.decl.c.arr}};
+{{/each}}
+
+{{#each memmodules}}  int32_t m{{device.slot}}_status;
 {{/each}}
 } plc_dev_t;
 
@@ -28,5 +32,8 @@ void plc_init_dev();
 void plc_dev_to_mem();
 void plc_mem_to_dev();
 plc_dev_t * _get_plc_mem_devices_struct();
+
+int plc_get_module_status(uint8_t slot);
+void plc_set_module_status(uint8_t slot, int value);
 
 #endif

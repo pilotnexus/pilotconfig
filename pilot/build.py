@@ -55,6 +55,9 @@ def main(args):
     # get toplevel dir    
     projectdir = helper.find_fw_toplevel(args)
 
+    if 'config' in config:
+      model['config'] = config['config']
+
     for module in model['Modules']:
       configmodule = next( (x for x in config['modules'] if int(x['slot']) == module['Slot'] + 1 ), None)
       if configmodule:

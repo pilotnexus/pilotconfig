@@ -50,7 +50,6 @@ void plc_write_variables(uint8_t *buffer, int count);
 int plc_read_from_variable(uint16_t number, uint8_t subvalue, uint8_t *buffer, int index);
 int plc_write_to_variable(uint16_t varnumber, uint8_t subvalue, uint8_t *buffer, int index);
 int plc_find_next_updated_variable();
-
 void plc_port_config(uint8_t slot, uint8_t port, uint16_t baud);
 {{/if}}
 #endif

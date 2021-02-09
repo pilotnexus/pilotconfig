@@ -2,6 +2,8 @@ use proc_macro::TokenStream;
 use quote::ToTokens;
 use syn::{parse_macro_input, DeriveInput, ItemStatic};
 
+mod const_new;
+mod pilot_access;
 mod pilot_bindings;
 mod root_var;
 
@@ -77,11 +79,21 @@ pub fn root_var(attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemStatic);
     let generated = root_var::expand(&input).unwrap_or_else(|err| err.to_compile_error());
 
-    eprintln!("ROOT_VAR TOKENS: {}", generated);
+    // eprintln!("ROOT_VAR TOKENS: {}", generated);
 
     let mut item = input.into_token_stream();
     item.extend(generated);
     item.into()
+}
+
+#[proc_macro_derive(PilotAccess)]
+pub fn derive_pilot_access(item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as DeriveInput);
+    let tokens = pilot_access::expand(&input).unwrap_or_else(|err| err.to_compile_error());
+
+    // eprintln!("pilot_access TOKENS: {}", tokens);
+
+    tokens.into()
 }
 
 /// This derive macro generates an implementation of the `PilotBindings` trait using `bind_*`
@@ -91,9 +103,9 @@ pub fn root_var(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// Fields of that type can be also bind to a field of an input or output module through
 /// `#[bind_read]` or `#[bind_write]` attributes. The following syntax variants exist:
 ///
-/// - `#[bind_read(m3.5)]`: Reads from the annotated variable of type `Var<bool>` resolve to the
+/// - `#[bind_read(m3, bit = 5)]`: Reads from the annotated variable of type `Var<bool>` resolve to the
 ///   value of bit 5 of module `m3`.
-/// - `#[bind_write(m2.7)]`: Writes to the variable of type `Var<bool>` set the value of bit 7
+/// - `#[bind_write(m2, bit = 7)]`: Writes to the variable of type `Var<bool>` set the value of bit 7
 ///   of `m2`.
 ///
 /// Planned variants that are not yet supported:
@@ -107,9 +119,20 @@ pub fn root_var(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// ```
 /// #[derive(PilotBindings)]
 /// pub struct IOModule {
-///     #[bind_read(m1.0)]
-///     #[bind_write(m2.0)]
+///     #[bind_read(m1, bit = 0)]
+///     #[bind_write(m2, bit = 0)]
 ///     pub io0: Var<bool>,
+/// }
+/// ```
+///
+/// It is also possible to bind to certain sub-fields of the generated module structs:
+///
+/// ```
+/// #[derive(PilotBindings)]
+/// pub struct IOModule {
+///    // assuming that `m3` is an array of `Motor { position: u32, }` structs
+///    #[bind_write(m3[0].position, bit = 15)]
+///    pub demo_o1: Var<bool>,
 /// }
 /// ```
 ///
@@ -122,21 +145,18 @@ pub fn root_var(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// #[derive(PilotBindings)]
 /// pub struct PlcVars {
 ///     /* Example for hieracical var structure */
-///     #[bind_read]
+///     #[bind_nested]
 ///     pub inputs: IOModule,
-///     #[bind_write]
+///     #[bind_nested]
 ///     pub outputs: IOModule,
 ///
-///     #[bind_read(m1.0)]
+///     #[bind_read(m1, bit = 0)]
 ///     pub i8_0: Var<bool>,
 /// }
 /// ```
 ///
-/// Fields that refer to other structs must be annotated with argument-less `#[bind_read]` and/or
-/// `#[bind_write]` attributes. These attributes specify whether the `#[bind_read]`/`#[bind_write]`
-/// attributes of the referenced struct should apply or not. For the above example, only the
-/// `#[bind_read]` attributes of the `IOModule` struct apply for the `inputs` fields and only the
-/// `#[bind_write]` attributes apply to the `outputs` field.
+/// Fields that refer to other structs must be annotated with an argument-less `#[bind_nested]`
+/// attribute.
 ///
 /// ## Ignoring Fields
 ///
@@ -144,18 +164,23 @@ pub fn root_var(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// attribute. Other fields need to be explicitly ignored through a `#[bind_ignore]` attribute.
 /// This requirement ensures that one can't accidentally forget to add a `#[bind_*]` attributes
 /// on fields that refer other structs such as the `inputs` fields in the example above.
-///
-/// ## Limitations
-///
-/// Since macro expansion happens before type analysis, the detection of fields of type `Var`
-/// uses simple string matching. That means that specifying the field type using a path does
-/// not work currently (e.g. `struct Test { io0: pilot_types::var::Var<bool>, }`).
-#[proc_macro_derive(PilotBindings, attributes(bind_read, bind_write, bind_ignore))]
+#[proc_macro_derive(
+    PilotBindings,
+    attributes(bind_read, bind_write, bind_ignore, bind_nested, bind_type)
+)]
 pub fn derive_pilot_bindings(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
     let tokens = pilot_bindings::expand(&input).unwrap_or_else(|err| err.to_compile_error());
 
-    eprintln!("pilot_bindings TOKENS: {}", tokens);
+    // eprintln!("binding TOKENS: {}", tokens);
+
+    tokens.into()
+}
+
+#[proc_macro_derive(ConstNew)]
+pub fn derive_const_new(item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as DeriveInput);
+    let tokens = const_new::expand(&input).unwrap_or_else(|err| err.to_compile_error());
 
     tokens.into()
 }

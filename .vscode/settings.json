@@ -14,5 +14,4 @@
   },
   "python.jediEnabled": false,
   "python.languageServer": "Microsoft",
-  "python.pythonPath": "/bin/python3",
 }

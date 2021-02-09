@@ -7,9 +7,9 @@ use pilot_macro::*;
 #[allow(unused_imports)]
 use pilot_types::var::*;
 
-#[derive(PilotBindings)]
+#[derive(ConstNew, PilotAccess, PilotBindings)]
 pub struct PlcVars {
-     pub io16_0: Var<bool>  
+  //insert your plc variables here
 }
 
 

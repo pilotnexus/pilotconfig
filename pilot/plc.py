@@ -62,6 +62,11 @@ class Plc():
 
     # memory mapped modules
     self.model['memmodules'] = memmodules 
+    uniquemodules = []
+    for m in memmodules:
+      if len(list(filter(lambda x: x['fid'] == m['fid'], uniquemodules))) == 0:
+        uniquemodules.append(m)
+    self.model['uniquemodules'] = uniquemodules 
 
     # generate data for linker script
     self.model['memory'] = self.targetdevice

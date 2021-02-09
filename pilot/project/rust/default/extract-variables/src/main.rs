@@ -118,7 +118,6 @@ fn visit_var(
     let fields_ptr = buf.get_u32_le();
     let fields_len = buf.get_u32_le();
     let field_number_offset = buf.get_u16_le();
-    let field_number = buf.get_u16_le();
 
     // read out the string fields
     let name = std::str::from_utf8(
@@ -136,8 +135,8 @@ fn visit_var(
     if fields_len == 0 {
         // this field is a leaf in the tree, which indicates that this is a `Var` type
         let var_info = VarInfo {
-            name,
-            number: number_offset + field_number,
+            name: name.strip_suffix(".value").unwrap_or(&name).into(),
+            number: number_offset,
             ty: ty.into(),
         };
         variables.push(var_info);
@@ -202,7 +201,7 @@ fn write_csv(csv_arg: String, variables: &[VarInfo]) -> anyhow::Result<()> {
     for var in variables {
         writeln!(
             f,
-            "{0};VAR;CONFIG.RESOURCE1.{1};CONFIG.RESOURCE1.{1};{2};",
+            "{0};VAR;CONFIG.{1};CONFIG.{1};{2};",
             var.number,
             &var.name,
             iecvars.get(&var.ty.as_ref()).unwrap_or(&"UNKNOWN"),
