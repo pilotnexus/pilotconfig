@@ -53,7 +53,18 @@ def program(args):
       else:
         print('You need to specify an image file to write with the --binary attribute.')
         exit(1)
-      pilotdriver.program(program_cpld=not (args.mcuonly==True), program_mcu=True, mcu_file=args.bin, var_file=vars, bootmsg=args.wait_bootmsg)
+
+      if args.logicbin:
+        if not os.path.isfile(args.logicbin):
+          print('You need to specify a valid CPLD file for the --logicbinary attribute.')
+          exit(1)
+      elif os.path.isfile(os.path.join(args.workdir, 'basefw/cpld/output_files/cpld.jam') if args.workdir else './basefw/cpld/output_files/cpld.jam'):
+        args.logicbin = os.path.join(args.workdir, 'basefw/cpld/output_files/cpld.jam') if args.workdir else './basefw/cpld/output_files/cpld.jam'
+      else:
+        print('You need to specify an image file to write with the --logicbinary attribute.')
+        exit(1)
+
+      pilotdriver.program(program_cpld=not (args.mcuonly==True), program_mcu=True, cpld_file=args.logicbin, mcu_file=args.bin, var_file=vars, bootmsg=args.wait_bootmsg)
   except Exception as error:
     print(error)
 

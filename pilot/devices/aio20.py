@@ -81,7 +81,13 @@ pub struct Aio20 {
 
   def compile(self):
     dev_to_mem_str = """// source for device {{device.name}}
-  plc_mem_devices.m{{device.slot}}_status |= single_ended_adc_read_all({{device.index}}, (uint8_t *) &plc_mem_devices.m{{device.slot}}); 
+  get_module_info()->m{{device.index}}_status |= single_ended_adc_read_all({{device.index}}, (uint8_t *) &plc_mem_devices.m{{device.slot}}); 
   """
+
+    init_str = "  // initialization for device {{device.name}}\n  int32_t status = 1;\n  if (aio20_get_device_id({{device.index}}) == 0x424)\n  {\n    status = 0;\n    AIO20_init({{device.index}});\n  }\n  return status;"
+    init_template = self.compiler.compile(init_str)
     dev_to_mem_template = self.compiler.compile(dev_to_mem_str)
+
     self.dev_to_mem_source = dev_to_mem_template(self.module, self.helpers)
+    self.init_source = init_template(self.module, self.helpers)
+

@@ -18,6 +18,8 @@ def program_arguments(parser):
                       help='Specify named node to program')
   parser.add_argument('--binary', '-b', default=None, dest='bin',
                       help='Write binary image to the Pilot Microcontroller')
+  parser.add_argument('--logicbinary', '-l', default=None, dest='logicbin',
+                      help='Write bitstream to the Pilot CPLD')
   parser.add_argument('--variables', '-v', default=None, dest='vars',
                       help='Set PLC variables')
   parser.add_argument('--config', dest='configfile',

@@ -1,13 +1,30 @@
 #include "plc_memory.h"
 #include "string.h"
+#include "module.h"
 
 // Memory mapped device instance
 volatile plc_dev_t __attribute__((section(".plc_mem_section"))) plc_mem_devices = { 0 };
 
+{{#each memmodules}}int32_t plc_init_module{{device.slot}}()
+{
+{{{device.spec.init_source}}}
+}
+
+{{/each}}
 void plc_init_dev()
 {
+  modules_t *modules = get_module_info();
   memset((void *)&plc_mem_devices, 0, sizeof(plc_mem_devices));
-  {{#each memmodules}}{{{device.spec.init_source}}}{{/each}}
+{{#each memmodules}}  modules->m{{device.index}}_status = plc_init_module{{device.slot}}();
+  {{/each}}
+}
+
+void plc_check_modules()
+{
+  modules_t *modules = get_module_info();
+  {{#each memmodules}}if (pilot_module_status_changed({{device.index}}) == -1) //status was reset from >0 to 0, reinitialize module
+    modules->m{{device.index}}_status = plc_init_module{{device.slot}}();
+  {{/each}}
 }
 
 void plc_dev_to_mem()
@@ -22,30 +39,4 @@ void plc_mem_to_dev()
 
 plc_dev_t * _get_plc_mem_devices_struct() {
   return (plc_dev_t *) &plc_mem_devices;
-}
-
-int plc_get_module_status(uint8_t slot)
-{
-  switch(slot)
-  {
-  {{#each memmodules}}
-  case {{slot}}:
-    return plc_mem_devices.m{{slot}}_status;
-  break;
-  {{/each}}
-  }
-
-  return 0;
-}
-
-void plc_set_module_status(uint8_t slot, int value)
-{
-  switch(slot)
-  {
-  {{#each memmodules}}
-  case {{slot}}:
-    plc_mem_devices.m{{slot}}_status = value;
-  break;
-  {{/each}}
-  }
 }

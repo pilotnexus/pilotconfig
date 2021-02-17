@@ -1,4 +1,6 @@
 #include "stdint.h"
+#include "module.h"
+
 {{#each memmodules}}{{#each device.spec.include}}#include "{{this}}"
 {{/each}}{{/each}}
 
@@ -23,17 +25,12 @@
 typedef struct  __attribute__((__packed__)) {
 {{#each memmodules}}  {{device.spec.decl.c.name}} m{{device.slot}}{{device.spec.decl.c.arr}};
 {{/each}}
-
-{{#each memmodules}}  int32_t m{{device.slot}}_status;
-{{/each}}
 } plc_dev_t;
 
 void plc_init_dev();
+void plc_check_modules();
 void plc_dev_to_mem();
 void plc_mem_to_dev();
 plc_dev_t * _get_plc_mem_devices_struct();
-
-int plc_get_module_status(uint8_t slot);
-void plc_set_module_status(uint8_t slot, int value);
 
 #endif

@@ -47,7 +47,7 @@ class IO16Device():
     if "config" not in self.module:
       self.module['config'] = { 'direction': directions }
 
-    init_str = "// initialization for device {{device.name}}\n"
+    init_str = "  // initialization for device {{device.name}}\n  int32_t status = 0;\n"
     dev_to_mem_str = "// source for device {{device.name}}\n  int16_t {{device.name}}_value;\n"
     mem_to_dev_str = "// source for device {{device.name}}\n  int16_t {{device.name}}_value;\n"
     # iterate nibbles
@@ -64,11 +64,12 @@ class IO16Device():
       offset_to = int(nibble.split('-')[1])
 
       nibbles_read[int(offset / 4)] = dir == 'in'
-      init_str = init_str + "  plc_mem_devices.m{{device.slot}}_status |= pilot_io16_{{device.index}}_set_direction(pilot_io16_block_" + str(offset) + "_to_" + str(offset_to) + ", " + self.direction_to_enum(dir) + ");\n"
+      init_str = init_str + "  status |= pilot_io16_{{device.index}}_set_direction(pilot_io16_block_" + str(offset) + "_to_" + str(offset_to) + ", " + self.direction_to_enum(dir) + ");\n"
 
       for i in range(4):
         self.mem_doc.append({ "name": "{}{}".format(dir[0], offset+i), "desc": "digital {} {}".format('input' if dir == 'in' else 'output', offset+i), "byte": int((offset+i) / 8), "bit": (offset+i) % 8, "datatype": "bool", "write": True if dir == 'out' else False, "read": True if dir == 'in' else False })
 
+    init_str = init_str + "  return status;"
 
     readmask = "0x" + "".join(map(lambda x: 'F' if x else '0', reversed(nibbles_read)))
     writemask = "0x" + "".join(map(lambda x: '0' if x else 'F', reversed(nibbles_read)))
@@ -76,12 +77,12 @@ class IO16Device():
     inv_writemask = "0x" + "".join(map(lambda x: 'F' if x else '0', reversed(nibbles_read)))
     
     if readmask != '0x0000':
-      dev_to_mem_str = dev_to_mem_str + """  plc_mem_devices.m{{device.slot}}_status |= pilot_io16_{{device.index}}_read_register(pilot_io16_register_input_register_A, 2, (uint8_t *)&{{device.name}}_value);
+      dev_to_mem_str = dev_to_mem_str + """  get_module_info()->m{{device.index}}_status |= pilot_io16_{{device.index}}_read_register(pilot_io16_register_input_register_A, 2, (uint8_t *)&{{device.name}}_value);
   plc_mem_devices.m{{device.slot}} &= """ + inv_readmask + """; 
   plc_mem_devices.m{{device.slot}} |= {{device.name}}_value & """ + readmask + ";\n"
 
     if writemask != '0x0000':
-      mem_to_dev_str = mem_to_dev_str + "  {{device.name}}_value = plc_mem_devices.m{{device.slot}} & " + writemask + ";\n  " + "plc_mem_devices.m{{device.slot}}_status |= pilot_io16_{{device.index}}_write_register(pilot_io16_register_output_register_A, 2, (uint8_t *)&{{device.name}}_value);"
+      mem_to_dev_str = mem_to_dev_str + "  {{device.name}}_value = plc_mem_devices.m{{device.slot}} & " + writemask + ";\n  " + "get_module_info->m{{device.index}}_status |= pilot_io16_{{device.index}}_write_register(pilot_io16_register_output_register_A, 2, (uint8_t *)&{{device.name}}_value);"
 
     # generate source 
     init_template = self.compiler.compile(init_str)
