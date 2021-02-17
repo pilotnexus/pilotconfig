@@ -22,7 +22,7 @@
 {{device.spec.decl.c.decl}}
 {{/each}}
 
-typedef struct  __attribute__((__packed__)) {
+typedef struct {
 {{#each memmodules}}  {{device.spec.decl.c.name}} m{{device.slot}}{{device.spec.decl.c.arr}};
 {{/each}}
 } plc_dev_t;

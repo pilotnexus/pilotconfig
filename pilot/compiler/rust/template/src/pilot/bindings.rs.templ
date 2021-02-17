@@ -7,8 +7,6 @@
 
 #[repr(C)]
 pub struct plc_dev_t {
-{{#each memmodules}}  pub m{{device.slot}}_state: i32,
-{{/each}}
 {{#each memmodules}}  pub m{{device.slot}}: {{device.spec.decl.rust.name}},
 {{/each}}
 }
