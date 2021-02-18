@@ -82,7 +82,7 @@ class IO16Device():
   plc_mem_devices.m{{device.slot}} |= {{device.name}}_value & """ + readmask + ";\n"
 
     if writemask != '0x0000':
-      mem_to_dev_str = mem_to_dev_str + "  {{device.name}}_value = plc_mem_devices.m{{device.slot}} & " + writemask + ";\n  " + "get_module_info->m{{device.index}}_status |= pilot_io16_{{device.index}}_write_register(pilot_io16_register_output_register_A, 2, (uint8_t *)&{{device.name}}_value);"
+      mem_to_dev_str = mem_to_dev_str + "  {{device.name}}_value = plc_mem_devices.m{{device.slot}} & " + writemask + ";\n  " + "get_module_info()->m{{device.index}}_status |= pilot_io16_{{device.index}}_write_register(pilot_io16_register_output_register_A, 2, (uint8_t *)&{{device.name}}_value);"
 
     # generate source 
     init_template = self.compiler.compile(init_str)
