@@ -31,18 +31,23 @@ def program(args):
       #  print('This does not seem to be a Raspberry Pi. Please use the --node option to remote connect to it.')
       #  return 2
 
-      vars = None
       if args.vars:
-        if os.path.isfile(args.vars):
-          vars = args.vars
-        else:
+        if not os.path.isfile(args.vars):
           print('You need to specify a valid file for the --variables attribute.')
           exit(1)
       else:
-        varfile = os.path.join(args.workdir, 'out/VARIABLES.csv') if args.workdir else './out/VARIABLES.csv'
-        if os.path.isfile(varfile):
-          print('Using variable file ' + varfile)
-          vars = varfile
+        args.vars = os.path.join(args.workdir, 'out/VARIABLES.csv') if args.workdir else './out/VARIABLES.csv'
+        if os.path.isfile(args.vars):
+          print('Using variable file ' + args.vars)
+
+      if args.doc:
+        if not os.path.isfile(args.doc):
+          print('You need to specify a valid doc (fwconfig.json) file for the --doc attribute.')
+          exit(1)
+      else:
+        args.doc = os.path.join(args.workdir, 'out/fwconfig.json') if args.workdir else './out/fwconfig.json'
+        if os.path.isfile(args.doc):
+          print('Using documentation file ' + args.doc)
 
       if args.bin:
         if not os.path.isfile(args.bin):
@@ -64,7 +69,7 @@ def program(args):
         print('You need to specify an image file to write with the --logicbinary attribute.')
         exit(1)
 
-      pilotdriver.program(program_cpld=not (args.mcuonly==True), program_mcu=True, cpld_file=args.logicbin, mcu_file=args.bin, var_file=vars, bootmsg=args.wait_bootmsg)
+      pilotdriver.program(program_cpld=not (args.mcuonly==True), program_mcu=True, cpld_file=args.logicbin, mcu_file=args.bin, var_file=args.vars, bootmsg=args.wait_bootmsg, doc_file=args.doc, reload_driver=not (args.mcuonly==True)) #only reload driver if cpld is programmed (indicates hardware change)
   except Exception as error:
     print(error)
 

@@ -13,7 +13,7 @@ class IO16Device():
   init_source = ''
   dev_to_mem_source = ''
   mem_to_dev_source = ''
-  mem_doc = []
+  mem_doc = { "read": [], "write": [] }
 
   decl = {
     'c': { 'name': 'io16_t', 'decl': 'typedef uint16_t io16_t;' },
@@ -67,7 +67,7 @@ class IO16Device():
       init_str = init_str + "  status |= pilot_io16_{{device.index}}_set_direction(pilot_io16_block_" + str(offset) + "_to_" + str(offset_to) + ", " + self.direction_to_enum(dir) + ");\n"
 
       for i in range(4):
-        self.mem_doc.append({ "name": "{}{}".format(dir[0], offset+i), "desc": "digital {} {}".format('input' if dir == 'in' else 'output', offset+i), "byte": int((offset+i) / 8), "bit": (offset+i) % 8, "datatype": "bool", "write": True if dir == 'out' else False, "read": True if dir == 'in' else False })
+        self.mem_doc['read' if dir == 'in' else 'write'].append({ "name": "{}{}".format(dir[0], offset+i), "desc": "digital {} {}".format('input' if dir == 'in' else 'output', offset+i), "byte": int((offset+i) / 8), "bit": (offset+i) % 8, "length": 1, "datatype": "bool"})
 
     init_str = init_str + "  return status;"
 

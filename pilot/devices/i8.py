@@ -15,7 +15,7 @@ class I8Device():
   init_source = ''
   dev_to_mem_source = ''
   mem_to_dev_source = ''
-  mem_doc = []
+  mem_doc = { "read": [], "write": [] }
 
   decl = {
     'c': { 'name': 'i8_t', 'decl': 'typedef uint8_t i8_t;' },
@@ -41,4 +41,4 @@ class I8Device():
 {{/each}}
   """)
     self.dev_to_mem_source = template(self.module, self.helpers)
-    self.mem_doc = [{ "name": "i{}".format(i), "desc": "digital input {}".format(i), "byte": 0, "bit": i, "datatype": "bool", "read": True, "write": False } for i in range(8)]
+    self.mem_doc['read'] = [{ "name": "i{}".format(i), "desc": "digital input {}".format(i), "byte": 0, "bit": i,"length": 1, "datatype": "bool"} for i in range(8)]

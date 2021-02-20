@@ -15,7 +15,171 @@ class AIO20Device():
   init_source = ''
   dev_to_mem_source = ''
   mem_to_dev_source = ''
-  mem_doc = []
+  mem_doc = {
+    "read": [
+    {
+      "byte": 2,
+      "bit": 0,
+      "length": 16,
+      "name": "aio0",
+      "desc": "Analog I/O 0",
+      "signed": False
+    },
+    {
+      "byte": 0,
+      "bit": 0,
+      "length": 16,
+      "name": "aio1",
+      "desc": "Analog I/O 1",
+      "signed": False
+    },
+    {
+      "byte": 6,
+      "bit": 0,
+      "length": 16,
+      "name": "aio2",
+      "description": "Analog I/O 2",
+      "signed": False
+    },
+    {
+      "byte": 4,
+      "bit": 0,
+      "length": 16,
+      "name": "aio3",
+      "desc": "Analog I/O 3",
+      "signed": False
+    },
+    {
+      "byte": 12,
+      "bit": 0,
+      "length": 16,
+      "name": "aio4",
+      "desc": "Analog I/O 4",
+      "signed": False
+    },
+    {
+      "byte": 10,
+      "bit": 0,
+      "length": 16,
+      "name": "aio5",
+      "desc": "Analog I/O 5",
+      "signed": False
+    },
+    {
+      "byte": 18,
+      "bit": 0,
+      "length": 16,
+      "name": "aio6",
+      "desc": "Analog I/O 6",
+      "signed": False
+    },
+    {
+      "byte": 16,
+      "bit": 0,
+      "length": 16,
+      "name": "aio7",
+      "desc": "Analog I/O 7",
+      "signed": False
+    },
+    {
+      "byte": 22,
+      "bit": 0,
+      "length": 16,
+      "name": "aio8",
+      "desc": "Analog I/O 8",
+      "signed": False
+    },
+    {
+      "byte": 20,
+      "bit": 0,
+      "length": 16,
+      "name": "aio9",
+      "desc": "Analog I/O 9",
+      "signed": False
+    },
+    {
+      "byte": 28,
+      "bit": 0,
+      "length": 16,
+      "name": "aio10",
+      "desc": "Analog I/O 10",
+      "signed": False
+    },
+    {
+      "byte": 26,
+      "bit": 0,
+      "length": 16,
+      "name": "aio11",
+      "desc": "Analog I/O 11",
+      "signed": False
+    },
+    {
+      "byte": 32,
+      "bit": 0,
+      "length": 16,
+      "name": "aio12",
+      "desc": "Analog I/O 12",
+      "signed": False
+    },
+    {
+      "byte": 30,
+      "bit": 0,
+      "length": 16,
+      "name": "aio13",
+      "desc": "Analog I/O 13",
+      "signed": False
+    },
+    {
+      "byte": 36,
+      "bit": 0,
+      "length": 16,
+      "name": "aio14",
+      "desc": "Analog I/O 14",
+      "signed": False
+    },
+    {
+      "byte": 38,
+      "bit": 0,
+      "length": 16,
+      "name": "aio15",
+      "desc": "Analog I/O 15",
+      "signed": False
+    },
+    {
+      "byte": 8,
+      "bit": 0,
+      "length": 16,
+      "name": "r1",
+      "desc": "Analog Frontend 1 Id Resistor",
+      "signed": False
+    },
+    {
+      "byte": 14,
+      "bit": 0,
+      "length": 16,
+      "name": "r2",
+      "desc": "Analog Frontend 2 Id Resistor",
+      "signed": False
+    },
+    {
+      "byte": 24,
+      "bit": 0,
+      "length": 16,
+      "name": "r3",
+      "desc": "Analog Frontend 3 Id Resistor",
+      "signed": False
+    },
+    {
+      "byte": 34,
+      "bit": 0,
+      "length": 16,
+      "name": "r4",
+      "desc": "Analog Frontend 4 Id Resistor",
+      "signed": False
+    }
+  ],
+  "write": []
+  }
 
   decl = {
     'c': { 'name': 'aio20_t', 'decl': """typedef struct { 

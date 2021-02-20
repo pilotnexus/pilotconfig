@@ -55,6 +55,16 @@ class Plc():
       else:
         self.config['plc_memory_size'] = self.config['plc_memory_size'] + dev['spec'].size
         dev['spec'].compile()
+        # custom name replacement
+        if 'config' in mod and 'labels' in mod['config']:
+          for label in mod['config']['labels']:
+            for dir in ['read', 'write']:
+              found = next((x for x in dev['spec'].mem_doc[dir] if x['name'] == label), None)
+              if found:
+                found['name'] = mod['config']['labels'][label]
+              else:
+                print("Warning: Custom label {} could not be matched to a module property".format(label))
+              
         memmodules.append(mod)
 
     # memory size in kb

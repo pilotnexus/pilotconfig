@@ -187,6 +187,13 @@ class PilotDriver():
         print('Resetting MCU...', end='')
       sys.stdout.flush()
       reset_pin = self.sbc.target['reset_pin']['number']
+      boot_pin = self.sbc.target['boot_pin']['number']
+
+      # set boot pin to 0 to avoid booting into bootloader
+      self.sbc.cmd('sudo sh -c \'[ ! -f /sys/class/gpio/gpio{0}/value ] && echo "{0}" > /sys/class/gpio/export\''.format(boot_pin))
+      self.sbc.cmd('sudo sh -c \'echo "out" > /sys/class/gpio/gpio{}/direction\''.format(boot_pin))
+      self.sbc.cmd('sudo sh -c \'echo -n "0" > /sys/class/gpio/gpio{}/value\''.format(boot_pin))
+
       self.sbc.cmd('sudo sh -c \'[ ! -f /sys/class/gpio/gpio{0}/value ] && echo "{0}" > /sys/class/gpio/export\''.format(reset_pin))
       self.sbc.cmd('sudo sh -c \'echo "out" > /sys/class/gpio/gpio{}/direction\''.format(reset_pin))
       self.sbc.cmd('sudo sh -c \'echo -n "1" > /sys/class/gpio/gpio{}/value\''.format(reset_pin))
@@ -442,7 +449,7 @@ class PilotDriver():
   def program_mcu(self, binpath, binfile): #use 115200, 57600, 38400 baud rates sequentially
     return self.tryrun('programming MCU', 4, 'sudo chmod +x {0}/stm32flash; sudo {0}/stm32flash -w {1} -b 115200 -g 0 -x {2} -z {3} {4}'.format(binpath, binfile, self.sbc.target['reset_pin']['number'], self.sbc.target['boot_pin']['number'], self.sbc.target['tty']))
 
-  def program(self, program_cpld=True, program_mcu=True, cpld_file=None, mcu_file=None, var_file=None, bootmsg=False):
+  def program(self, program_cpld=True, program_mcu=True, cpld_file=None, mcu_file=None, var_file=None, bootmsg=False, doc_file=None, reload_driver=True):
     res = 0
     binpath = self.binpath
     if self.sbc.remote_client:
@@ -459,6 +466,8 @@ class PilotDriver():
             scp_client.put(mcu_file, remote_path=os.path.join(self.tmp_dir, 'stm.bin'))
           if var_file != None:
             scp_client.put(var_file, remote_path=os.path.join(self.tmp_dir, 'variables'))
+          if doc_file != None:
+            scp_client.put(doc_file, remote_path=os.path.join(self.tmp_dir, 'fwconfig.json'))
       else:
         print('Error setting permissions to folder {}'.format(self.tmp_dir))
     else:
@@ -468,6 +477,8 @@ class PilotDriver():
         copyfile(mcu_file, os.path.join(self.tmp_dir, 'stm.bin'))
       if var_file != None:
         copyfile(var_file, os.path.join(self.tmp_dir, 'variables'))
+      if doc_file != None:
+        copyfile(doc_file, os.path.join(self.tmp_dir, 'fwconfig.json'))
 
     if program_cpld and res == 0:
       res = self.program_cpld(binpath, Path(self.tmp_dir).joinpath('cpld.jam').as_posix(), True)
@@ -480,11 +491,15 @@ class PilotDriver():
       res = self.program_cpld(binpath, Path(self.tmp_dir).joinpath('cpld.jam').as_posix())
 
     print(self.reset_pilot(bootmsg))
-    self.reload_drivers()
+    if reload_driver:
+      self.reload_drivers()
 
     if res == 0 and var_file != None:
       res = self.tryrun('setting PLC variables', 4, 'sudo cp {}/variables /proc/pilot/plc/varconfig'.format(self.tmp_dir))
       self.tryrun('setting PLC variables permanently', 4, 'sudo mkdir -p /etc/pilot; sudo cp {}/variables /etc/pilot/variables'.format(self.tmp_dir))     
+    
+    if res == 0 and doc_file != None:
+      res = self.tryrun('saving firmware configuration file', 4, 'sudo mkdir -p /etc/pilot; sudo cp {}/fwconfig.json /etc/pilot/fwconfig.json'.format(self.tmp_dir))     
 
     return res
 

@@ -6,8 +6,8 @@ def setup_arguments(parser):
                       help='Download Sourcecode only')
   parser.add_argument('--regnode', '-n', dest='regnode', action='store_true',
                       help='Register node')
-  parser.add_argument('--reset', '-r', default=None, action='store_const', const='reset', dest='reset',
-                      help='Resets the Pilot Mainboard')
+  #parser.add_argument('--reset', '-r', default=None, action='store_const', const='reset', dest='reset',
+  #                    help='Resets the Pilot Mainboard')
   parser.add_argument('--yes', '-y', default=None, action='store_const', const='noninteractive', dest='noninteractive',
                       help='Confirms default action (non-interactive mode)')
   parser.add_argument('--driveronly', '-x', default=None, action='store_const', const='driveronly', dest='driveronly',
@@ -22,6 +22,8 @@ def program_arguments(parser):
                       help='Write bitstream to the Pilot CPLD')
   parser.add_argument('--variables', '-v', default=None, dest='vars',
                       help='Set PLC variables')
+  parser.add_argument('--doc', default=None, dest='doc',
+                      help='set firmware config file')
   parser.add_argument('--config', dest='configfile',
                     default=None, help='module config file (.pilotfwconfig.json)')
   parser.add_argument('--mcuonly', action='store_const', default=False,

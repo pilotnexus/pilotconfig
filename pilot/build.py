@@ -40,6 +40,54 @@ def pluginparser(args, model, compiler, helpers):
 def _hex(this, items):
     return hex(items)
 
+def parseplcvariables(varcsvfilepath ):
+  with open(varcsvfilepath) as varcsvfile:
+    content = [line.strip() for line in varcsvfile]
+
+  mode = 'variables'
+  variables = []
+  for line in content:
+    if line.startswith('//'): 
+      mode = line[2:].strip().lower()
+    else:
+      columns = line.split(';')
+      if mode == 'variables' and len(columns) >= 5:
+        varname = columns[2].split('.')
+        if len(varname) > 2 and varname[0].upper() == "CONFIG":
+          var = {'number': int(columns[0]), 'location': columns[1], 'resource': varname[1], 'type': columns[4]}
+          if len(varname) == 3:
+            var['instance'] = None
+            var['name'] = varname[2]
+          elif len(varname) >= 4:
+            var['instance'] = varname[2]
+            var['name'] = '.'.join(varname[3:])
+        variables.append(var)
+  return variables
+
+def createdoc(args, model, config):
+  docfile = os.path.join(args.workdir, 'out/fwconfig.json') if args.workdir else './out/fwconfig.json'
+  doc = { "modules": [], "variables": [] }
+
+  # create module documentation
+  for m in model['memmodules']:
+    mod_cfg = next(iter([x for x in config['modules'] if x['slot'] == m['slot']]))
+    n = mod_cfg['name'] if 'name' in mod_cfg else mod_cfg['device']['name']
+    
+    doc['modules'].append({
+      "slot": m['slot'],
+      "fid": m['fid'],
+      "fid_nicename": m['fid_nicename'],
+      "name": n ,
+      "doc": m['device']['spec'].mem_doc
+    })
+  
+  # create variable documentation
+  varfile = os.path.join(args.workdir, 'out/VARIABLES.csv') if args.workdir else './out/VARIABLES.csv'
+  doc['variables'] = parseplcvariables(varfile)
+
+  with open((docfile), 'w') as f:
+    json.dump(doc, f)
+
 def main(args):
   parser = Compiler()
   helpers = {'hex': _hex}
@@ -85,4 +133,8 @@ def main(args):
     compiler = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(compiler)
     compiler.main(args, config, model, projectdir, compilerdirectory)
+
+    #create documentation json
+    createdoc(args, model, config)
+     
   return 0      

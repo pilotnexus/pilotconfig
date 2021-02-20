@@ -67,6 +67,9 @@ def main():
   argparser = argparse.ArgumentParser(description='Pilot Command-Line Interface')
   argparser.add_argument('-v', '--version', dest='version',action='store_true',
                          help='Get version')
+
+  argparser.add_argument('--reset', '-r', default=None, action='store_const', const='reset', dest='reset',
+                      help='Resets the Pilot Mainboard')
   # argparser.add_argument('-m', '--modules', dest='modules', action='store_true',
   #                        help='Get info on modules')
   #argparser.add_argument('-a', '--api', dest='api', action='store_true',
@@ -106,7 +109,7 @@ def main():
   #  from . import moduleinfo
   #  sys.exit(moduleinfo.main(args))
   elif ('subparser_name' in args):
-    if (args.subparser_name == 'setup'):
+    if (args.subparser_name == 'setup' or args.reset):
       from . import pilotsetup
       sys.exit(pilotsetup.main(args))
     elif (args.subparser_name == 'fw'):

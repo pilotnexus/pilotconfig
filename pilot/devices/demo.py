@@ -16,7 +16,7 @@ class O8Device():
   init_source = ''
   dev_to_mem_source = ''
   mem_to_dev_source = ''
-  mem_doc = []
+  mem_doc = { "read": [], "write": [] }
 
   decl = {
     'c': { 'name': 'o8_t', 'decl': 'typedef uint8_t o8_t;' },
@@ -49,5 +49,5 @@ class O8Device():
     """)
     self.dev_to_mem_source = inputs_template(self.module, self.helpers)
     self.mem_to_dev_source = outputs_template(self.module, self.helpers)
-    self.mem_doc = [{ "name": "i{}".format(i), "desc": "digital input {}".format(i), "byte": 0, "bit": i, "datatype": "bool", "read": True, "write": False } for i in range(4)]
-    self.mem_doc.append([{ "name": "o{}".format(i), "desc": "digital output {}".format(i), "byte": 0, "bit": i, "datatype": "bool", "write": True, "read": False } for i in range(4)])
+    self.mem_doc['read'] = [{ "name": "i{}".format(i), "desc": "digital input {}".format(i), "byte": 0, "bit": i, "length": 1, "datatype": "bool"} for i in range(4)]
+    self.mem_doc['write'] = ([{ "name": "o{}".format(i), "desc": "digital output {}".format(i), "byte": 0, "bit": i, "length": 1, "datatype": "bool"} for i in range(4)])
