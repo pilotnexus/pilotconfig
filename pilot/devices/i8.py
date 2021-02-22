@@ -41,4 +41,4 @@ class I8Device():
 {{/each}}
   """)
     self.dev_to_mem_source = template(self.module, self.helpers)
-    self.mem_doc['read'] = [{ "name": "i{}".format(i), "desc": "digital input {}".format(i), "byte": 0, "bit": i,"length": 1, "datatype": "bool"} for i in range(8)]
+    self.mem_doc['read'] = [{ "name": "i{}".format(i), "desc": "digital input {}".format(i), "byte": 0, "bit": i,"length": 1, "signed": False, "datatype": "bool"} for i in range(8)]

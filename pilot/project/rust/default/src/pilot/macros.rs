@@ -5,7 +5,6 @@ pub struct SerialWriter;
 impl fmt::Write for SerialWriter {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         unsafe {
-            crate::pilot::_putchar(0x27); // start of logstring
             for c in s.chars() {
                 crate::pilot::_putchar(c as u8);
             }
@@ -15,10 +14,18 @@ impl fmt::Write for SerialWriter {
 }
 
 #[macro_export]
+macro_rules! start_print {
+    ($f:expr) => {
+        unsafe {
+          crate::pilot::_putchar(0x27); // start of logstring
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! print {
     ($f:expr) => {
         unsafe {
-            crate::pilot::_putchar(0x27); // start of logstring
             for c in $f.chars() {
                 crate::pilot::_putchar(c as u8);
             }
@@ -29,6 +36,9 @@ macro_rules! print {
 #[macro_export]
 macro_rules! println {
     ($f:expr) => {
+        unsafe {
+          crate::pilot::_putchar(0x27); // start of logstring
+        }
         print!($f);
         unsafe {
             crate::pilot::_putchar(10);

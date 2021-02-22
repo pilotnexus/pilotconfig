@@ -49,5 +49,5 @@ class O8Device():
     """)
     self.dev_to_mem_source = inputs_template(self.module, self.helpers)
     self.mem_to_dev_source = outputs_template(self.module, self.helpers)
-    self.mem_doc['read'] = [{ "name": "i{}".format(i), "desc": "digital input {}".format(i), "byte": 0, "bit": i, "length": 1, "datatype": "bool"} for i in range(4)]
-    self.mem_doc['write'] = ([{ "name": "o{}".format(i), "desc": "digital output {}".format(i), "byte": 0, "bit": i, "length": 1, "datatype": "bool"} for i in range(4)])
+    self.mem_doc['read'] = [{ "name": "i{}".format(i), "desc": "digital input {}".format(i), "byte": 0, "bit": i, "length": 1, "signed": False, "datatype": "bool"} for i in range(4)]
+    self.mem_doc['write'] = ([{ "name": "o{}".format(i), "desc": "digital output {}".format(i), "byte": 0, "bit": i, "length": 1, "signed": False, "datatype": "bool"} for i in range(4)])

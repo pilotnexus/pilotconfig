@@ -20,11 +20,12 @@
                 //"setup", "--node", "192.168.1.14", "--user", "mendel", "--password", "mendel"
                 //"setup", "--node", "192.168.1.14", "--user", "pi", "--sshkey"
                 //"setup", "--node", "192.168.1.14", "--user", "pi", "--password", "raspberry"
+                "setup", "--node", "192.168.1.24"
                 //"fw", "program", "--workdir", "~/work/phoinix/newfw2/", "--node", "192.168.1.38"
                 //"fw", "init", "--workdir", "/tmp/tempfw", "--node", "192.168.1.14", "--sshkey"
                 //"fw", "init", "--workdir", "/tmp/tempfw", "--module1", "io16", "--module2", "aio20", "--module4", "fpga"
                 //"fw", "build", "--workdir", "~/work/rust/phoinix_head"
-                "fw", "program", "--workdir", "~/work/rust/testnew", "--mcuonly"
+                //"fw", "program", "--workdir", "~/work/rust/testnew", "--mcuonly"
             ],
             "console": "integratedTerminal"
         },

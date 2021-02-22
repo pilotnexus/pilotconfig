@@ -87,14 +87,14 @@ class PilotServer():
     nodeauthfile = self.pilot_dir + self.authfilename
     nodeauth = None
     try:
-      nodeauth = yaml.load(self.sbc.getFileContent(nodeauthfile), Loader=yaml.FullLoader)
+      nodeauth = json.loads(self.sbc.getFileContent(nodeauthfile))
     except:
       nodeauth = None
     return nodeauth
 
   def savenodeauth(self, nodeauth):
     nodeauthfile = self.pilot_dir + self.authfilename
-    nodeauthcontent = yaml.dump(nodeauth, default_flow_style=False)
+    nodeauthcontent = json.dumps(nodeauth)
     return self.sbc.setFileContent(nodeauthfile, nodeauthcontent)
 
   def authenticate(self):
@@ -145,10 +145,8 @@ class PilotServer():
           print(Fore.GREEN + "\n\nYour device was sucessfully authorized.")
           self.tokenset = response2
           self.decode()
-          with open(self.authfile, 'w') as authfile:
-            json.dump(self.tokenset, authfile)
-          if nodeauth == None: # node authentication file does not exist
-            self.savenodeauth(response2)
+          self.savenodeauth(response2)
+          done = True
 
     except Exception as e: 
       print(Fore.RED + 'Error authenticating the device {}'.format(e))

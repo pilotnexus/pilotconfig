@@ -38,7 +38,7 @@ class AIO20Device():
       "bit": 0,
       "length": 16,
       "name": "aio2",
-      "description": "Analog I/O 2",
+      "desc": "Analog I/O 2",
       "signed": False
     },
     {

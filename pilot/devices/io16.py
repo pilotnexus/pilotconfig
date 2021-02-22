@@ -67,7 +67,7 @@ class IO16Device():
       init_str = init_str + "  status |= pilot_io16_{{device.index}}_set_direction(pilot_io16_block_" + str(offset) + "_to_" + str(offset_to) + ", " + self.direction_to_enum(dir) + ");\n"
 
       for i in range(4):
-        self.mem_doc['read' if dir == 'in' else 'write'].append({ "name": "{}{}".format(dir[0], offset+i), "desc": "digital {} {}".format('input' if dir == 'in' else 'output', offset+i), "byte": int((offset+i) / 8), "bit": (offset+i) % 8, "length": 1, "datatype": "bool"})
+        self.mem_doc['read' if dir == 'in' else 'write'].append({ "name": "{}{}".format(dir[0], offset+i), "desc": "digital {} {}".format('input' if dir == 'in' else 'output', offset+i), "byte": int((offset+i) / 8), "bit": (offset+i) % 8, "length": 1, "signed": False, "datatype": "bool"})
 
     init_str = init_str + "  return status;"
 
