@@ -77,8 +77,8 @@ pub fn expand(item: &ItemStatic) -> Result<TokenStream> {
           match plc_varnumber_to_variable(num) {
             Some(v) => {
               match config {
-                2 => (*v).get_subscribed(),
-                3 => (*v).get_forced(),
+                1 => (*v).get_subscribed(),
+                2 => (*v).get_forced(),
                 _ => 0
               }
             }
@@ -92,11 +92,11 @@ pub fn expand(item: &ItemStatic) -> Result<TokenStream> {
           match plc_varnumber_to_variable(num) {
             Some(v) => {
               match config {
-                2 => {
+                1 => {
                   (*v).set_subscribed(value);
                   1
                 },
-                3 => {
+                2 => {
                   (*v).set_forced(value);
                   1
                 },
