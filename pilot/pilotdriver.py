@@ -268,9 +268,15 @@ class PilotDriver():
           #self.get_kernel_info()
           return -1
     return 0
+  
+
         
   def reload_drivers(self, verbose = True):
     ok = True
+
+    pnstopped = self.sbc.stop_service("pilotnode", verbose)
+    pdstopped = self.sbc.stop_service("pilotd", verbose)
+
     if verbose:
       print('reloading drivers...', end='')
     sys.stdout.flush()
@@ -292,6 +298,12 @@ class PilotDriver():
         print(Fore.GREEN + 'done')
       else:
         print(Fore.RED + 'failed')
+    
+    if pdstopped:
+      self.sbc.start_service("pilotd")
+    
+    if pnstopped:
+      self.sbc.start_service("pilotnode")
 
     return ok
 

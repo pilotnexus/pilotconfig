@@ -159,6 +159,34 @@ class Sbc():
     cmdstr = 'sudo mkdir -p "{}" && printf "{}" | sudo tee {} >/dev/null'.format(os.path.dirname(file), content.replace('"', '\\"'), file)
     return self.cmd(cmdstr, True)
 
+  def stop_service(self, name, verbose = True):
+    trystop = False
+
+    servicestarted = self.cmd_retcode('sudo systemctl is-active --quiet ' + name)
+    if servicestarted == 0:
+      if verbose:
+        print(name + ' running, stopping...', end='')
+        servicestopped = self.cmd_retcode('sudo service ' + name + ' stop')
+        trystop = True # also set to true if stopping was unsucessful
+        if verbose:
+          if servicestopped == 0:
+            print(Fore.GREEN + 'done')
+          else:
+            print(Fore.RED + 'failed')
+    return trystop
+
+
+  def start_service(self, name, verbose = True):
+    if verbose:
+      print('starting ' + name + '...', end='')
+    servicestarted = self.cmd_retcode('sudo service ' + name + ' start')
+    if verbose:
+      if servicestarted == 0:
+        print(Fore.GREEN + 'done')
+      else:
+        print(Fore.RED + 'failed')
+
+
   def check_hardware(self):
     if not 'hardware' in self.args:
       try:
