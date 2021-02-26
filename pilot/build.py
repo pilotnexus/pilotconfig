@@ -61,7 +61,7 @@ def parseplcvariables(varcsvfilepath ):
           elif len(varname) >= 4:
             var['instance'] = varname[2]
             var['name'] = '.'.join(varname[3:])
-        variables.append(var)
+          variables.append(var)
   return variables
 
 def createdoc(args, model, config):
