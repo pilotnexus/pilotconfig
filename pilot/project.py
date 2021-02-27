@@ -67,6 +67,8 @@ def init(args, version):
     if (len(compilers) == 0):
       print('No compilers found, exiting')
       return 1
+    elif (len(compilers) == 1): #only one compiler available
+      compiler_index = 0
 
     while (compiler_index < 0 or compiler_index > len(compilers)):
       print('Please specify the compiler toolchain to use:')
@@ -74,6 +76,8 @@ def init(args, version):
         print('[{}] {}: {}'.format(index+1, compiler['name'], compiler['description']))
       try:
         compiler_index = int(input('[1-{}]: '.format(len(compilers)))) - 1
+      except KeyboardInterrupt:
+        exit(1)
       except: pass
     args.compiler = compilers[compiler_index]['name']
 

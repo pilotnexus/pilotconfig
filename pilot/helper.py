@@ -40,15 +40,16 @@ def get_compilers():
   directories = []
   for subdir, dirs, files in os.walk(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'compiler')):
     for dir in dirs:
-      compilerinfofile = os.path.join(subdir, dir, 'template.yml')
-      if os.path.isfile(compilerinfofile):
-        with open(compilerinfofile, 'r') as f:
-          try:
-            compilers.append(yaml.load(f.read(), Loader=yaml.FullLoader))
-            directories.append(os.path.join(subdir, dir))
-          except Exception as e: 
-            print('Error parsing {}'.format(compilerinfofile))
-            print(e)
+      if not dir.startswith("_"): #ignore dirs with underscore (to disable non-functioning compilers)
+        compilerinfofile = os.path.join(subdir, dir, 'template.yml')
+        if os.path.isfile(compilerinfofile):
+          with open(compilerinfofile, 'r') as f:
+            try:
+              compilers.append(yaml.load(f.read(), Loader=yaml.FullLoader))
+              directories.append(os.path.join(subdir, dir))
+            except Exception as e: 
+              print('Error parsing {}'.format(compilerinfofile))
+              print(e)
   return compilers, directories
 
 def show_compilers():
