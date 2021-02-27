@@ -90,7 +90,7 @@ class Plc():
     
   def getDevice(self, module):
     devicefile = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'devices', module['fid'] + '.py') 
-    if not os.path.isfile(devicefile): # not found in devices, check in plugins folder
+    if not os.path.isfile(devicefile) and 'plugin' in module: # not found in devices, check in plugins folder
       devicefile = os.path.join(self.args.workdir, 'plugins', module['plugin'] + '.py') 
       if (os.path.isfile(devicefile)): # plugin exists, add plugin to model
         if not 'plugins' in self.model:
