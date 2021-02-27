@@ -8,7 +8,7 @@ def default_config():
   return {}
 
 class AIO20Device():
-  size = 1
+  size = 40
   ctype = 'uint16_t[16]'
   rusttype = 'u8'
   include = ['aio20.h'] 
