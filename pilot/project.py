@@ -48,7 +48,7 @@ def download_base_firmware(args):
 
   return modules
 
-def init(args):
+def init(args, version):
   use_compiler = None
   print('This will create a new Pilot firmware project in the current folder')
 
@@ -99,6 +99,7 @@ def init(args):
     # create .pilotfwconfig.json
     config = {}
     config['compiler'] = args.compiler
+    config['generated_by'] = "pilot-node v{}".format(version)
     config['modules'] = []
 
     for mod in modules:
@@ -154,9 +155,9 @@ def update(args):
   else:
     print("Could not find project configuration file '.pilotfwconfig.json', firmware not updated")
 
-def main(args, mode):
+def main(args, version, mode):
   if mode == 'init':
-    init(args)
+    init(args, version)
   elif mode == 'update':
     update(args)
 

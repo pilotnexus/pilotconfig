@@ -15,13 +15,14 @@ class Plc():
   helpers = None
   args = {}
 
-  def __init__(self, args, model, config, compiler, helpers):
+  def __init__(self, args, version, model, config, compiler, helpers):
     self.args = args
     self.config = config
     self.model = model
     self.compiler = compiler
     self.helpers = helpers
 
+    self.model['version'] = version
 
     mem_modules = self.init_memory_mapped_modules()
 

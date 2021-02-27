@@ -88,7 +88,7 @@ def createdoc(args, model, config):
   with open((docfile), 'w') as f:
     json.dump(doc, f)
 
-def main(args):
+def main(args, version):
   parser = Compiler()
   helpers = {'hex': _hex}
   compilerdirectory = None
@@ -124,7 +124,7 @@ def main(args):
       return 1
 
     # generate common C code for module I/O 
-    plc = Plc(args, model, config, parser, helpers)
+    plc = Plc(args, version, model, config, parser, helpers)
     templateparser(args, os.path.join(os.path.abspath(os.path.dirname(__file__)), 'compiler', 'template'), plc.model, parser, helpers)
 
     pluginparser(args, plc.model, parser, helpers)

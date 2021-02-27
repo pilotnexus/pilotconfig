@@ -115,13 +115,13 @@ def main():
     elif (args.subparser_name == 'fw'):
       if 'fw_subparser_name' in args and args.fw_subparser_name == 'build':
         from . import build
-        sys.exit(build.main(args))
+        sys.exit(build.main(args, VERSION))
       elif 'fw_subparser_name' in args and args.fw_subparser_name == 'program':
         from . import program
         sys.exit(program.main(args))
       elif 'fw_subparser_name' in args and (args.fw_subparser_name == 'init' or args.fw_subparser_name == 'update'):
         from . import project
-        sys.exit(project.main(args, args.fw_subparser_name))
+        sys.exit(project.main(args, VERSION, args.fw_subparser_name))
     else:
       print('No parameters specified, running setup.')
       from . import pilotsetup
