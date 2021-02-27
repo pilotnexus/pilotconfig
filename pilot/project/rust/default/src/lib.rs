@@ -42,7 +42,7 @@ pub struct State<'a> {
 #[no_mangle]
 unsafe fn plc_fw_version(_part: u8, buffer: *mut u8, buf_size: u32) -> i32
 {
-  static VERSION: &'static str = "v1.0"; //you can change this string to match your software version
+  static VERSION: &'static str = crate_version!();
   let mut size = 0;
 
   for (i,c) in VERSION.chars().enumerate() {

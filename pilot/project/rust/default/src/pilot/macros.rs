@@ -14,6 +14,13 @@ impl fmt::Write for SerialWriter {
 }
 
 #[macro_export]
+macro_rules! crate_version {
+    () => {
+        env!("CARGO_PKG_VERSION")
+    };
+}
+
+#[macro_export]
 macro_rules! start_print {
     ($f:expr) => {
         unsafe {
