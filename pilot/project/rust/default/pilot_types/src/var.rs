@@ -241,7 +241,6 @@ impl VarProps<bool> for Var<bool> {
             self.pos.set(false);
             self.neg.set(false);
         } else {
-            self.value.set(value);
             if value > self.value.get() {
                 self.pos.set(true);
                 self.neg.set(false);
@@ -249,6 +248,7 @@ impl VarProps<bool> for Var<bool> {
                 self.pos.set(false);
                 self.neg.set(true);
             }
+            self.value.set(value);
             match self.subscribed.get() {
               SubscribeMode::Sticky => {
                 if !self.dirty.get() && self.changed_value.get() != value {
