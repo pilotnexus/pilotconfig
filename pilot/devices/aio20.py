@@ -183,10 +183,10 @@ class AIO20Device():
 
   decl = {
     'c': { 'name': 'aio20_t', 'decl': """typedef struct { 
-  uint16_t aio1;
-  uint16_t aio0;
   uint16_t aio3;
+  uint16_t aio1;
   uint16_t aio2;
+  uint16_t aio0;
   uint16_t r1;
   uint16_t aio5;
   uint16_t aio4;
@@ -207,26 +207,26 @@ class AIO20Device():
 """},
     'rust': { 'name': 'Aio20', 'decl': """#[repr(C)]
 pub struct Aio20 { 
-  pub aio1: u16,
-  pub aio0: u16,
-  pub aio3: u16,
-  pub aio2: u16,
-  r1: u16,
-  pub aio5: u16,
-  pub aio4: u16,
-  r2: u16,
-  pub aio7: u16,
-  pub aio6: u16,
-  pub aio9: u16,
-  pub aio8: u16,
-  r3: u16,
-  pub aio11: u16,
-  pub aio10: u16,
-  pub aio13: u16,
-  pub aio12: u16,
-  r4: u16,
-  pub aio14: u16,
-  pub aio15: u16,
+  pub aio3: u16,  // 0
+  pub aio1: u16,  // 1
+  pub aio2: u16,  // 2
+  pub aio0: u16,  // 3
+  r1: u16,        // 4
+  pub aio5: u16,  // 5
+  pub aio4: u16,  // 6
+  r2: u16,        // 7
+  pub aio7: u16,  // 8
+  pub aio6: u16,  // 9
+  pub aio9: u16,  // 10
+  pub aio8: u16,  // 11
+  r3: u16,        // 12
+  pub aio11: u16, // 13  
+  pub aio10: u16, // 14
+  pub aio13: u16, // 15
+  pub aio12: u16, // 16
+  r4: u16,        // 17
+  pub aio14: u16, // 18 
+  pub aio15: u16, // 19 
 }
 """ }
   }
