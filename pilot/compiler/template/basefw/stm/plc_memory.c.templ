@@ -1,6 +1,9 @@
+#include "common_base.h"
 #include "plc_memory.h"
 #include "string.h"
 #include "module.h"
+#include "pilot_comm.h"
+#include "pilot_config.h"
 
 // Memory mapped device instance
 volatile plc_dev_t __attribute__((section(".plc_mem_section"))) plc_mem_devices = { 0 };
@@ -22,13 +25,21 @@ void plc_init_dev()
 void plc_check_modules()
 {
   modules_t *modules = get_module_info();
-  {{#each memmodules}}if (pilot_module_status_changed({{device.index}}) == -1) //status was reset from >0 to 0, reinitialize module
+{{#each memmodules}}  if (pilot_module_status_changed({{device.index}}) == -1) //status was reset from >0 to 0, reinitialize module
     modules->m{{device.index}}_status = plc_init_module{{device.slot}}();
   {{/each}}
+
+  {{#if config.stop_plc_on_module_error}}// stop_plc_on_module_error was defined in config
+  if (pilot_get_plc_state() == pilot_plc_state_run && ({{#each ../memmodules}} modules->m{{device.index}}_status | {{/each}}0) != 0)
+    pilot_set_plc_state(pilot_plc_state_module_error);
+  {{/if}}
 }
 
 void plc_dev_to_mem()
 {
+  // check modules
+  plc_check_modules();
+
   {{#each memmodules}}{{{device.spec.dev_to_mem_source}}}{{/each}}
 }
 

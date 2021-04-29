@@ -104,6 +104,11 @@ def init(args, version):
     config = {}
     config['compiler'] = args.compiler
     config['generated_by'] = "pilot-node v{}".format(version)
+    config['config'] = { 
+      "stop_plc_on_module_error": False,
+      "watchdog_timeout": 50,
+      "enable_rtc": False
+      }
     config['modules'] = []
 
     for mod in modules:

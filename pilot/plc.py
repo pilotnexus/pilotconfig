@@ -24,6 +24,9 @@ class Plc():
 
     self.model['version'] = version
 
+    if 'config' in config:
+      self.model['config'] = config['config']
+
     mem_modules = self.init_memory_mapped_modules()
 
   def init_memory_mapped_modules(self):

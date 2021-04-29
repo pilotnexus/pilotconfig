@@ -17,6 +17,8 @@ members = [
 ]
 
 [dependencies]
-pilot_macro = { path = "pilot_macro" }
-pilot_types = { path = "pilot_types" }
-futures = { version = "0.3.5", default-features = false, features = ["async-await"] }
+pilot_sys = { path = "/home/amd/work/pilot/rust-crates/pilot_sys" }
+pilot_macro = { path = "/home/amd/work/pilot/rust-crates/pilot_macro" }
+
+[dev-dependencies]
+pilot_test = { path = "/home/amd/work/pilot/rust-crates/pilot_test" }
