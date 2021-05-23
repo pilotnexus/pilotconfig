@@ -151,25 +151,25 @@ def main(args):
         fwconfig['modules'] = modules
 
         #check if node is registered
-        if not trywritedefaultfirmware:
-          if pilotserver.decoded == None:
-            ch = input("You not logged in to access the Pilot Nexus Cloud, do you want to authenticate? [y/n]: ") 
-            if (ch == 'y' or ch == 'yes'):
-              pilotserver.authenticate()
+        #if not trywritedefaultfirmware:
+        #  if pilotserver.decoded == None:
+        #    ch = input("You not logged in to access the Pilot Nexus Cloud, do you want to authenticate? [y/n]: ") 
+        #    if (ch == 'y' or ch == 'yes'):
+        #      pilotserver.authenticate()
 
-          if pilotserver.decoded != None:
-            node = pilotserver.getnode()
-            if node != None:
-              print("Your node is registered as '{}'".format(node['name']))
-              pilotserver.updatenode(fwconfig)
+        #  if pilotserver.decoded != None:
+        #    node = pilotserver.getnode()
+        #    if node != None:
+        #      print("Your node is registered as '{}'".format(node['name']))
+        #      pilotserver.updatenode(fwconfig)
 
-            elif not args.noninteractive and not trywritedefaultfirmware:
-              ch = input("Node is not registered, do you want to register it with the Pilot Cloud? [y/n]: ")
-              if (ch == 'y' or ch == 'yes'):
-                pilotserver.registernode(fwconfig)
+        #    elif not args.noninteractive and not trywritedefaultfirmware:
+        #      ch = input("Node is not registered, do you want to register it with the Pilot Cloud? [y/n]: ")
+        #      if (ch == 'y' or ch == 'yes'):
+        #        pilotserver.registernode(fwconfig)
 
-      elif not args.noninteractive: # --regnode param
-        pilotserver.registernode(None)
+      #elif not args.noninteractive: # --regnode param
+      #  pilotserver.registernode(None)
   except Exception as error:
     print(error)
     exit(1) 

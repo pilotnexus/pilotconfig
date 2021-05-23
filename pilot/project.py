@@ -45,7 +45,6 @@ def download_base_firmware(args):
     print(Fore.RED + 'Could not download firmware source!')
     exit(1)
 
-
   return modules
 
 def init(args, version):

@@ -18,7 +18,7 @@
 #define GPIO_IN_GET(a,b) BITBAND_PERI(a+8, b)
 #define GPIO_OUT_SET(a,b,c) c ? (*((uint32_t *)(a+0x10)) = (1 << b)) : (*((uint32_t *)(a+0x14)) = (1 << b))
 
-{{#each uniquemodules}}
+{{#each memmodules}}
 {{device.spec.decl.c.decl}}
 {{/each}}
 

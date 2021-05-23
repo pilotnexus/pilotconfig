@@ -1,0 +1,56 @@
+#include "pilot_config.h"
+#include "pilot_uart.h"
+#include "rtc.h"
+#include "pilot_comm.h"
+
+// plc_state
+int32_t plc_state;
+
+// uart_echo_on
+bool uart_echo_on=false;
+
+int32_t pilot_get_plc_state()
+{
+  return plc_state;
+}
+
+void pilot_set_plc_state(int32_t state)
+{
+  plc_state = state;
+  pilot_rpi_plc_state_get();   //send state over SPI
+  pilot_uart_send_plc_state(); //send state over UART
+}
+
+void pilot_config_init()
+{
+  {{#if config.enable_rtc}}// rtc enabled
+  rtc_init();{{/if}}
+
+  {{#if config.uart_echo_on}}// uart echo enabled
+  uart_echo_on=true;{{/if}}
+}
+
+void pilot_loop_pre_init() {
+  {{#if config.watchdog_timeout}}// watchdog timeout set to {{config.watchdog_timeout}}
+  /* Enable the LSI OSC */
+  RCC_LSICmd(ENABLE);
+  /* Wait till LSI is ready */
+  while (RCC_GetFlagStatus(RCC_FLAG_LSIRDY) == RESET)
+  {}
+  IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);    // Enable write access to IWDG registers.
+  IWDG_SetPrescaler(IWDG_Prescaler_4);           // IWDG timer clock will be (LSI / 32).
+  IWDG_SetReload({{config.watchdog_timeout}} * 32 / 4);
+  IWDG_ReloadCounter();                            // Reload the IWDG counter (kick the dog for once!).
+  IWDG_Enable();                                   // Enable IWDG (LSI will be enabled by hardware).
+  {{/if}}
+}
+
+void pilot_loop_head() {
+
+}
+
+void pilot_loop_tail() {
+  {{#if config.watchdog_timeout}}// watchdog timeout reload
+  IWDG_ReloadCounter();
+  {{/if}}
+}

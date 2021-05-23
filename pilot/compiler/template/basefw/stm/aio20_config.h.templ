@@ -1,0 +1,16 @@
+
+#ifndef AIO20_CONFIG
+#define AIO20_CONFIG
+
+  {{#each custom.aio20}}
+  static const uint16_t aio20_{{index}}_dac[20] = {
+    {{config.port_dacs}}
+    };
+
+  static const uint16_t aio20_{{index}}_port_config[20] = {
+    {{config.port_cfgs}}
+    };
+
+  {{/each}}
+
+#endif
