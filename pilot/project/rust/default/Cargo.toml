@@ -18,7 +18,7 @@ members = [
 
 [dependencies]
 pilot_sys = { git = "https://gitlab.com/pilot-automation/nexus/pilot_sys" }
-pilot_macro = { path = "/home/amd/work/pilot/rust-crates/pilot_macro" }
+pilot_macro = { git = "https://gitlab.com/pilot-automation/nexus/pilot_macro" }
 
 [dev-dependencies]
-pilot_test = { path = "/home/amd/work/pilot/rust-crates/pilot_test" }
+pilot_test = { git = "https://gitlab.com/pilot-automation/nexus/pilot_test" }
