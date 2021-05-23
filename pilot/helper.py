@@ -9,7 +9,7 @@ def get_node_from_config(args):
   config = get_config(args)
   if 'nodes' in config and isinstance(config['nodes'], list):
 
-    specified_node = args.name if 'name' in args and args.name != None else 'default'
+    specified_node = args.name if 'name' in args and args.name is not None else 'default'
     for node in config['nodes']:
       if specified_node == node['name']:
         print("Using node '{}'".format(args.name))
