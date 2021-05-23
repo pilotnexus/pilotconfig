@@ -249,8 +249,6 @@ class AIO20Device():
       exit(1)
     
     self.model["custom"]["aio20"].append({ 'index': self.module['slot']-1, 'config': res })
-    print(self.model["custom"]["aio20"])
-
 
     dev_to_mem_str = """// source for device {{device.name}}
   get_module_info()->m{{device.index}}_status |= single_ended_adc_read_all({{device.index}}, (uint8_t *) &plc_mem_devices.m{{device.slot}}); 
@@ -335,9 +333,6 @@ class AIO20Device():
       for intport in internalports:
         ports.append(intport)
       
-
-      print(list(map(lambda x: x['io'], ports)))
-
       # check if all items have io
       for port in ports:
         if not 'io' in port:
@@ -380,11 +375,6 @@ class AIO20Device():
           port_cfgs.append(port_cfg)
           port_dacs.append(port_dac)
       
-      
-      for c in port_cfgs:
-          print(f"{c:04x}")
-      print(port_dacs)
-      print(self.module)
       return {
         "port_cfgs": ", ".join("0x{:02X}".format(p) for p in port_cfgs), 
         "port_dacs": ", ".join("0x{:02X}".format(p) for p in port_dacs),
