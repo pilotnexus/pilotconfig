@@ -8,12 +8,14 @@ def get_node_from_config(args):
   #check if a .pilotfwconfig.json file exists and extract nodes
   config = get_config(args)
   if 'nodes' in config and isinstance(config['nodes'], list):
+
+    specified_node = args.name if 'name' in args and args.name != None else 'default'
     for node in config['nodes']:
-      if 'name' in args and args.name != None and 'name' in node:
-        if args.name == node['name']:
-          print("Using specified node name '{}'".format(args.name))
-        else:
-          continue
+      if specified_node == node['name']:
+        print("Using node '{}'".format(args.name))
+        break
+      else:
+        continue
       nodesfromconfig = True
       args.node = node['node']
       if 'user' in node:
