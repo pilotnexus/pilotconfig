@@ -11,11 +11,6 @@ def get_node_from_config(args):
 
     specified_node = args.name if 'name' in args and args.name is not None else 'default'
     for node in config['nodes']:
-      if specified_node == node['name']:
-        print("Using node '{}'".format(args.name))
-        break
-      else:
-        continue
       nodesfromconfig = True
       args.node = node['node']
       if 'user' in node:
@@ -24,6 +19,9 @@ def get_node_from_config(args):
         args.password = node['password']
       if 'hardware' in node:
         args.hardware = node['hardware']
+      if specified_node == node['name']:
+        print("Using node '{}'".format(specified_node))
+        break
   
   return args
 
