@@ -13,5 +13,5 @@
     "**/target": true
   },
   "python.jediEnabled": false,
-  "python.languageServer": "Microsoft",
+  "python.languageServer": "Default",
 }

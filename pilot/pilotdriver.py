@@ -1,3 +1,4 @@
+from sys import modules
 import lazy_import
 
 sys = lazy_import.lazy_module("sys")
@@ -9,6 +10,8 @@ tarfile = lazy_import.lazy_module("tarfile")
 itertools = lazy_import.lazy_module("itertools")
 requests = lazy_import.lazy_module("requests")
 bugsnag = lazy_import.lazy_module("bugsnag")
+# grpc = lazy_import.lazy_module("grpcio")
+import grpc
 
 import traceback
 
@@ -16,6 +19,9 @@ from pathlib import Path
 
 from .pilotserver import PilotServer
 from .sbc import Sbc
+
+from .grpc.pilotbuild_pb2 import BuildRequest, BuildStatus, BuildStep, TargetMcu, Module
+from .grpc.pilotbuild_pb2_grpc import PilotBuildStub
 
 from shutil import copyfile
 from gql import gql 
@@ -349,8 +355,17 @@ class PilotDriver():
 
   def statestring(state):
     return ('(' + str(state) + ') ').ljust(30)
-
+  
   def build(self):
+    channel = grpc.insecure_channel('http://localhost:5000', options=(('grpc.enable_http_proxy', 0),))
+    stub = PilotBuildStub(channel)
+    request = BuildRequest(modules=[Module(number=1, fid='o8')], target=TargetMcu.STM32F103RC)
+    responses = stub.Build(request=request)
+
+    for response in next(responses):
+      print("client received: " + response)
+
+  def build_(self):
     try:
       spinner = itertools.cycle(['-', '/', '|', '\\'])
       sys.stdout.write('checking if firmware is available...')

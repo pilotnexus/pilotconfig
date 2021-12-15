@@ -67,6 +67,7 @@ setup(
                     'qrcode_terminal',
                     'gql',
                     'graphql-core<3.0.0',
+                    'grpcio'
                     ],
   python_requires='>=3',
   entry_points={  # Optional
