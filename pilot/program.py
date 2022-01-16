@@ -1,6 +1,8 @@
 import os
 import json
 import argparse
+
+from pilot.grpc_gen.pilotbuild_pb2 import BinaryType
 from . import arguments
 from . import helper 
 from .sbc import Sbc
@@ -69,7 +71,13 @@ def program(args):
         print('You need to specify an image file to write with the --logicbinary attribute.')
         exit(1)
 
-      pilotdriver.program(program_cpld=not (args.mcuonly==True), program_mcu=True, cpld_file=args.logicbin, mcu_file=args.bin, var_file=args.vars, bootmsg=args.wait_bootmsg, doc_file=args.doc, reload_driver=not (args.mcuonly==True)) #only reload driver if cpld is programmed (indicates hardware change)
+      files = {
+          BinaryType.MCUFirmware: args.bin,
+          BinaryType.FPGABitstream: args.logicbin,
+          BinaryType.Variables: args.vars,
+          BinaryType.Docs: args.doc
+      }
+      pilotdriver.program(files, program_cpld=not (args.mcuonly==True), program_mcu=True, bootmsg=args.wait_bootmsg, reload_driver=not (args.mcuonly==True)) #only reload driver if cpld is programmed (indicates hardware change)
   except Exception as error:
     print(error)
 

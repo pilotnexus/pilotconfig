@@ -11,9 +11,11 @@
             "module": "pilot.pilot",
             "args": [
                 //"fw", "init", "--workdir", "~/work/rust/test2" //, "--sshkey"
-                "fw", "init", "--workdir", "/tmp/tempfw", "--module1", "io16", "--module2", "aio20", "--module4", "fpga"
-                //"fw", "build", "--workdir", "/tmp/headtest"
+                //"fw", "init", "--workdir", "/tmp/tempfw", "--module1", "io16", "--module2", "aio20", "--module4", "fpga"
+                //"setup", "--module1", "io16", "--module2", "aio20", "--module3", "fpga", "--node", "192.168.1.24"
+                //"fw", "build", "--workdir", "/tmp/tempfw"
                 //"fw", "program", "--workdir", "~/work/rust/testnew", "--mcuonly"
+                "fw", "program", "--workdir", "/tmp/tempfw", "--node",  "192.168.1.24"
             ],
             "console": "integratedTerminal"
         },

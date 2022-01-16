@@ -12,6 +12,8 @@ def setup_arguments(parser):
                       help='Confirms default action (non-interactive mode)')
   parser.add_argument('--driveronly', '-x', default=None, action='store_const', const='driveronly', dest='driveronly',
                       help='Installs driver only')
+  for mod in range(1, PilotDriver.MODULE_COUNT+1):
+    parser.add_argument('--module{}'.format(mod), '-m{}'.format(mod), dest='m{}'.format(mod), help='Firmware id of module {}'.format(mod))
 
 def program_arguments(parser):
   parser.add_argument('name', metavar='node', type=str, nargs='?',

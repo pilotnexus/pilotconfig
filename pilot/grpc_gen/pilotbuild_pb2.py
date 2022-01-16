@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'\252\002\016GrpcPilotBuild',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x10pilotbuild.proto\"%\n\x06Module\x12\x0e\n\x06number\x18\x01 \x01(\x05\x12\x0b\n\x03\x66id\x18\x02 \x01(\t\"e\n\x0c\x42uildRequest\x12\x1a\n\x06target\x18\x01 \x01(\x0e\x32\n.TargetMcu\x12\x0f\n\x07version\x18\x02 \x01(\t\x12\x18\n\x07modules\x18\x03 \x03(\x0b\x32\x07.Module\x12\x0e\n\x06source\x18\x04 \x01(\x0c\"G\n\x0b\x42uildStatus\x12\x1a\n\x04step\x18\x01 \x01(\x0e\x32\n.BuildStepH\x00\x12\x12\n\x08\x66irmware\x18\x02 \x01(\x0cH\x00\x42\x08\n\x06status*+\n\tTargetMcu\x12\x0f\n\x0bSTM32F103RC\x10\x00\x12\r\n\tSTM32F40X\x10\x01*\xfe\x01\n\tBuildStep\x12\x08\n\x04\x44one\x10\x00\x12\r\n\tQueueFull\x10\x01\x12\t\n\x05\x45rror\x10\x02\x12\n\n\x06Queued\x10\x03\x12\x13\n\x0fValidateRequest\x10\x04\x12\x16\n\x12GenerateCpldSource\x10\x05\x12\x15\n\x11\x43ompileCpldSource\x10\x06\x12\x1b\n\x17\x43leanStmOutputDirectory\x10\x07\x12\x15\n\x11GenerateStmSource\x10\x08\x12\x14\n\x10\x43ompileStmSource\x10\t\x12\x13\n\x0fPackageFirmware\x10\n\x12\x11\n\rPackageSource\x10\x0b\x12\x0b\n\x07\x43leanup\x10\x0c\x32\x34\n\nPilotBuild\x12&\n\x05\x42uild\x12\r.BuildRequest\x1a\x0c.BuildStatus0\x01\x42\x11\xaa\x02\x0eGrpcPilotBuildb\x06proto3'
+  serialized_pb=b'\n\x10pilotbuild.proto\"%\n\x06Module\x12\x0e\n\x06number\x18\x01 \x01(\x05\x12\x0b\n\x03\x66id\x18\x02 \x01(\t\"e\n\x0c\x42uildRequest\x12\x1a\n\x06target\x18\x01 \x01(\x0e\x32\n.TargetMcu\x12\x0f\n\x07version\x18\x02 \x01(\t\x12\x18\n\x07modules\x18\x03 \x03(\x0b\x32\x07.Module\x12\x0e\n\x06source\x18\x04 \x01(\x0c\"Z\n\x0b\x42uildResult\x12\x0f\n\x07version\x18\x01 \x01(\t\x12\x1c\n\x07\x62intype\x18\x02 \x01(\x0e\x32\x0b.BinaryType\x12\x0c\n\x04hash\x18\x03 \x01(\t\x12\x0e\n\x06\x62inary\x18\x04 \x01(\x0c\"S\n\x0b\x42uildStatus\x12\x1a\n\x04step\x18\x01 \x01(\x0e\x32\n.BuildStepH\x00\x12\x1e\n\x06result\x18\x02 \x01(\x0b\x32\x0c.BuildResultH\x00\x42\x08\n\x06status*+\n\tTargetMcu\x12\x0f\n\x0bSTM32F103RC\x10\x00\x12\r\n\tSTM32F40X\x10\x01*\xd2\x02\n\tBuildStep\x12\x08\n\x04\x44one\x10\x00\x12\r\n\tQueueFull\x10\x01\x12\t\n\x05\x45rror\x10\x02\x12\n\n\x06Queued\x10\x03\x12\x13\n\x0fValidateRequest\x10\x04\x12\x1c\n\x18\x43leanCpldOutputDirectory\x10\x05\x12\x16\n\x12GenerateCpldSource\x10\x06\x12\x15\n\x11\x43ompileCpldSource\x10\x07\x12\x17\n\x13PackageCpldFirmware\x10\x08\x12\x15\n\x11PackageCpldSource\x10\t\x12\x1b\n\x17\x43leanStmOutputDirectory\x10\n\x12\x15\n\x11GenerateStmSource\x10\x0b\x12\x14\n\x10\x43ompileStmSource\x10\x0c\x12\x16\n\x12PackageStmFirmware\x10\r\x12\x14\n\x10PackageStmSource\x10\x0e\x12\x0b\n\x07\x43leanup\x10\x0f*h\n\nBinaryType\x12\x0f\n\x0bMCUFirmware\x10\x00\x12\r\n\tMCUSource\x10\x01\x12\x11\n\rFPGABitstream\x10\x02\x12\x0e\n\nFPGASource\x10\x03\x12\r\n\tVariables\x10\x04\x12\x08\n\x04\x44ocs\x10\x05\x32\x34\n\nPilotBuild\x12&\n\x05\x42uild\x12\r.BuildRequest\x1a\x0c.BuildStatus0\x01\x42\x11\xaa\x02\x0eGrpcPilotBuildb\x06proto3'
 )
 
 _TARGETMCU = _descriptor.EnumDescriptor(
@@ -43,8 +43,8 @@ _TARGETMCU = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=235,
-  serialized_end=278,
+  serialized_start=339,
+  serialized_end=382,
 )
 _sym_db.RegisterEnumDescriptor(_TARGETMCU)
 
@@ -82,54 +82,115 @@ _BUILDSTEP = _descriptor.EnumDescriptor(
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='GenerateCpldSource', index=5, number=5,
+      name='CleanCpldOutputDirectory', index=5, number=5,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='CompileCpldSource', index=6, number=6,
+      name='GenerateCpldSource', index=6, number=6,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='CleanStmOutputDirectory', index=7, number=7,
+      name='CompileCpldSource', index=7, number=7,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='GenerateStmSource', index=8, number=8,
+      name='PackageCpldFirmware', index=8, number=8,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='CompileStmSource', index=9, number=9,
+      name='PackageCpldSource', index=9, number=9,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='PackageFirmware', index=10, number=10,
+      name='CleanStmOutputDirectory', index=10, number=10,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='PackageSource', index=11, number=11,
+      name='GenerateStmSource', index=11, number=11,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='Cleanup', index=12, number=12,
+      name='CompileStmSource', index=12, number=12,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='PackageStmFirmware', index=13, number=13,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='PackageStmSource', index=14, number=14,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='Cleanup', index=15, number=15,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=281,
-  serialized_end=535,
+  serialized_start=385,
+  serialized_end=723,
 )
 _sym_db.RegisterEnumDescriptor(_BUILDSTEP)
 
 BuildStep = enum_type_wrapper.EnumTypeWrapper(_BUILDSTEP)
+_BINARYTYPE = _descriptor.EnumDescriptor(
+  name='BinaryType',
+  full_name='BinaryType',
+  filename=None,
+  file=DESCRIPTOR,
+  create_key=_descriptor._internal_create_key,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='MCUFirmware', index=0, number=0,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='MCUSource', index=1, number=1,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='FPGABitstream', index=2, number=2,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='FPGASource', index=3, number=3,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='Variables', index=4, number=4,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='Docs', index=5, number=5,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=725,
+  serialized_end=829,
+)
+_sym_db.RegisterEnumDescriptor(_BINARYTYPE)
+
+BinaryType = enum_type_wrapper.EnumTypeWrapper(_BINARYTYPE)
 STM32F103RC = 0
 STM32F40X = 1
 Done = 0
@@ -137,14 +198,23 @@ QueueFull = 1
 Error = 2
 Queued = 3
 ValidateRequest = 4
-GenerateCpldSource = 5
-CompileCpldSource = 6
-CleanStmOutputDirectory = 7
-GenerateStmSource = 8
-CompileStmSource = 9
-PackageFirmware = 10
-PackageSource = 11
-Cleanup = 12
+CleanCpldOutputDirectory = 5
+GenerateCpldSource = 6
+CompileCpldSource = 7
+PackageCpldFirmware = 8
+PackageCpldSource = 9
+CleanStmOutputDirectory = 10
+GenerateStmSource = 11
+CompileStmSource = 12
+PackageStmFirmware = 13
+PackageStmSource = 14
+Cleanup = 15
+MCUFirmware = 0
+MCUSource = 1
+FPGABitstream = 2
+FPGASource = 3
+Variables = 4
+Docs = 5
 
 
 
@@ -240,6 +310,59 @@ _BUILDREQUEST = _descriptor.Descriptor(
 )
 
 
+_BUILDRESULT = _descriptor.Descriptor(
+  name='BuildResult',
+  full_name='BuildResult',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='version', full_name='BuildResult.version', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='bintype', full_name='BuildResult.bintype', index=1,
+      number=2, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='hash', full_name='BuildResult.hash', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='binary', full_name='BuildResult.binary', index=3,
+      number=4, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=162,
+  serialized_end=252,
+)
+
+
 _BUILDSTATUS = _descriptor.Descriptor(
   name='BuildStatus',
   full_name='BuildStatus',
@@ -256,9 +379,9 @@ _BUILDSTATUS = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='firmware', full_name='BuildStatus.firmware', index=1,
-      number=2, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"",
+      name='result', full_name='BuildStatus.result', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -279,24 +402,28 @@ _BUILDSTATUS = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=162,
-  serialized_end=233,
+  serialized_start=254,
+  serialized_end=337,
 )
 
 _BUILDREQUEST.fields_by_name['target'].enum_type = _TARGETMCU
 _BUILDREQUEST.fields_by_name['modules'].message_type = _MODULE
+_BUILDRESULT.fields_by_name['bintype'].enum_type = _BINARYTYPE
 _BUILDSTATUS.fields_by_name['step'].enum_type = _BUILDSTEP
+_BUILDSTATUS.fields_by_name['result'].message_type = _BUILDRESULT
 _BUILDSTATUS.oneofs_by_name['status'].fields.append(
   _BUILDSTATUS.fields_by_name['step'])
 _BUILDSTATUS.fields_by_name['step'].containing_oneof = _BUILDSTATUS.oneofs_by_name['status']
 _BUILDSTATUS.oneofs_by_name['status'].fields.append(
-  _BUILDSTATUS.fields_by_name['firmware'])
-_BUILDSTATUS.fields_by_name['firmware'].containing_oneof = _BUILDSTATUS.oneofs_by_name['status']
+  _BUILDSTATUS.fields_by_name['result'])
+_BUILDSTATUS.fields_by_name['result'].containing_oneof = _BUILDSTATUS.oneofs_by_name['status']
 DESCRIPTOR.message_types_by_name['Module'] = _MODULE
 DESCRIPTOR.message_types_by_name['BuildRequest'] = _BUILDREQUEST
+DESCRIPTOR.message_types_by_name['BuildResult'] = _BUILDRESULT
 DESCRIPTOR.message_types_by_name['BuildStatus'] = _BUILDSTATUS
 DESCRIPTOR.enum_types_by_name['TargetMcu'] = _TARGETMCU
 DESCRIPTOR.enum_types_by_name['BuildStep'] = _BUILDSTEP
+DESCRIPTOR.enum_types_by_name['BinaryType'] = _BINARYTYPE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Module = _reflection.GeneratedProtocolMessageType('Module', (_message.Message,), {
@@ -312,6 +439,13 @@ BuildRequest = _reflection.GeneratedProtocolMessageType('BuildRequest', (_messag
   # @@protoc_insertion_point(class_scope:BuildRequest)
   })
 _sym_db.RegisterMessage(BuildRequest)
+
+BuildResult = _reflection.GeneratedProtocolMessageType('BuildResult', (_message.Message,), {
+  'DESCRIPTOR' : _BUILDRESULT,
+  '__module__' : 'pilotbuild_pb2'
+  # @@protoc_insertion_point(class_scope:BuildResult)
+  })
+_sym_db.RegisterMessage(BuildResult)
 
 BuildStatus = _reflection.GeneratedProtocolMessageType('BuildStatus', (_message.Message,), {
   'DESCRIPTOR' : _BUILDSTATUS,
@@ -330,8 +464,8 @@ _PILOTBUILD = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=537,
-  serialized_end=589,
+  serialized_start=831,
+  serialized_end=883,
   methods=[
   _descriptor.MethodDescriptor(
     name='Build',

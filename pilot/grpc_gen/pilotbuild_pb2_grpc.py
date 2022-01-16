@@ -25,7 +25,8 @@ class PilotBuildServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Build(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Build firmware for the given modules
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')

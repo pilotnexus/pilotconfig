@@ -55,6 +55,7 @@ setup(
   install_requires=['lazy_import',
                     'pyYAML',
                     'pybars3',
+                    'halo',
                     'requests',
                     'argparse',
                     'bugsnag',
@@ -67,6 +68,7 @@ setup(
                     'qrcode_terminal',
                     'gql',
                     'graphql-core<3.0.0',
+                    'protobuf',
                     'grpcio'
                     ],
   python_requires='>=3',

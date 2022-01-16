@@ -13,5 +13,6 @@
     "**/target": true
   },
   "python.jediEnabled": false,
-  "python.languageServer": "Default",
+"python.languageServer": "Default",
+"python.formatting.provider": "yapf",
 }

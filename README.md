@@ -23,3 +23,12 @@ There are two options:
 [IP]       = hostname or IP address of your SBC
 [user]     = SSH username
 [password] = SSH password 
+
+
+## Infos when regerating Protos
+
+If `generate_protobuf.sh` is run, the import in `grpc_gen/pilotbuild_pb2_grpc.py` is not generated correctly.
+You need to change the import in line 5 to:
+``` python
+from . import pilotbuild_pb2 as pilotbuild__pb2
+```
