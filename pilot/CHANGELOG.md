@@ -1,6 +1,6 @@
 # CHANGELOG
 ## 2.0.3
-removed unessecary tkinter import
+removed unnecessary tkinter import
 
 ## 2.0.2
 If the pilot driver has no compiled version in the package repository you can now opt-in to build and install it locally.
