@@ -341,7 +341,7 @@ class PilotDriver():
                     return 1
                 else:
                     print('Could not install the pilot driver, most likely there is no driver compiled for your kernel.')
-                    ch = input("Do you want to try to build them locally (needs a couple of minutes and plenty of disk space)? [y/n]: ")
+                    ch = input("Do you want to try to build them locally (needs a couple of minutes and plenty of disk space, be patient)? [y/n]: ")
                     if (ch == 'y' or ch == 'yes'):
                         return self.try_build_drivers()
                     #self.get_kernel_info()
@@ -349,12 +349,16 @@ class PilotDriver():
         return 0
     
     def try_build_drivers(self):
+        print('Building Pilot Kernel Driver...', end='')
+        sys.stdout.flush()
         ret = self.sbc.cmd_retcode("sudo apt-get install -y python2 git build-essential")
         if ret == 0:
             ret = self.sbc.cmd_retcode("git clone https://github.com/pilotnexus/pilotdriver.git ~/pilotdriver && cd ~/pilotdriver && make prepare && make && make package && sudo make install")
-        else:
-            print("Could not install build tools")
-            return -1
+            if ret == 0:
+                print(Fore.GREEN + 'done')
+                return 0
+        print(Fore.RED + 'failed')
+        print("Could not install build tools")
         return ret 
 
     def reload_drivers(self, verbose=True):
