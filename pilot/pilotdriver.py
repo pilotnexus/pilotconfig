@@ -1,4 +1,5 @@
 from sys import modules
+from tkinter import W
 from halo import Halo
 import lazy_import
 
@@ -339,12 +340,22 @@ class PilotDriver():
                     print('Pilot driver installed.')
                     return 1
                 else:
-                    print(
-                        'Could not install the pilot driver, most likely there is no driver compiled for your kernel.'
-                    )
+                    print('Could not install the pilot driver, most likely there is no driver compiled for your kernel.')
+                    ch = input("Do you want to try to build them locally (needs a couple of minutes and plenty of disk space)? [y/n]: ")
+                    if (ch == 'y' or ch == 'yes'):
+                        return self.try_build_drivers()
                     #self.get_kernel_info()
                     return -1
         return 0
+    
+    def try_build_drivers(self):
+        ret = self.sbc.cmd_retcode("sudo apt-get install -y python2 git build-essential")
+        if ret == 0:
+            ret = self.sbc.cmd_retcode("git clone https://github.com/pilotnexus/pilotdriver.git ~/pilotdriver && cd ~/pilotdriver && make prepare && make && make package && sudo make install")
+        else:
+            print("Could not install build tools")
+            return -1
+        return ret 
 
     def reload_drivers(self, verbose=True):
         ok = True
@@ -385,6 +396,7 @@ class PilotDriver():
 
     def build(self):
         files = dict()
+        version = None
         try:
             if not os.path.exists(self.tmp_dir):
                 os.makedirs(self.tmp_dir)
@@ -419,6 +431,8 @@ class PilotDriver():
                     extractdir = ''
                     if (buildStatus.result.bintype == BinaryType.MCUFirmware):
                         filename = "stm.gz"
+                        if buildStatus.result.version:
+                            version = buildStatus.result.version
                         extract = True
                         extractdir = self.tmp_dir
                         extractfname = 'stm.bin'
@@ -450,7 +464,7 @@ class PilotDriver():
 
             spinner.stop()
             print("Done.")
-            return files
+            return version, files
 
         except Exception as error:
             print(Fore.RED + str(error))
@@ -458,7 +472,7 @@ class PilotDriver():
     
     def get_firmware_source(self, extractDir):
         try:
-            files = self.build()
+            version, files = self.build()
             mcu_src_expanded = False
             fpga_src_expanded = False
             if BinaryType.FPGASource in files:
@@ -471,11 +485,11 @@ class PilotDriver():
                     tar.extractall(path=extractDir)
                     tar.close()
                     mcu_src_expanded = True
-            return fpga_src_expanded and mcu_src_expanded
+            return version, fpga_src_expanded and mcu_src_expanded
         except Exception as error:
             print(Fore.RED + str(error))
             bugsnag.notify(Exception(error))
-        return False
+        return None, False
 
     def program_cpld(self, binfile, erase=False):
         cmd = 'sudo chmod +x {0}/jamplayer; sudo {0}/jamplayer -a{1} -g{2},{3},{4},{5} {6}'.format(

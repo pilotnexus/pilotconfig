@@ -42,13 +42,14 @@ def download_base_firmware(args):
       print('Module {}: {}{}'.format(
           module['module'], Fore.GREEN, module['currentfid_nicename']))
 
-  if not pilotdriver.get_firmware_source(os.path.join(args.workdir, 'basefw') if args.workdir else './basefw'):
+  version, success = pilotdriver.get_firmware_source(os.path.join(args.workdir, 'basefw') if args.workdir else './basefw')
+  if not success:
     print(Fore.RED + 'Could not download firmware source!')
     exit(1)
 
-  return modules
+  return version, modules
 
-def init(args, version):
+def init(args, pilotconfig_version):
   use_compiler = None
   print('This will create a new Pilot firmware project in the current folder')
 
@@ -82,7 +83,7 @@ def init(args, version):
     args.compiler = compilers[compiler_index]['name']
 
   try:
-    modules = download_base_firmware(args)
+    firmware_version, modules = download_base_firmware(args)
     # create credentials.json
     #cred = {}
     #try:
@@ -103,7 +104,8 @@ def init(args, version):
     # create .pilotfwconfig.json
     config = {}
     config['compiler'] = args.compiler
-    config['generated_by'] = "pilot-node v{}".format(version)
+    config['generated_by'] = "pilot-config v{}".format(pilotconfig_version)
+    config['firmware_version'] = firmware_version
     config['config'] = { 
       "stop_plc_on_module_error": False,
       "watchdog_timeout": 50,
@@ -134,8 +136,7 @@ def init(args, version):
     if args.node:
       config['nodes'] = [{'name': 'default', 'node': args.node}]
 
-    with open(os.path.join(args.workdir, '.pilotfwconfig.json') if args.workdir else './.pilotfwconfig.json', 'w') as configfile:
-      json.dump(config, configfile)
+    helper.save_config(args, config)
 
     # copy default project files
     targetpath = os.path.join(args.workdir) if args.workdir else './'
@@ -160,7 +161,8 @@ def update(args):
   toplevel = helper.find_fw_toplevel(args)
   if toplevel != '':
     args.workdir = toplevel
-    download_base_firmware(args)
+    version, modules = download_base_firmware(args)
+    helper.update_firmware_version_in_config(args, version)
   else:
     print("Could not find project configuration file '.pilotfwconfig.json', firmware not updated")
 

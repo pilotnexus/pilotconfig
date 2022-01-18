@@ -24,6 +24,10 @@ def get_node_from_config(args):
         break
   
   return args
+def update_firmware_version_in_config(args, version):
+  config = get_config(args)
+  config['firmware_version'] = version
+  save_config(args, config)
 
 def find_fw_toplevel(args):
   dir = args.workdir if args.workdir else os.getcwd() 
@@ -56,6 +60,10 @@ def show_compilers():
   compilers, _ = get_compilers()
   for compiler in compilers:
     print('{}: {} (extension: {})'.format(compiler['name'], compiler['description'], compiler['filter']))
+
+def save_config(args, config):
+    with open(os.path.join(args.workdir, '.pilotfwconfig.json') if args.workdir else './.pilotfwconfig.json', 'w') as configfile:
+      json.dump(config, configfile)
 
 def get_config(args):
   try:

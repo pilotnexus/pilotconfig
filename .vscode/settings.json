@@ -15,4 +15,9 @@
   "python.jediEnabled": false,
 "python.languageServer": "Default",
 "python.formatting.provider": "yapf",
+"gitlab.repositories": {
+    "/home/amd/work/pilot/pilotconfig": {
+        "preferredRemoteName": "gl"
+    }
+},
 }
