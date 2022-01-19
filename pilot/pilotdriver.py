@@ -1,5 +1,4 @@
 from sys import modules
-from tkinter import W
 from halo import Halo
 import lazy_import
 

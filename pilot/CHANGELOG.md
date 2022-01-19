@@ -1,5 +1,5 @@
 # CHANGELOG
-## 2.0.3
+## 2.0.4
 removed unnecessary tkinter import
 
 ## 2.0.2
