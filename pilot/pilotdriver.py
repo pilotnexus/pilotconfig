@@ -397,22 +397,23 @@ class PilotDriver():
 
         return ok
 
-    def build(self):
+    def build(self, version):
         files = dict()
-        version = None
         try:
             if not os.path.exists(self.tmp_dir):
                 os.makedirs(self.tmp_dir)
+            if version is not None:
+                print("Building Version {}".format(version))
             spinner = Halo(text='Connecting', spinner='dots')
             spinner.start()
             channel = grpc.insecure_channel(self.build_server)
             stub = PilotBuildStub(channel)
             modules = [
-                Module(number=key, fid=value['fid'])
+                Module(number=key, fid=value['fid'], hid=value['hid'], uid=value['uid'])
                 for key, value in self.eeproms.items() if value['fid'] != ''
             ]
             request = BuildRequest(modules=modules,
-                                   target=TargetMcu.STM32F103RC)
+                                   target=TargetMcu.STM32F103RC, version=version)
             for buildStatus in stub.Build(request=request):
                 if (buildStatus.HasField('step')):
                     spinner.stop()
@@ -473,9 +474,9 @@ class PilotDriver():
             print(Fore.RED + str(error))
             bugsnag.notify(Exception(error))
     
-    def get_firmware_source(self, extractDir):
+    def get_firmware_source(self, extractDir, version):
         try:
-            version, files = self.build()
+            version, files = self.build(version)
             mcu_src_expanded = False
             fpga_src_expanded = False
             if BinaryType.FPGASource in files:

@@ -42,7 +42,7 @@ def download_base_firmware(args):
       print('Module {}: {}{}'.format(
           module['module'], Fore.GREEN, module['currentfid_nicename']))
 
-  version, success = pilotdriver.get_firmware_source(os.path.join(args.workdir, 'basefw') if args.workdir else './basefw')
+  version, success = pilotdriver.get_firmware_source(os.path.join(args.workdir, 'basefw') if args.workdir else './basefw', args.fwversion)
   if not success:
     print(Fore.RED + 'Could not download firmware source!')
     exit(1)

@@ -1,4 +1,9 @@
 # CHANGELOG
+
+## 2.0.7
+specific firmware version can now be specified with the --fw-version parameter
+## 2.0.6
+added reset command, increased watchdog_timeout default to 100ms (to not interrupt EEPROM writes)
 ## 2.0.5
 prompt reboot when drivers are build locally & installed
 ## 2.0.4

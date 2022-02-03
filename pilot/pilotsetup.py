@@ -144,7 +144,7 @@ def main(args):
                                             len(modules_with_multiple_fids) > 0
                                             else '')).strip().lower()
                             if ch == 'y' or ch == 'yes':
-                                version, files = pilotdriver.build()
+                                version, files = pilotdriver.build(args.fwversion)
                                 print('Firmware version: {}'.format(version))
                                 if BinaryType.MCUFirmware in files:
                                     result = pilotdriver.program(
@@ -180,7 +180,7 @@ def main(args):
                                 break
 
                     else:
-                        version, success = pilotdriver.get_firmware_source(os.path.abspath(args.source))
+                        version, success = pilotdriver.get_firmware_source(os.path.abspath(args.source), args.fwversion)
 
                 else:
                     print('No modules found, is the driver loaded?')
