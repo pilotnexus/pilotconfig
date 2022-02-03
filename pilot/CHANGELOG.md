@@ -1,4 +1,6 @@
 # CHANGELOG
+## 2.0.5
+prompt reboot when drivers are build locally & installed
 ## 2.0.4
 removed unnecessary tkinter import
 

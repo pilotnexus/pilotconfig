@@ -339,8 +339,8 @@ class PilotDriver():
                     print('Pilot driver installed.')
                     return 1
                 else:
-                    print('Could not install the pilot driver, most likely there is no driver compiled for your kernel.')
-                    ch = input("Do you want to try to build them locally (needs a couple of minutes and plenty of disk space, be patient)? [y/n]: ")
+                    print('Could not install the pilot driver, most likely there is no pre-compiled driver for your kernel.')
+                    ch = input("Do you want to try to build them locally? (needs a couple of minutes and plenty of disk space, be patient) [y/n]: ")
                     if (ch == 'y' or ch == 'yes'):
                         return self.try_build_drivers()
                     #self.get_kernel_info()
@@ -355,7 +355,7 @@ class PilotDriver():
             ret = self.sbc.cmd_retcode("git clone https://github.com/pilotnexus/pilotdriver.git ~/pilotdriver && cd ~/pilotdriver && make prepare && make && make package && sudo make install")
             if ret == 0:
                 print(Fore.GREEN + 'done')
-                return 0
+                return 1 # success, we built the drivers, returning 1 to indicate a reboot
         print(Fore.RED + 'failed')
         print("Could not install build tools")
         return ret 

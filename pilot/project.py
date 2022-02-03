@@ -108,7 +108,7 @@ def init(args, pilotconfig_version):
     config['firmware_version'] = firmware_version
     config['config'] = { 
       "stop_plc_on_module_error": False,
-      "watchdog_timeout": 50,
+      "watchdog_timeout": 100,
       "enable_rtc": False
       }
     config['modules'] = []

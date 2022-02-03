@@ -5,3 +5,4 @@
 /pilot_config\.egg-info/
 /pilot_cli.egg-info/
 /testfiles/
+/.vscode/

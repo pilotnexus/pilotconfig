@@ -81,6 +81,8 @@ def main():
   parser_a = subparsers.add_parser('setup', parents=[parent_parser], help="Configure Pilot firmware")
   arguments.setup_arguments(parser_a)
 
+  parser_r = subparsers.add_parser('reset', parents=[parent_parser], help="Reset Pilot Mainboard")
+
   # Firmware subparser
   parser_b = subparsers.add_parser('fw', parents=[parent_parser], help="Init/Build/Program custom firmware")
   parser_b.add_argument('--show-toplevel', dest='show_toplevel', action='store_true',
@@ -112,6 +114,9 @@ def main():
     if (args.subparser_name == 'setup' or args.reset):
       from . import pilotsetup
       sys.exit(pilotsetup.main(args))
+    elif (args.subparser_name == 'reset' or args.reset):
+      from . import reset
+      sys.exit(reset.main(args))
     elif (args.subparser_name == 'fw'):
       if 'fw_subparser_name' in args and args.fw_subparser_name == 'build':
         from . import build
