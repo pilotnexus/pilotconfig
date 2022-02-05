@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.0.9
+bugfix: fix when modules are specified directly
+## 2.0.8
+added --module parameter to get help for modules (description, pinout, usage)
 ## 2.0.7
 specific firmware version can now be specified with the --fw-version parameter
 ## 2.0.6

@@ -17,7 +17,7 @@ def download_base_firmware(args):
     modarg = 'm{}'.format(mod)
     if modarg in args and getattr(args, modarg) is not None:
       detect_modules = False
-      eeproms[mod] = {'uid': 0, 'hid': '', 'fid': getattr(args,modarg)}
+      eeproms[mod] = {'uid': '', 'hid': '', 'fid': getattr(args,modarg)}
 
   if detect_modules:        
     if not args.node:

@@ -59,12 +59,6 @@ def main():
                          help='Remote SSH Password')
   parent_parser.add_argument('--sshkey', '-k', nargs='?', default='/', dest='sshkey_file',
                          help='public key file')
-  parent_parser.add_argument('--fw-version', '-f', dest='fwversion',
-                         help='Set working directory')
-  parent_parser.add_argument('--workdir', '-d', default=os.getcwd(), dest='workdir',
-                         help='Set working directory')
-  parent_parser.add_argument('--wait_bootmsg', '-w', dest='wait_bootmsg', action='store_true',
-                         help='Wait for Pilot boot message and display after reboot')
 
   argparser = argparse.ArgumentParser(description='Pilot Command-Line Interface')
   argparser.add_argument('-v', '--version', dest='version',action='store_true',

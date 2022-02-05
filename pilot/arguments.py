@@ -1,7 +1,13 @@
+import os
 from .pilotdriver import PilotDriver
 
 def setup_arguments(parser):
-  # parser.add_argument('--terminal', '-t', action='store_true', help='forces the terminal version instead of GUI')
+  parser.add_argument('--fw-version', '-f', dest='fwversion',
+                  help='Specify firmware version, latest is used if not specified')
+  parser.add_argument('--workdir', '-d', default=os.getcwd(), dest='workdir',
+                  help='Set working directory')
+  parser.add_argument('--wait_bootmsg', '-w', dest='wait_bootmsg', action='store_true',
+                         help='Wait for Pilot boot message and display after reboot')
   parser.add_argument('--source', '-c', default=None, dest='source',
                       help='Download Sourcecode only')
   parser.add_argument('--regnode', '-n', dest='regnode', action='store_true',
@@ -23,6 +29,12 @@ def module_arguments(parser):
   parser.add_argument('--usage', help='Show Module Usage Examples', action='store_true')
 
 def program_arguments(parser):
+  parser.add_argument('--fw-version', '-f', dest='fwversion',
+                  help='Specify firmware version, latest is used if not specified')
+  parser.add_argument('--workdir', '-d', default=os.getcwd(), dest='workdir',
+                  help='Set working directory')
+  parser.add_argument('--wait_bootmsg', '-w', dest='wait_bootmsg', action='store_true',
+                         help='Wait for Pilot boot message and display after reboot')
   parser.add_argument('name', metavar='node', type=str, nargs='?',
                       help='Specify named node to program')
   parser.add_argument('--binary', '-b', default=None, dest='bin',
@@ -39,6 +51,12 @@ def program_arguments(parser):
                       const=True, help='Program MCU only')
 
 def compiler_arguments(parser):
+  parser.add_argument('--fw-version', '-f', dest='fwversion',
+                  help='Specify firmware version, latest is used if not specified')
+  parser.add_argument('--workdir', '-d', default=os.getcwd(), dest='workdir',
+                  help='Set working directory')
+  parser.add_argument('--wait_bootmsg', '-w', dest='wait_bootmsg', action='store_true',
+                         help='Wait for Pilot boot message and display after reboot')
   parser.add_argument('--config', dest='configfile',
                       default=None, help='module config file (.pilotfwconfig.json)')
   parser.add_argument('--iec2c', dest='iec2cdir',
@@ -53,6 +71,12 @@ def compiler_arguments(parser):
                       help='IEC Structured Text File')
 
 def project_arguments(parser):
+  parser.add_argument('--fw-version', '-f', dest='fwversion',
+                  help='Set working directory')
+  parser.add_argument('--workdir', '-d', default=os.getcwd(), dest='workdir',
+                  help='Set working directory')
+  parser.add_argument('--wait_bootmsg', '-w', dest='wait_bootmsg', action='store_true',
+                         help='Wait for Pilot boot message and display after reboot')
   parser.add_argument('--compiler', dest='compiler', help='Specify compiler to use. Run --show-compilers to get a list of options')
   parser.add_argument('--config', dest='configfile',
                       default=None, help='module config file (.pilotfwconfig.json)')
