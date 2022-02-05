@@ -85,6 +85,9 @@ def main():
 
   parser_r = subparsers.add_parser('reset', parents=[parent_parser], help="Reset Pilot Mainboard")
 
+  parser_m = subparsers.add_parser('module', parents=[parent_parser], help="Get info on modules")
+  arguments.module_arguments(parser_m)
+
   # Firmware subparser
   parser_b = subparsers.add_parser('fw', parents=[parent_parser], help="Init/Build/Program custom firmware")
   parser_b.add_argument('--show-toplevel', dest='show_toplevel', action='store_true',
@@ -119,6 +122,10 @@ def main():
     elif (args.subparser_name == 'reset' or args.reset):
       from . import reset
       sys.exit(reset.main(args))
+    elif (args.subparser_name == 'module' or args.reset):
+      from .modulehelp  import ModuleHelp
+      helper = ModuleHelp()
+      sys.exit(helper.help(args))
     elif (args.subparser_name == 'fw'):
       if 'fw_subparser_name' in args and args.fw_subparser_name == 'build':
         from . import build

@@ -14,6 +14,13 @@ def setup_arguments(parser):
                       help='Installs driver only')
   for mod in range(1, PilotDriver.MODULE_COUNT+1):
     parser.add_argument('--module{}'.format(mod), '-m{}'.format(mod), dest='m{}'.format(mod), help='Firmware id of module {}'.format(mod))
+    
+
+def module_arguments(parser):
+  parser.add_argument('module', metavar='N', type=int,
+                    help='module number')
+  parser.add_argument('--pinout', help='Show Module Pinout', action='store_true')
+  parser.add_argument('--usage', help='Show Module Usage Examples', action='store_true')
 
 def program_arguments(parser):
   parser.add_argument('name', metavar='node', type=str, nargs='?',

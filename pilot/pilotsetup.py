@@ -104,7 +104,7 @@ def main(args):
                 modules, success = pilotdriver.load_pilot_defs()
                 if not success:
                     print(
-                        Fore.YELLOW,
+                        Fore.YELLOW + 
                         'Could not read module data. Maybe the firmware is outdated, trying to write base firmware image.'
                     )
                     trywritedefaultfirmware = True

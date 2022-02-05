@@ -139,12 +139,14 @@ class PilotDriver():
         pilot_fid(where: {fid: {_in: $fids} }) {
           fid
           name
+          usage
         }
         pilot_hid(where: {hid: {_in: $hids} }) {
           hid
           title
           subtitle
           description
+          pinout
           hid2fids {
             fid {
               fid
@@ -159,15 +161,28 @@ class PilotDriver():
             self.modules = [{
                 'module':
                 key,
-                'currentfid':
-                value['fid'],
-                'hid':
-                value['hid'],
+                'currentfid': value['fid'],
+                'hid': value['hid'],
                 'currentfid_nicename':
                 next(
                     iter(y['name'] for y in filter(
                         lambda x: x['fid'].strip() == value['fid'].strip(),
                         obj['pilot_fid'])), value['fid'].strip()),
+                'usage':
+                next(
+                    iter(y['usage'] for y in filter(
+                        lambda x: x['fid'].strip() == value['fid'].strip(),
+                        obj['pilot_fid'])), value['fid'].strip()),
+                'description':
+                next(
+                    iter(y['description'] for y in filter(
+                        lambda x: x['hid'].strip() == value['hid'].strip(),
+                        obj['pilot_hid'])), value['hid'].strip()),            
+                'pinout':
+                next(
+                    iter(y['pinout'] for y in filter(
+                        lambda x: x['hid'].strip() == value['hid'].strip(),
+                        obj['pilot_hid'])), value['hid'].strip()),            
                 'fids':
                 next(
                     iter([{
