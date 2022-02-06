@@ -9,12 +9,30 @@ import re
 import lazy_import
 Compiler = lazy_import.lazy_callable("pybars.Compiler")
 
-from tabulate import tabulate
+from rich.console import Console
+from rich.markdown import Markdown
+from rich import print as rich_print
+from rich.table import Table, Column
+
 from colorama import Fore
 from colorama import Style
 from colorama import init
 
 init(autoreset=True)  # colorama color autoreset
+
+# finds the largest string in an array
+def largest_str(arr):
+    # Initialize maximum element
+    n = len(arr)
+    max = len(arr[0])
+    # Traverse array elements from second
+    # and compare every element with 
+    # current max
+    for i in range(1, n):
+        cur = len(arr[i])
+        if cur > max:
+            max = cur
+    return max
 
 class ModuleHelp():
     sbc = None
@@ -61,6 +79,19 @@ class ModuleHelp():
         for i in range(start, to, incr):
             accum += "".join(block['fn'](i))
         return accum
+    
+    def printformatted(self, line):
+        splitchars=["#", "//"]
+        splitchar=""
+        for sp in splitchars:
+            splitchar = sp
+            parts=line.split(splitchar, 1)
+            if (len(parts) > 1):
+                break
+        if len(parts) > 1:
+            print(Style.RESET_ALL + parts[0] + Fore.GREEN + splitchar + parts[1])
+        else:
+            print(parts[0])
 
     def printhelp(self, args, module, sbc):
             helpers = {'gpio_base': self.gpiochip_base, 'tty': self.tty, 'for': self.loop }
@@ -75,23 +106,40 @@ class ModuleHelp():
                 if args.pinout:
                     if 'pinout' in module and 'default' in module['pinout'] and 'pins' in module['pinout']['default']:
                         pins = module['pinout']['default']['pins'] 
-                        print(tabulate(pins, tablefmt="fancy_grid"))
+                        width = largest_str([item for sublist in pins for item in sublist]) + 2 # add a space on each side of the string
+
+                        grid = Table(show_header=False, expand=False)
+                        grid.add_column(justify="center")
+                        for row in pins:
+                            table = Table(show_header=False, expand=False)
+                            i = 0
+                            for col in row:
+                                # color special pins
+                                if col == "GND":
+                                    row[i] = "[green]" + col
+                                elif col == "VCC" or col == "24V" or col == "5V":
+                                    row[i] = "[red]" + col
+                                table.add_column(justify="center", width=width)
+                                i = i + 1
+                            table.add_row(*row)
+                            grid.add_row(table)
+                        rich_print(grid)
                     else:
                         print("No pinout available for this module")
                 elif args.usage:
                     if 'usage' in module and module['usage'] != None:
                         template = compiler.compile(module['usage'])
                         text = template({}, helpers)
-                        for line in text.split('\n'):
-                            if line.strip().startswith("#"):
-                                print(Fore.GREEN+line)
-                            else:
-                                print(line)
+                        console = Console()
+                        md = Markdown(text)
+                        console.print(md)
                     else:
                         print("No usage description available for this module")
                 else:
                     if 'description' in module and module['description'] != None:
-                        print(module['description'])
+                        console = Console()
+                        md = Markdown(module['description'])
+                        console.print(md)
                     else:
                         print("No description available for this module")
 

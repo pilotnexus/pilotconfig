@@ -68,7 +68,7 @@ setup(
                     'qrcode_terminal',
                     'gql',
                     'graphql-core<3.0.0',
-                    'tabulate',
+                    'rich',
                     'protobuf',
                     'grpcio'
                     ],
