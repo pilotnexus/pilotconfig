@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 2.2.0
+Login methodology changed. If no parameter is specified, a key file is used. A password can be provided with '--password' or '-p'. If the password after this parameter is ommitted, it will be prompted safely (without displaying it)
 ## 2.0.9
 bugfix: fix when modules are specified directly
 ## 2.0.8

@@ -6,7 +6,7 @@ logging = lazy_import.lazy_module("logging")
 subprocess = lazy_import.lazy_module("subprocess")
 fnmatch = lazy_import.lazy_module("fnmatch")
 json = lazy_import.lazy_module("json")
-
+getpass = lazy_import.lazy_module("getpass")
 class Sbc():
   logging.getLogger("paramiko").setLevel(logging.ERROR)
 
@@ -27,47 +27,54 @@ class Sbc():
   def __enter__(self):
     usecredentials = False
     usekeyfile = False
-    if 'user' in self.args and self.args.user and 'sshkey_file' in self.args and self.args.sshkey_file != '/':
-      if self.args.sshkey_file == None:
-        self.args.sshkey_file = os.path.expanduser('~/.ssh/id_rsa.pub')
-      usekeyfile = True
-    elif 'user' in self.args and self.args.user and 'password' in self.args and self.args.password:
+    connected = False
+    if self.args.password != None: # use password was specified
+      if self.args.password == 'password_was_not_given':
+        self.args.password = getpass.getpass(prompt='Enter SSH password: ', stream=None) 
       usecredentials = True
-    if 'hardware' in self.args and self.args.hardware:
-      self.target = next(x for x in self.targethardwarelist if x['name'] == self.args.hardware)
+    else: # no password parameter, usekeyfile
+      self.args.sshkey_file = os.path.expanduser(self.args.sshkey_file)
+      if os.path.exists(self.args.sshkey_file):
+        usekeyfile = True
+      else:
+        print(Fore.RED + 'error')
+        print("Password parameter ('-p' or '--password') not specified, and ssh key file '{}' does not exist.\nPlease specify a password or a valid ssh key file.".format(self.args.sshkey_file))
+        exit(1)
+    
+    try:
       if usekeyfile:
         self.connect_with_key(self.args.user, self.args.sshkey_file)
+        connected = True
       elif usecredentials:
         self.connect(self.args.user, self.args.password)
+        connected = True
       else:
-        self.connect(self.target['defaultuser'], self.target['defaultpassword'])
-    else:
-      connected = False
-      for hw in self.targethardwarelist:
-        try:
-          user = self.args.user if usecredentials else hw['defaultuser']
-          if usekeyfile:
-            self.connect_with_key(user, self.args.sshkey_file)
-            connected = True
-          else:
-            password = self.args.password if usecredentials else hw['defaultpassword']
-            self.connect(user, password)
-            connected = True
-          break
-        except: 
-          print(Fore.YELLOW + 'failed')
-      if not connected:
-        print('Could not connect to target') 
+        print(Fore.YELLOW + 'failed')
+        print("You have neither specified a password nor a valid ssh key file (the default '{}' does not exist either, yes we tried that too).\nPlease specify a password or a valid ssh key file.".format(self.args.sshkey_file))
         exit(1)
-        #raise Exception('Could not connect to target') 
-      for hw in self.targethardwarelist:
-        try:  
-          if self.cmd(hw['hardware']['runcheck']).strip() == hw['hardware']['checkresult']:
-            self.target = hw
-            print("{} detected".format(self.target['fullname']))
-            break
-        except: 
-          pass
+    except:
+      print(Fore.YELLOW + 'failed')
+
+    if not connected:
+      print(Fore.RED + 'Could not connect to target {} with user {}'.format(self.args.node, self.args.user)) 
+      print("Is the target '{}' up and running and reachable?\nIs the user '{}' allowed to connect to the target via SSH?".format(self.args.node, self.args.user))
+      if usecredentials:
+        print("Is the password correct?")
+      if usekeyfile:
+        print("Is the key file '{}' correct and allowed on the target?".format(self.args.sshkey_file))
+        print("You can add your key to the target with 'ssh-copy-id -i {} {}@{}'".format(self.args.sshkey_file, self.args.user, self.args.node))
+        print("Alternatively you can specify a password using the '-p' or '--password' parameter if your target accepts login with password.")
+      exit(1)
+
+      #raise Exception('Could not connect to target') 
+    for hw in self.targethardwarelist:
+      try:  
+        if self.cmd(hw['hardware']['runcheck']).strip() == hw['hardware']['checkresult']:
+          self.target = hw
+          print("{} detected".format(self.target['fullname']))
+          break
+      except: 
+        pass
     if not self.target:
       if self.remote_client != None:
         self.remote_client.close()

@@ -53,11 +53,11 @@ def main():
                   help='Alternative URL for the pilot server API to contact')
   parent_parser.add_argument('--node', '-o', default=None, dest='node',
                          help='Node to configure remotely')
-  parent_parser.add_argument('--user', '-u', default='', dest='user',
+  parent_parser.add_argument('--user', '-u', default='pi', dest='user',
                          help='Remote SSH User')
-  parent_parser.add_argument('--password', '-p', default='', dest='password',
+  parent_parser.add_argument('--password', '-p', nargs='?', const='password_was_not_given', dest='password',
                          help='Remote SSH Password')
-  parent_parser.add_argument('--sshkey', '-k', nargs='?', default='/', dest='sshkey_file',
+  parent_parser.add_argument('--sshkey', '-k', nargs='?', default='~/.ssh/id_rsa.pub', dest='sshkey_file',
                          help='public key file')
 
   argparser = argparse.ArgumentParser(description='Pilot Command-Line Interface')
