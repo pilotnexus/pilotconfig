@@ -69,7 +69,6 @@ setup(
                     'gql',
                     'graphql-core<3.0.0',
                     'rich',
-                    'getpass',
                     'protobuf',
                     'grpcio'
                     ],

@@ -6,7 +6,7 @@ logging = lazy_import.lazy_module("logging")
 subprocess = lazy_import.lazy_module("subprocess")
 fnmatch = lazy_import.lazy_module("fnmatch")
 json = lazy_import.lazy_module("json")
-getpass = lazy_import.lazy_module("getpass")
+import getpass
 class Sbc():
   logging.getLogger("paramiko").setLevel(logging.ERROR)
 
@@ -157,7 +157,7 @@ class Sbc():
       return ret
 
   def reboot(self):
-    return self.cmd_retcode('sudo reboot')
+    return self.cmd_retcode('sudo reboot -f > /dev/null 2>&1 &')
 
   def getFileContent(self, file):
     return self.cmd('sudo cat {}'.format(file), True)

@@ -53,8 +53,8 @@ class ModuleHelp():
                     return gpio_start
         return -1
     
-    def tty(self, data):
-        return "/dev/ttyP{}".format((self.number)*2)
+    def tty(self, _, block, offset=0):
+        return "/dev/ttyP{}".format((self.number)*2+offset)
 
 
     def help(self, args):
@@ -72,7 +72,7 @@ class ModuleHelp():
                 for mod in modules:
                     if mod['module'] == args.module:
                         self.number = args.module-1
-                        self.printhelp(args, mod, sbc)
+                        self.printhelp(args, mod)
     
     def loop(self, _, block, start, to, incr):
         accum = '' 
@@ -93,8 +93,8 @@ class ModuleHelp():
         else:
             print(parts[0])
 
-    def printhelp(self, args, module, sbc):
-            helpers = {'gpio_base': self.gpiochip_base, 'tty': self.tty, 'for': self.loop }
+    def printhelp(self, args, module):
+            helpers = {'gpio_base': self.gpiochip_base, 'for': self.loop }
 
             print("")
             print(Fore.GREEN + 'Module [{}]: {}'.format(args.module, module['currentfid_nicename']))
@@ -129,7 +129,13 @@ class ModuleHelp():
                 elif args.usage:
                     if 'usage' in module and module['usage'] != None:
                         template = compiler.compile(module['usage'])
-                        text = template({}, helpers)
+                        text = template({
+                            'module': module['module']-1, 
+                            'slot': module['module'], 
+                            'tty': "/dev/ttyP{}".format((module['module']-1)*2),
+                            'tty1': "/dev/ttyP{}".format((module['module']-1)*2),
+                            'tty2': "/dev/ttyP{}".format((module['module']-1)*2+1),
+                            }, helpers)
                         console = Console()
                         md = Markdown(text)
                         console.print(md)
