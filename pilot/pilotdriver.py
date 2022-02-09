@@ -12,7 +12,8 @@ itertools = lazy_import.lazy_module("itertools")
 requests = lazy_import.lazy_module("requests")
 bugsnag = lazy_import.lazy_module("bugsnag")
 
-import grpc
+grpc = lazy_import.lazy_module("grpc")
+#import grpc
 
 import traceback
 
@@ -583,14 +584,23 @@ class PilotDriver():
                 print('Error setting permissions to folder {}'.format(
                     self.tmp_dir))
         else:
+            src = ""
+            target = ""
             if BinaryType.FPGABitstream in files:
-                copyfile(files[BinaryType.FPGABitstream], os.path.join(self.tmp_dir, 'cpld.jam'))
+                src = files[BinaryType.FPGABitstream]
+                target = os.path.join(self.tmp_dir, 'cpld.jam')
             if BinaryType.MCUFirmware in files:
-                copyfile(files[BinaryType.MCUFirmware], os.path.join(self.tmp_dir, 'stm.bin'))
+                src = files[BinaryType.MCUFirmware]
+                target = os.path.join(self.tmp_dir, 'stm.bin')
             if BinaryType.Variables in files:
-                copyfile(files[BinaryType.Variables], os.path.join(self.tmp_dir, 'variables'))
+                src = files[BinaryType.Variables]
+                target = os.path.join(self.tmp_dir, 'variables')
             if BinaryType.Docs in files:
-                copyfile(files[BinaryType.Docs], os.path.join(self.tmp_dir, 'fwconfig.json'))
+                src = files[BinaryType.Docs]
+                target = os.path.join(self.tmp_dir, 'fwconfig.json')
+
+            if src != target:
+                copyfile(src, target)
 
         if program_cpld and res == 0:
             res = self.program_cpld(

@@ -6,5 +6,10 @@
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,
     "**/target": true
-  }
+  },
+  "rust-analyzer.checkOnSave.allTargets": false,
+  "rust-analyzer.checkOnSave.extraArgs": [
+      "--target",
+      "thumbv7m-none-eabi"
+  ]
 }

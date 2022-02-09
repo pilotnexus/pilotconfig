@@ -28,32 +28,35 @@ class Sbc():
     usecredentials = False
     usekeyfile = False
     connected = False
-    if self.args.password != None: # use password was specified
-      if self.args.password == 'password_was_not_given':
-        self.args.password = getpass.getpass(prompt='Enter SSH password: ', stream=None) 
-      usecredentials = True
-    else: # no password parameter, usekeyfile
-      self.args.sshkey_file = os.path.expanduser(self.args.sshkey_file)
-      if os.path.exists(self.args.sshkey_file):
-        usekeyfile = True
-      else:
-        print(Fore.RED + 'error')
-        print("Password parameter ('-p' or '--password') not specified, and ssh key file '{}' does not exist.\nPlease specify a password or a valid ssh key file.".format(self.args.sshkey_file))
-        exit(1)
-    
-    try:
-      if usekeyfile:
-        self.connect_with_key(self.args.user, self.args.sshkey_file)
-        connected = True
-      elif usecredentials:
-        self.connect(self.args.user, self.args.password)
-        connected = True
-      else:
+
+    if 'node' in self.args and self.args.node != None:
+      if self.args.password != None: # use password was specified
+        if self.args.password == 'password_was_not_given':
+          self.args.password = getpass.getpass(prompt='Enter SSH password: ', stream=None) 
+        usecredentials = True
+      else: # no password parameter, usekeyfile
+        self.args.sshkey_file = os.path.expanduser(self.args.sshkey_file)
+        if os.path.exists(self.args.sshkey_file):
+          usekeyfile = True
+        else:
+          print(Fore.RED + 'error')
+          print("Password parameter ('-p' or '--password') not specified, and ssh key file '{}' does not exist.\nPlease specify a password or a valid ssh key file.".format(self.args.sshkey_file))
+          exit(1)
+      try:
+        if usekeyfile:
+          self.connect_with_key(self.args.user, self.args.sshkey_file)
+          connected = True
+        elif usecredentials:
+          self.connect(self.args.user, self.args.password)
+          connected = True
+        else:
+          print(Fore.YELLOW + 'failed')
+          print("You have neither specified a password nor a valid ssh key file (the default '{}' does not exist either, yes we tried that too).\nPlease specify a password or a valid ssh key file.".format(self.args.sshkey_file))
+          exit(1)
+      except:
         print(Fore.YELLOW + 'failed')
-        print("You have neither specified a password nor a valid ssh key file (the default '{}' does not exist either, yes we tried that too).\nPlease specify a password or a valid ssh key file.".format(self.args.sshkey_file))
-        exit(1)
-    except:
-      print(Fore.YELLOW + 'failed')
+    else: # no node specified
+        connected = True
 
     if not connected:
       print(Fore.RED + 'Could not connect to target {} with user {}'.format(self.args.node, self.args.user)) 
