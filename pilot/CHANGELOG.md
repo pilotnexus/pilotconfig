@@ -1,4 +1,6 @@
 # CHANGELOG
+## 2.3.0
+Project templates are now build from tar.gz instead of copying from file system, because setuptools packaging does include old files
 
 ## 2.2.4
 Improved help moustache model data (slot, module (zero based slot number) and tty/tty1/tty2 is now available for --usage help)

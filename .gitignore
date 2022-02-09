@@ -6,3 +6,4 @@
 /pilot_cli.egg-info/
 /testfiles/
 /.vscode/
+/**/*.tar.gz

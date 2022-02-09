@@ -4,6 +4,8 @@ from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 import os
+import tarfile
+from pathlib import Path
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -19,11 +21,33 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 def package_files(directoryarr):
     paths = []
     for directory in directoryarr:
-      for (path, _directories, filenames) in os.walk(os.path.join('pilot', directory)):
-          for filename in filenames:
-              paths.append(os.path.join('..', path, filename))
+        if directory == 'project': #additionally pack these
+            project_dir = os.path.join('pilot', directory)
+            compiler_dirs = os.listdir(project_dir)
+            for compiler_dir in compiler_dirs:
+                project_templ_path = os.path.join(project_dir, compiler_dir)
+                project_templates = os.listdir(project_templ_path)
+                for proj_templ in project_templates:
+                    ptf = os.path.join(project_templ_path, proj_templ)
+                    if Path(ptf).is_dir():
+                        tar_dir(ptf+'.tar.gz', ptf)
+                print(project_templates)
+            pass
+        else:
+            for (path, _directories, filenames) in os.walk(os.path.join('pilot', directory)):
+                for filename in filenames:
+                    if not filename.endswith(".pyc"):
+                        paths.append(os.path.join('..', path, filename))
     return paths
 
+def tar_dir(name, directory):
+    with tarfile.open(name, "w:gz") as tar:
+        for (path, _directories, filenames) in os.walk(directory):
+            for filename in filenames:
+                full_file = os.path.join('.', path, filename)
+                arcname=os.path.relpath(full_file, directory)
+                tar.add(full_file, arcname=arcname)
+        tar.close()
 
 extra_files = package_files(['bin', 'compiler', 'plugins', 'devices', 'project'])
 extra_files.append('VERSION')
