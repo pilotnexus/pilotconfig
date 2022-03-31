@@ -1,3 +1,4 @@
+import os
 import lazy_import
 
 from bugsnag.handlers import BugsnagHandler

@@ -64,12 +64,6 @@ def main():
   argparser.add_argument('-v', '--version', dest='version',action='store_true',
                          help='Get version')
 
-  argparser.add_argument('--reset', '-r', default=None, action='store_const', const='reset', dest='reset',
-                      help='Resets the Pilot Mainboard')
-  # argparser.add_argument('-m', '--modules', dest='modules', action='store_true',
-  #                        help='Get info on modules')
-  #argparser.add_argument('-a', '--api', dest='api', action='store_true',
-  #                       help='Run Api Endpoint instead of CLI')
   # Subparsers
   subparsers = argparser.add_subparsers(dest='subparser_name')
 
@@ -78,6 +72,7 @@ def main():
   arguments.setup_arguments(parser_a)
 
   parser_r = subparsers.add_parser('reset', parents=[parent_parser], help="Reset Pilot Mainboard")
+  arguments.reset_arguments(parser_r)
 
   parser_m = subparsers.add_parser('module', parents=[parent_parser], help="Get info on modules")
   arguments.module_arguments(parser_m)

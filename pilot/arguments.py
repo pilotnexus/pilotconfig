@@ -21,6 +21,9 @@ def setup_arguments(parser):
   for mod in range(1, PilotDriver.MODULE_COUNT+1):
     parser.add_argument('--module{}'.format(mod), '-m{}'.format(mod), dest='m{}'.format(mod), help='Firmware id of module {}'.format(mod))
     
+def reset_arguments(parser):
+  parser.add_argument('--wait_bootmsg', '-w', dest='wait_bootmsg', action='store_true',
+                         help='Wait for Pilot boot message and display after reboot')
 
 def module_arguments(parser):
   parser.add_argument('module', metavar='N', type=int,
