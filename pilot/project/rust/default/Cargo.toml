@@ -2,7 +2,7 @@
 name = "pilot-fw"
 version = "0.1.0"
 authors = []
-edition = "2018"
+edition = "2021"
 build = "build.rs"
 
 [lib]
@@ -17,8 +17,8 @@ members = [
 ]
 
 [dependencies]
-pilot_sys = { git = "https://github.com/pilotnexus/pilot_sys.git", tag="v0.1.2" }
-pilot_macro = { git = "https://github.com/pilotnexus/pilot_macro.git", tag="v0.1.1" }
+pilot_sys = { git = "https://github.com/pilotnexus/pilot_sys.git", tag="v0.3.0" }
+pilot_macro = { git = "https://github.com/pilotnexus/pilot_macro.git", tag="v0.3.0" }
 
 [dev-dependencies]
-pilot_test = { git = "https://github.com/pilotnexus/pilot_test.git", tag="v0.1.1" }
+pilot_test = { git = "https://github.com/pilotnexus/pilot_test.git", tag="v0.3.0" }

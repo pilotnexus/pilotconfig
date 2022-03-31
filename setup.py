@@ -30,7 +30,9 @@ def package_files(directoryarr):
                 for proj_templ in project_templates:
                     ptf = os.path.join(project_templ_path, proj_templ)
                     if Path(ptf).is_dir():
-                        tar_dir(ptf+'.tar.gz', ptf)
+                        tar_file = ptf+'.tar.gz'
+                        tar_dir(tar_file, ptf)
+                        paths.append(os.path.join('..', tar_file))
                 print(project_templates)
             pass
         else:
