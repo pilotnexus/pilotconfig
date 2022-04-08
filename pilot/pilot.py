@@ -105,13 +105,13 @@ def main():
   #  from . import moduleinfo
   #  sys.exit(moduleinfo.main(args))
   elif ('subparser_name' in args):
-    if (args.subparser_name == 'setup' or args.reset):
+    if (args.subparser_name == 'setup'):
       from . import pilotsetup
       sys.exit(pilotsetup.main(args))
-    elif (args.subparser_name == 'reset' or args.reset):
+    elif (args.subparser_name == 'reset'):
       from . import reset
       sys.exit(reset.main(args))
-    elif (args.subparser_name == 'module' or args.reset):
+    elif (args.subparser_name == 'module'):
       from .modulehelp  import ModuleHelp
       helper = ModuleHelp()
       sys.exit(helper.help(args))

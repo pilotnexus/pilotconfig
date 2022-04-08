@@ -79,11 +79,6 @@ def main(args):
                     )
                     return 2
 
-                if (args.reset):
-                    print('Resetting Pilot Mainboard')
-                    print(pilotdriver.reset_pilot(args.wait_bootmsg))
-                    return 0
-
                 ret = pilotdriver.check_driver()
                 if ret != 0:
                     if ret == 1:
