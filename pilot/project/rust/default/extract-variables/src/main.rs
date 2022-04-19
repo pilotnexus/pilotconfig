@@ -180,6 +180,8 @@ fn write_csv(csv_arg: String, variables: &[VarInfo]) -> anyhow::Result<()> {
     // translations for the different type names
     let iecvars = {
         let mut vars = HashMap::new();
+        vars.insert("AtomicU64", "ULINT");
+        vars.insert("AtomicI64", "LINT");
         vars.insert("AtomicU32", "UDINT");
         vars.insert("AtomicI32", "DINT");
         vars.insert("AtomicU16", "UINT");
@@ -187,6 +189,8 @@ fn write_csv(csv_arg: String, variables: &[VarInfo]) -> anyhow::Result<()> {
         vars.insert("AtomicU8", "USINT");
         vars.insert("AtomicI8", "SINT");
         vars.insert("AtomicBool", "BOOL");
+        vars.insert("u64", "ULINT");
+        vars.insert("i64", "LINT");
         vars.insert("u32", "UDINT");
         vars.insert("i32", "DINT");
         vars.insert("u16", "UINT");

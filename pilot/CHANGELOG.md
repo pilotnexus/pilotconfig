@@ -1,4 +1,9 @@
 # CHANGELOG
+## 2.3.9
+updated to newest rust_sys v0.3.2
+
+## 2.3.6
+reset cremoved from setup, only available as a separate command now
 ## 2.3.0
 Project templates are now build from tar.gz instead of copying from file system, because setuptools packaging does include old files
 
