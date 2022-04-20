@@ -17,7 +17,7 @@ members = [
 ]
 
 [dependencies]
-pilot_sys = { git = "https://github.com/pilotnexus/pilot_sys.git", tag="v0.3.2" }
+pilot_sys = { git = "https://github.com/pilotnexus/pilot_sys.git", tag="v0.3.3" }
 pilot_macro = { git = "https://github.com/pilotnexus/pilot_macro.git", tag="v0.3.0" }
 
 [dev-dependencies]

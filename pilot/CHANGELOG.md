@@ -1,4 +1,7 @@
 # CHANGELOG
+
+## 2.4.0
+Firmware Project is now cloned from github by default
 ## 2.3.9
 updated to newest rust_sys v0.3.2
 

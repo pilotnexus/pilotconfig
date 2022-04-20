@@ -85,6 +85,8 @@ def project_arguments(parser):
                       default=None, help='module config file (.pilotfwconfig.json)')
   parser.add_argument('name', metavar='node', type=str, nargs='?',
                       help='Specify named node to update firmware code (node is not reprogrammed, it is just used to get the modules)')
+  parser.add_argument('--local', '-l', dest='local', action='store_true',
+                  help='Use local instead of github template')
   for mod in range(1, PilotDriver.MODULE_COUNT+1):
     parser.add_argument('--module{}'.format(mod), '-m{}'.format(mod), dest='m{}'.format(mod), help='Firmware id of module {}'.format(mod))
       

@@ -1,6 +1,7 @@
 import os
 import distutils
 import tarfile
+import subprocess
 import json
 import yaml
 from .sbc import Sbc
@@ -64,12 +65,15 @@ def init(args, pilotconfig_version):
             print("Cannot create project directory. Please check permissions.")
             exit(1)
     elif len(os.listdir(targetpath)) != 0:
-        if input('The current folder {} is not empty. Do you want to continue? [y/n] '.format(targetpath)) != 'y':
-            print('Aborting!')
-            exit(1)
+        print('The current folder {} is not empty.'.format(targetpath))
+        print('Aborting!')
+        exit(1)
 
-    node_user = args.user
-    node_password = args.password
+    # copy default project files if pulled from github
+    if not args.local:
+        res = subprocess.call("git clone https://github.com/pilotnexus/pilot_plc_template.git {}".format(targetpath), shell = True)
+        if res != 0:
+            exit(res)
 
     compilers, _ = helper.get_compilers()
 
@@ -153,23 +157,28 @@ def init(args, pilotconfig_version):
 
         helper.save_config(args, config)
 
-        # copy default project files
+
         project_type = 'default'
         sourcepath = os.path.join(os.path.dirname(os.path.realpath(__file__)),'project', args.compiler.lower(), project_type)
 
-        # check if a compressed version exists
-        source_gz = sourcepath+".tar.gz"
-        if (os.path.exists(source_gz)):
-            with tarfile.open(source_gz, "r:gz") as tar:
-                tar.extractall(path=targetpath)
-                tar.close()
-        elif os.path.exists(sourcepath):
-            distutils.dir_util.copy_tree(sourcepath, targetpath)
-        else:
-            print("Project type '{}' not found".format(project_type))
-            exit(1)
+        if args.local:
+            # check if a compressed version exists
+            source_gz = sourcepath+".tar.gz"
+            if (os.path.exists(source_gz)):
+                with tarfile.open(source_gz, "r:gz") as tar:
+                    tar.extractall(path=targetpath)
+                    tar.close()
+            elif os.path.exists(sourcepath):
+                distutils.dir_util.copy_tree(sourcepath, targetpath)
+            else:
+                print("Project type '{}' not found".format(project_type))
+                exit(1)
 
         print("Project generated")
+        print("""
+        Run `pilot fw build` to compile the project
+        and `pilot fw program` to program it to the Pilot Mainboard
+        """)
         #print( """{}
         #├─ src/
         #│  ├─ program.st    /* IEC 61131-3 code */
