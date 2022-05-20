@@ -11,6 +11,7 @@ import importlib.util
 from .plc import Plc
 from . import helper
 import lazy_import
+from colorama import Fore
 Compiler = lazy_import.lazy_callable("pybars.Compiler")
 
 def templateparser(args, dir, model, compiler, helpers):
@@ -72,15 +73,29 @@ def createdoc(args, model, config):
   for m in model['memmodules']:
     mod_cfg = next(iter([x for x in config['modules'] if x['slot'] == m['slot']]))
     n = mod_cfg['name'] if 'name' in mod_cfg else mod_cfg['device']['name']
+    mem_doc = m['device']['spec'].mem_doc
     
+    # add custom label
+    if 'config' in mod_cfg and 'labels' in mod_cfg['config']:
+      for label in mod_cfg['config']['labels']:
+        was_found = False
+        for dir in ['read', 'write']:
+          found = next((x for x in mem_doc[dir] if x['name'] == label), None)
+          if found:
+            found['label'] = mod_cfg['config']['labels'][label]
+            was_found = True
+        if not was_found:
+          print(Fore.YELLOW + "Warning: Custom label '{}' defined in module {} could not be matched to a module property".format(label, m['slot']))
+          print(Fore.YELLOW + "Possible label values are: " + ', '.join(list(map(lambda x: x['name'], mem_doc['read'])) + list(map(lambda x: x['name'], mem_doc['write']))))
+  
     doc['modules'].append({
       "slot": m['slot'],
       "fid": m['fid'],
       "fid_nicename": m['fid_nicename'],
-      "name": n ,
-      "doc": m['device']['spec'].mem_doc
+      "name": n,
+      "doc": mem_doc
     })
-  
+
   # create variable documentation
   varfile = os.path.join(args.workdir, 'out/VARIABLES.csv') if args.workdir else './out/VARIABLES.csv'
   doc['variables'] = parseplcvariables(varfile)
@@ -114,7 +129,7 @@ def main(args, version):
           exit(1)
       elif module['Name'] != 'None':
         print("WARNING: Base firmware has '{}' in module {}, but no configuration.".format(module['Name'], module['Slot'] + 1))
-    
+
     compilers, directories = helper.get_compilers()
     for index, compiler in enumerate(compilers):
       if compiler['name'] == config['compiler']:

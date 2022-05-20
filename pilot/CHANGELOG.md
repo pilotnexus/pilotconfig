@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2.4.1
+Early stopping and late starting of pilotd service if present, so that it can shut down gracefully instead of being killed for using the ttyAMA0
+Custom label for a module I/O now does not overwrite name but creates a separate label property in the fwconfig.json documentation file
 ## 2.4.0
 Firmware Project is now cloned from github by default
 ## 2.3.9

@@ -376,11 +376,12 @@ class PilotDriver():
         print("Could not install build tools")
         return ret 
 
-    def reload_drivers(self, verbose=True):
+    def reload_drivers(self, verbose=True, pdstopped=False):
         ok = True
 
         pnstopped = self.sbc.stop_service("pilotnode", verbose)
-        pdstopped = self.sbc.stop_service("pilotd", verbose)
+        if not pdstopped:
+            pdstopped = self.sbc.stop_service("pilotd", verbose)
 
         if verbose:
             print('reloading drivers...', end='')
@@ -607,6 +608,7 @@ class PilotDriver():
                 Path(self.tmp_dir).joinpath('cpld.jam').as_posix(), True)
 
         if program_mcu and res == 0:
+            pdstopped = self.sbc.stop_service("pilotd", True)
             self.serial_used()
             res = self.program_mcu(
                 Path(self.tmp_dir).joinpath('stm.bin').as_posix())
@@ -616,9 +618,6 @@ class PilotDriver():
                 Path(self.tmp_dir).joinpath('cpld.jam').as_posix())
 
         print(self.reset_pilot(bootmsg))
-        if reload_driver:
-            self.reload_drivers()
-
         if res == 0 and BinaryType.Variables in files:
             res = self.tryrun(
                 'setting PLC variables', 4,
@@ -635,7 +634,10 @@ class PilotDriver():
                 'sudo mkdir -p /etc/pilot; sudo cp {}/fwconfig.json /etc/pilot/fwconfig.json'
                 .format(self.tmp_dir))
 
-        return res
+        if reload_driver:
+            self.reload_drivers(True, pdstopped)
+
+        return res, pdstopped
 
     def get_help(self):
         try:
