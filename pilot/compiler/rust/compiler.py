@@ -70,6 +70,4 @@ def main(args, config, model, projectdir, compilerdir):
   parsetemplate(projectdir, model, compilerdir)
   #run make - only works with installed arm-none-eabi-gcc
   #TODO - enable using docker container for the compiler
-  subprocess.call(['make', '-C', args.workdir])
-
-  return 0
+  return subprocess.call(['make', '-C', args.workdir, '-s'])

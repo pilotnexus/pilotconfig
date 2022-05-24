@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.4.5
+build now returns make returncode instead of 0
+## 2.4.2
+Moved labels out of module config, directly into module definition.
 ## 2.4.1
 Early stopping and late starting of pilotd service if present, so that it can shut down gracefully instead of being killed for using the ttyAMA0
 Custom label for a module I/O now does not overwrite name but creates a separate label property in the fwconfig.json documentation file

@@ -93,7 +93,6 @@ setup(
                     'pyjwt',
                     'qrcode_terminal',
                     'gql',
-                    'graphql-core<3.0.0',
                     'rich',
                     'protobuf',
                     'grpcio'

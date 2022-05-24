@@ -76,13 +76,13 @@ def createdoc(args, model, config):
     mem_doc = m['device']['spec'].mem_doc
     
     # add custom label
-    if 'config' in mod_cfg and 'labels' in mod_cfg['config']:
-      for label in mod_cfg['config']['labels']:
+    if 'config' in mod_cfg and 'labels' in mod_cfg:
+      for label in mod_cfg['labels']:
         was_found = False
         for dir in ['read', 'write']:
           found = next((x for x in mem_doc[dir] if x['name'] == label), None)
           if found:
-            found['label'] = mod_cfg['config']['labels'][label]
+            found['label'] = mod_cfg['labels'][label]
             was_found = True
         if not was_found:
           print(Fore.YELLOW + "Warning: Custom label '{}' defined in module {} could not be matched to a module property".format(label, m['slot']))
@@ -147,9 +147,10 @@ def main(args, version):
     spec = importlib.util.spec_from_file_location("module.name", os.path.join(compilerdirectory, 'compiler.py'))
     compiler = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(compiler)
-    compiler.main(args, config, model, projectdir, compilerdirectory)
+    buildresult = compiler.main(args, config, model, projectdir, compilerdirectory)
 
-    #create documentation json
-    createdoc(args, model, config)
+    if buildresult == 0:
+        #create documentation json
+        createdoc(args, model, config)
      
-  return 0      
+  return buildresult      
