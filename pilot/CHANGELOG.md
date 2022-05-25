@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 2.4.6
+update now uses modules defined in .pilotfwconfig.json instead of reading them again from node
 ## 2.4.5
 build now returns make returncode instead of 0
 ## 2.4.2

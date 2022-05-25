@@ -193,10 +193,11 @@ def init(args, pilotconfig_version):
 
 def update(args):
     print("Updating base firmware")
-    args = helper.get_node_from_config(args)
     toplevel = helper.find_fw_toplevel(args)
     if toplevel != '':
         args.workdir = toplevel
+        args = helper.get_modules_from_config(args)
+
         version, modules = download_base_firmware(args)
         helper.update_firmware_version_in_config(args, version)
     else:

@@ -24,6 +24,15 @@ def get_node_from_config(args):
         break
   
   return args
+
+def get_modules_from_config(args):
+  config = get_config(args)
+  if 'modules' in config and isinstance(config['modules'], list):
+    for module in config['modules']:
+      if 'slot' in module and 'fid' in module:
+        setattr(args, 'm{}'.format(module['slot']), module['fid'])
+  return args
+
 def update_firmware_version_in_config(args, version):
   config = get_config(args)
   config['firmware_version'] = version
