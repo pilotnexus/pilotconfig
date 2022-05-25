@@ -95,7 +95,8 @@ setup(
                     'gql',
                     'rich',
                     'protobuf',
-                    'grpcio'
+                    'grpcio',
+                    'requests_toolbelt'
                     ],
   python_requires='>=3',
   entry_points={  # Optional

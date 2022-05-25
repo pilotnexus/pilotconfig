@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 2.4.7
+added requests_toolbelt (gql needs it and does not install it by itself?)
 ## 2.4.6
 update now uses modules defined in .pilotfwconfig.json instead of reading them again from node
 ## 2.4.5
