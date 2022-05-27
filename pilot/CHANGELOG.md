@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 2.4.8
+build directory now also gets deleted when `make upload` is called. Otherwise old template files (that where removed from the project) might still be in the `build/lib/pilot/` folder
 ## 2.4.7
 added requests_toolbelt (gql needs it and does not install it by itself?)
 ## 2.4.6
