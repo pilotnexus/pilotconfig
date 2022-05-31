@@ -618,6 +618,10 @@ class PilotDriver():
                 Path(self.tmp_dir).joinpath('cpld.jam').as_posix())
 
         print(self.reset_pilot(bootmsg))
+
+        if reload_driver:
+            self.reload_drivers(True, pdstopped)
+
         if res == 0 and BinaryType.Variables in files:
             res = self.tryrun(
                 'setting PLC variables', 4,
@@ -633,9 +637,6 @@ class PilotDriver():
                 'saving firmware configuration file', 4,
                 'sudo mkdir -p /etc/pilot; sudo cp {}/fwconfig.json /etc/pilot/fwconfig.json'
                 .format(self.tmp_dir))
-
-        if reload_driver:
-            self.reload_drivers(True, pdstopped)
 
         return res, pdstopped
 

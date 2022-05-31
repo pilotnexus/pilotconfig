@@ -1,5 +1,6 @@
 # CHANGELOG
-
+## 2.4.9
+reload drivers before plc variables are set, otherwise the variables set are immediately discarded
 ## 2.4.8
 build directory now also gets deleted when `make upload` is called. Otherwise old template files (that where removed from the project) might still be in the `build/lib/pilot/` folder
 ## 2.4.7
