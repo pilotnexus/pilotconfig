@@ -96,7 +96,20 @@ def main(args):
                 if args.driveronly:
                     return 0
 
-                modules, success = pilotdriver.load_pilot_defs()
+                detect_modules = True
+                success = False
+                eeproms = {}
+                for mod in range(1, PilotDriver.MODULE_COUNT+1):
+                    modarg = 'm{}'.format(mod)
+                    if modarg in args and getattr(args, modarg) is not None:
+                        detect_modules = False
+                        eeproms[mod] = {'uid': '', 'hid': '', 'fid': getattr(args,modarg)}
+
+                if detect_modules:
+                    modules, success = pilotdriver.load_pilot_defs()
+                else:
+                    modules, success = pilotdriver.getmodules(eeproms)
+
                 if not success:
                     print(
                         Fore.YELLOW + 
