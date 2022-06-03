@@ -161,7 +161,7 @@ class Sbc():
 
   def reboot(self):
     #return self.cmd_retcode('sudo shutdown -r > /dev/null 2>&1 &')
-    return self.cmd_retcode('nohup sudo -b bash -c 'sleep 5; reboot' &>/dev/null;')
+    return self.cmd_retcode("nohup sudo -b bash -c 'sleep 5; reboot' &>/dev/null;")
 
   def getFileContent(self, file):
     return self.cmd('sudo cat {}'.format(file), True)
