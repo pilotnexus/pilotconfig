@@ -142,7 +142,7 @@ def main(args):
                                 version, files = pilotdriver.build(args.fwversion)
                                 print('Firmware version: {}'.format(version))
                                 if BinaryType.MCUFirmware in files:
-                                    result = pilotdriver.program(
+                                    result, pdstopped = pilotdriver.program(
                                         files,
                                         bootmsg=args.wait_bootmsg)
                                 else:
