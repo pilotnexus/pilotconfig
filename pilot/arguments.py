@@ -10,7 +10,7 @@ def setup_arguments(parser):
                          help='Wait for Pilot boot message and display after reboot')
   parser.add_argument('--source', '-c', default=None, dest='source',
                       help='Download Sourcecode only')
-  parser.add_argument('--regnode', '-n', dest='regnode', action='store_true',
+  parser.add_argument('--regnode', dest='regnode', action='store_true',
                       help='Register node')
   #parser.add_argument('--reset', '-r', default=None, action='store_const', const='reset', dest='reset',
   #                    help='Resets the Pilot Mainboard')

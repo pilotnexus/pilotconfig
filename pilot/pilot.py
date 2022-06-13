@@ -53,12 +53,16 @@ def main():
                   help='Alternative URL for the pilot server API to contact')
   parent_parser.add_argument('--remote', '-r', default=None, dest='remote',
                          help='Remote.it device name to connect to')
-  parent_parser.add_argument('--node', '-o', default=None, dest='node',
-                         help='Node to configure remotely')
+  parent_parser.add_argument('--host', '-o', default=None, dest='node',
+                         help='Host to configure remotely (via SSH)')
+  parent_parser.add_argument('--node', '-n', default=None, dest='node',
+                         help='Node to configure remotely (same as --host)')
   parent_parser.add_argument('--user', '-u', default='pi', dest='user',
-                         help='Remote SSH User')
+                         help='SSH User')
+  parent_parser.add_argument('--port', default=22, dest='port',
+                         help='SSH Port')
   parent_parser.add_argument('--password', '-p', nargs='?', const='password_was_not_given', dest='password',
-                         help='Remote SSH Password')
+                         help='SSH Password')
   parent_parser.add_argument('--sshkey', '-k', nargs='?', default='~/.ssh/id_rsa.pub', dest='sshkey_file',
                          help='public key file')
 

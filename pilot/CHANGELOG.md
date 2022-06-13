@@ -1,4 +1,6 @@
 # CHANGELOG
+## 2.5.1
+added SSH port parameter, alternative --host parameter to --node
 ## 2.5.0
 added support for remote.it proxy connections
 ## 2.4.9
