@@ -167,6 +167,17 @@ class Sbc():
       if throw_on_nonzero_retcode and ret != 0:
         raise Exception('Cound not execute {} \nError: {}'.format(command, stderr))
       return stdout
+  
+  def cmd_ok(self, command, ok, not_ok):
+    try:
+      res = self.cmd(command, True)
+      if ok:
+        ok(res.strip())
+      return True
+    except:
+      if not_ok:
+        not_ok()
+    return False
 
   def cmd_retcode(self, command):
     if not self.remote_client:
@@ -190,11 +201,16 @@ class Sbc():
     cmdstr = 'sudo mkdir -p "{}" && printf "{}" | sudo tee {} >/dev/null'.format(os.path.dirname(file), content.replace('"', '\\"'), file)
     return self.cmd(cmdstr, True)
 
+  def is_service_started(self, name):
+    servicestarted = self.cmd_retcode('sudo systemctl is-active --quiet ' + name)
+    if servicestarted == 0:
+        return True
+    return False
+
   def stop_service(self, name, verbose = True):
     trystop = False
 
-    servicestarted = self.cmd_retcode('sudo systemctl is-active --quiet ' + name)
-    if servicestarted == 0:
+    if self.is_service_started(name):
       if verbose:
         print(name + ' running, stopping...', end='')
         servicestopped = self.cmd_retcode('sudo service ' + name + ' stop')
@@ -217,6 +233,44 @@ class Sbc():
       else:
         print(Fore.RED + 'failed')
 
+  def check_status(self):
+    # reading stats
+    success = self.cmd_ok('cat /proc/pilot/stats',
+    lambda _: _,
+    lambda _: print("Pilot driver not installed?"))
+
+    if success:
+      print("Base Firmware Version: ", end='')
+      success  = self.cmd_ok('cat /proc/pilot/fwinfo',
+      lambda ver: print(Fore.GREEN+ver),
+      lambda _: print(Fore.RED+'?'))
+
+      print("PLC Program Version: ", end='')
+      success = self.cmd_ok('cat /proc/pilot/plc/fwinfo', 
+      lambda ver: print(Fore.GREEN+ver),
+      lambda _: print(Fore.RED+'?'))
+      print("PLC State: ", end='')
+      success = self.cmd_ok('cat /proc/pilot/plc/state', 
+      lambda state: print(Fore.GREEN+'running' if state=='0' else Fore.RED+'stopped'),
+      lambda _: print(Fore.RED+'?'))
+
+      for mod in range(1, 5):
+        print("Module {} Status: ".format(mod), end='')
+        success = self.cmd_ok('cat /proc/pilot/module{}/status'.format(mod), 
+        lambda state: print(Fore.GREEN+'ok' if state=='0' else Fore.RED+'error'),
+        lambda _: print(Fore.RED+'?'))
+    
+    print("PilotNode Service...", end='')
+    if self.is_service_started("pilotnode"):
+      print(Fore.GREEN+"started")
+    else:
+      print(Fore.RED+"not started")
+
+    print("Pilot Daemon Service...", end='')
+    if self.is_service_started("pilotd"):
+      print(Fore.GREEN+"started")
+    else:
+      print(Fore.RED+"not started")
 
   def check_hardware(self):
     if not 'hardware' in self.args:

@@ -84,10 +84,11 @@ def main():
   arguments.module_arguments(parser_m)
 
   # Remoteit subparser
-
   parser_r = subparsers.add_parser('remote', parents=[parent_parser], help="remote.it devices")
   arguments.remoteit_arguments(parser_r)
 
+  parser_s = subparsers.add_parser('status', parents=[parent_parser], help="Pilot Device Status")
+  
   # Firmware subparser
   parser_b = subparsers.add_parser('fw', parents=[parent_parser], help="Init/Build/Program custom firmware")
   parser_b.add_argument('--show-toplevel', dest='show_toplevel', action='store_true',
@@ -130,6 +131,10 @@ def main():
       from .remoteit  import Remoteit
       remote = Remoteit()
       remote.list_devices()
+    elif (args.subparser_name == 'status'):
+      from pilot.sbc import Sbc
+      with Sbc(args) as sbc:
+        sbc.check_status()
     elif (args.subparser_name == 'fw'):
       if 'fw_subparser_name' in args and args.fw_subparser_name == 'build':
         from . import build

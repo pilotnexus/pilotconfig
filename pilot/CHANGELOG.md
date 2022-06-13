@@ -1,4 +1,6 @@
 # CHANGELOG
+## 2.5.2
+Added status subcommand
 ## 2.5.1
 added SSH port parameter, alternative --host parameter to --node
 ## 2.5.0
