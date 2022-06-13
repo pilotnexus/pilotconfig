@@ -1,5 +1,7 @@
 import lazy_import
 from colorama import Fore
+
+from pilot.remoteit import Remoteit
 os = lazy_import.lazy_module("os")
 paramiko = lazy_import.lazy_module("paramiko")
 logging = lazy_import.lazy_module("logging")
@@ -7,10 +9,13 @@ subprocess = lazy_import.lazy_module("subprocess")
 fnmatch = lazy_import.lazy_module("fnmatch")
 json = lazy_import.lazy_module("json")
 import getpass
+
 class Sbc():
   logging.getLogger("paramiko").setLevel(logging.ERROR)
 
+  timeout=10 #SSH timeout in seconds
   remote_client = None
+  remoteit = None
   args = None
   targethardwarelist = {}
   target = {}
@@ -29,6 +34,18 @@ class Sbc():
     usekeyfile = False
     connected = False
 
+    if 'remote' in self.args and self.args.remote != None:
+        try:
+          self.remoteit = Remoteit()
+          
+          service_id = self.remoteit.resolve_service_name(self.args.remote)
+          (self.args.node, self.args.port) = self.remoteit.connect(service_id)
+
+        except Exception as e:
+          print("Error connecting to remote device")
+          print(e)
+          exit(1)
+
     if 'node' in self.args and self.args.node != None:
       if self.args.password != None: # use password was specified
         if self.args.password == 'password_was_not_given':
@@ -44,10 +61,10 @@ class Sbc():
           exit(1)
       try:
         if usekeyfile:
-          self.connect_with_key(self.args.user, self.args.sshkey_file)
+          self.connect_with_key(self.args.user, self.args.sshkey_file, self.args.port)
           connected = True
         elif usecredentials:
-          self.connect(self.args.user, self.args.password)
+          self.connect(self.args.user, self.args.password, self.args.port)
           connected = True
         else:
           print(Fore.YELLOW + 'failed')
@@ -55,7 +72,7 @@ class Sbc():
           exit(1)
       except:
         print(Fore.YELLOW + 'failed')
-    else: # no node specified
+    else: # no node or remote specified
         connected = True
 
     if not connected:
@@ -90,30 +107,33 @@ class Sbc():
     if self.remote_client != None:
       self.remote_client.close()
 
-  def connect_with_key(self, user, key_filename):
+    if self.remoteit != None:
+        self.remoteit.disconnect()
+
+  def connect_with_key(self, user, key_filename, port):
     if 'node' in self.args and self.args.node != None:
       print('trying to connect to {} with user {} using keyfile {}...'.format(self.args.node, user, key_filename), end='')
       client = paramiko.SSHClient()
       client.load_system_host_keys()
       #client.set_missing_host_key_policy(paramiko.WarningPolicy())
       client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-      client.connect(self.args.node, username=user, key_filename=key_filename)
+      client.connect(self.args.node, username=user, key_filename=key_filename, port=port, timeout=self.timeout)
       self.remote_client = client
       print(Fore.GREEN + 'succeeded')
     return self
 
-  def connect(self, user, password):
+  def connect(self, user, password, port):
     if 'node' in self.args and self.args.node != None:
       print('trying to connect to {} with user {}...'.format(self.args.node, user), end='')
       client = paramiko.SSHClient()
       client.load_system_host_keys()
       #client.set_missing_host_key_policy(paramiko.WarningPolicy())
       client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-      client.connect(self.args.node, username=user, password=password)
+      client.connect(self.args.node, username=user, password=password, port=port, timeout=self.timeout)
       self.remote_client = client
       print(Fore.GREEN + 'succeeded')
     return self
-    
+  
   def need_sudo_pw(self):
     try:
       if self.cmd_retcode('sudo -n true') == 0:

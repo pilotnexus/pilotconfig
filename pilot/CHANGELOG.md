@@ -1,4 +1,6 @@
 # CHANGELOG
+## 2.5.0
+added support for remote.it proxy connections
 ## 2.4.9
 reload drivers before plc variables are set, otherwise the variables set are immediately discarded
 ## 2.4.8

@@ -25,6 +25,9 @@ def reset_arguments(parser):
   parser.add_argument('--wait_bootmsg', '-w', dest='wait_bootmsg', action='store_true',
                          help='Wait for Pilot boot message and display after reboot')
 
+def remoteit_arguments(parser):
+  parser.add_argument('list', help='List remote.it devices (you need remote.it credentials in the ~/.remoteit/credentials file)')
+
 def module_arguments(parser):
   parser.add_argument('module', metavar='N', type=int,
                     help='module number')

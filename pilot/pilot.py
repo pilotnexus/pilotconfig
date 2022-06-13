@@ -51,6 +51,8 @@ def main():
                          help='set target hardware')
   parent_parser.add_argument('--server', '-s', default=None, dest='server',
                   help='Alternative URL for the pilot server API to contact')
+  parent_parser.add_argument('--remote', '-r', default=None, dest='remote',
+                         help='Remote.it device name to connect to')
   parent_parser.add_argument('--node', '-o', default=None, dest='node',
                          help='Node to configure remotely')
   parent_parser.add_argument('--user', '-u', default='pi', dest='user',
@@ -76,6 +78,11 @@ def main():
 
   parser_m = subparsers.add_parser('module', parents=[parent_parser], help="Get info on modules")
   arguments.module_arguments(parser_m)
+
+  # Remoteit subparser
+
+  parser_r = subparsers.add_parser('remote', parents=[parent_parser], help="remote.it devices")
+  arguments.remoteit_arguments(parser_r)
 
   # Firmware subparser
   parser_b = subparsers.add_parser('fw', parents=[parent_parser], help="Init/Build/Program custom firmware")
@@ -115,6 +122,10 @@ def main():
       from .modulehelp  import ModuleHelp
       helper = ModuleHelp()
       sys.exit(helper.help(args))
+    elif (args.subparser_name == 'remote'):
+      from .remoteit  import Remoteit
+      remote = Remoteit()
+      remote.list_devices()
     elif (args.subparser_name == 'fw'):
       if 'fw_subparser_name' in args and args.fw_subparser_name == 'build':
         from . import build
