@@ -10,8 +10,8 @@ def setup_arguments(parser):
                          help='Wait for Pilot boot message and display after reboot')
   parser.add_argument('--source', '-c', default=None, dest='source',
                       help='Download Sourcecode only')
-  parser.add_argument('--regnode', dest='regnode', action='store_true',
-                      help='Register node')
+  parser.add_argument('--register-remote', dest='regnode', action='store_true',
+                      help='Register device for remote access using https://remote.it (remote.it account needed)')
   #parser.add_argument('--reset', '-r', default=None, action='store_const', const='reset', dest='reset',
   #                    help='Resets the Pilot Mainboard')
   parser.add_argument('--yes', '-y', default=None, action='store_const', const='noninteractive', dest='noninteractive',

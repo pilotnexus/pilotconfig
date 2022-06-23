@@ -91,14 +91,14 @@ class Sbc():
       try:  
         if self.cmd(hw['hardware']['runcheck']).strip() == hw['hardware']['checkresult']:
           self.target = hw
-          print("{} detected".format(self.target['fullname']))
+          #print("{} detected".format(self.target['fullname']))
           break
       except: 
         pass
     if not self.target:
       if self.remote_client != None:
         self.remote_client.close()
-      print('Could not detect target hardware. If you want to use a remote node use the --node parameter to specify the IP address.')
+      print('Could not detect target hardware. If you want to use a remote node use the --host parameter to specify the IP address.')
       #raise Exception('Could not detect target hardware. If you want to use a remote node use the --node parameter to specify the IP address.')
       exit(1)
     return self

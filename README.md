@@ -18,7 +18,7 @@ There are two options:
 `sudo pilot setup`
 
 ## Run remotely
-`pilot setup --node [IP] --user [user] --password [password]`
+`pilot setup --host [IP] --user [user] --password [password]`
 
 [IP]       = hostname or IP address of your SBC
 [user]     = SSH username

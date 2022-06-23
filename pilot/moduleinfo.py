@@ -26,7 +26,7 @@ def main(args):
       pilotdriver = PilotDriver(pilotserver, sbc)
 
       if not pilotdriver.driver_loaded():
-        print('Drivers are not loaded. Please use --node if you connect remotely or install pilot drivers first by running sudo pilot setup.')
+        print('Drivers are not loaded. Please use --host if you connect remotely or install pilot drivers first by running sudo pilot setup.')
         return 2
 
       #if not pilotdriver.check_raspberry() and not args.node:

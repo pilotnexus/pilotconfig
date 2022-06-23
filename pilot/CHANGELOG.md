@@ -1,4 +1,6 @@
 # CHANGELOG
+## 2.5.4
+remote.it install script using --register-remote 
 ## 2.5.2
 Added status subcommand
 ## 2.5.1

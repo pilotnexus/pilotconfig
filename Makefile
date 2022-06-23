@@ -1,5 +1,5 @@
 run: guard-PILOT_DEVENV_PI_node
-	python3 -m pilot.pilot setup --node $(PILOT_DEVENV_PI_node)
+	python3 -m pilot.pilot setup --host $(PILOT_DEVENV_PI_node)
 upload:
 	rm -f dist/*
 	rm -r build/*

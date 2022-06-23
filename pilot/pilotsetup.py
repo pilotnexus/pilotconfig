@@ -3,9 +3,11 @@
 from __future__ import print_function  # disables annoying pylint print warning
 
 import lazy_import
+import yaml
 
 from pilot.grpc_gen.pilotbuild_pb2 import BinaryType
 from . import arguments
+from . import helper
 
 sys = lazy_import.lazy_module("sys")
 json = lazy_import.lazy_module("json")
@@ -14,11 +16,11 @@ shlex = lazy_import.lazy_module("shlex")
 time = lazy_import.lazy_module("time")
 os = lazy_import.lazy_module("os")
 argparse = lazy_import.lazy_module("argparse")
-base64 = lazy_import.lazy_module("base64")
-gettext = lazy_import.lazy_module("gettext")
 bugsnag = lazy_import.lazy_module("bugsnag")
 logging = lazy_import.lazy_module("logging")
 paramiko = lazy_import.lazy_module("paramiko")
+scp = lazy_import.lazy_module("scp")
+requests = lazy_import.lazy_module("requests")
 
 from uuid import getnode as get_mac
 from bugsnag.handlers import BugsnagHandler
@@ -39,8 +41,83 @@ init(autoreset=True)  # colorama color autoreset
 DEBUG = False
 EXECVP_ENABLED = False
 
-############## PROC FILE ACCESS #####################
 
+def setname(sbc, interactive, remoteit_config):
+    if "name" in remoteit_config["device"]:
+        name = remoteit_config["device"]["name"]
+
+        configcontent = sbc.cmd("cat /etc/pilot/config.yml")
+        if configcontent:
+            try:
+                config = yaml.safe_load(configcontent)
+            except:
+                pass
+            if "name" in config:
+                name = config["name"]
+        
+        if name == None or name == "":
+            name = remoteit_config["device"]["name"]
+        ch = ""
+        if interactive:
+            ch = input("Enter a name for the device (hit Enter if you want to keep '{}'): ".format(name))
+        if ch != "":
+            remoteit_config["device"]["name"] = ch
+        else:
+            remoteit_config["device"]["name"] = name
+        json.dump(remoteit_config, open("/tmp/config.json", "w"))
+        if sbc.remote_client:
+            with scp.SCPClient(sbc.remote_client.get_transport()) as scp_client:
+                scp_client.put('/tmp/config.json', remote_path='/tmp/config.json')
+                sbc.cmd('sudo mv /tmp/config.json /etc/remoteit/config.json', True)
+
+def getclaim(sbc, interactive):
+    try:
+        cfg_content = sbc.cmd('sudo cat /etc/remoteit/config.json', True)
+        remoteit_config = json.loads(cfg_content)
+        if "device" in remoteit_config and "claim" in remoteit_config["device"]:
+            claim = remoteit_config["device"]["claim"]
+
+            #setname(sbc, interactive, remoteit_config)
+
+            print()
+            print("------------------------")
+            print("Claim Code: " + Fore.GREEN + claim)
+            print("------------------------")
+            print("Enter this code in the Remote.it app to claim your device.")
+            return True
+    except:
+        return False
+    return False
+
+def regnode(args, sbc):
+    if getclaim(sbc, not args.noninteractive):
+        return 0
+    try:
+        print("Trying to install remote.it...", end='')
+        with requests.get("https://downloads.remote.it/remoteit/install_agent.sh", stream=True) as r:
+            with open("/tmp/install_agent.sh", "wb") as f:
+                for chunk in r.iter_content(chunk_size=1024):
+                    if chunk:
+                        f.write(chunk)
+                        f.flush()
+        if sbc.remote_client:
+            with scp.SCPClient(sbc.remote_client.get_transport()) as scp_client:
+                scp_client.put('/tmp/install_agent.sh', remote_path='/tmp/install_agent.sh')
+        sbc.cmd('sudo chmod +x /tmp/install_agent.sh', True)
+        sbc.cmd('sudo /tmp/install_agent.sh', True)
+        print(Fore.GREEN + 'done')
+        print("Waiting for remote.it service...", end='')
+        time.sleep(5)
+        print(Fore.GREEN + 'done')
+    except:
+        print(Fore.RED + 'failed')
+                
+        print('Failed to install remote.it service')
+        return 2
+    if getclaim(sbc, not args.noninteractive):
+        return 0
+    else:
+        return 2
 
 def main(args):
 
@@ -72,13 +149,15 @@ def main(args):
                 print('Please run with sudo permissions.')
                 return 2
 
-            if not args.regnode:
-                if sbc.need_sudo_pw():
-                    print(
-                        'we need sudo on remote machine (without interactive authentication)'
-                    )
-                    return 2
-
+            if sbc.need_sudo_pw():
+                print(
+                    'we need sudo on remote machine (without interactive authentication)'
+                )
+                return 2
+            
+            if args.regnode:
+                regnode(args, sbc)
+            else:
                 ret = pilotdriver.check_driver()
                 if ret != 0:
                     if ret == 1:
