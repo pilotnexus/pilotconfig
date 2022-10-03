@@ -474,7 +474,29 @@ class PilotDriver():
 
                     if extract:
                         with tarfile.open(fname, "r:gz") as tar:
-                            tar.extractall(path=extractdir)
+                            
+                            import os
+                            
+                            def is_within_directory(directory, target):
+                                
+                                abs_directory = os.path.abspath(directory)
+                                abs_target = os.path.abspath(target)
+                            
+                                prefix = os.path.commonprefix([abs_directory, abs_target])
+                                
+                                return prefix == abs_directory
+                            
+                            def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+                            
+                                for member in tar.getmembers():
+                                    member_path = os.path.join(path, member.name)
+                                    if not is_within_directory(path, member_path):
+                                        raise Exception("Attempted Path Traversal in Tar File")
+                            
+                                tar.extractall(path, members, numeric_owner) 
+                                
+                            
+                            safe_extract(tar, path=extractdir)
                             tar.close()
                             if extractfname:
                                 files[buildStatus.result.
@@ -498,12 +520,50 @@ class PilotDriver():
             fpga_src_expanded = False
             if BinaryType.FPGASource in files:
                 with tarfile.open(files[BinaryType.FPGASource], "r:gz") as tar:
-                    tar.extractall(path=extractDir)
+                    def is_within_directory(directory, target):
+                        
+                        abs_directory = os.path.abspath(directory)
+                        abs_target = os.path.abspath(target)
+                    
+                        prefix = os.path.commonprefix([abs_directory, abs_target])
+                        
+                        return prefix == abs_directory
+                    
+                    def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+                    
+                        for member in tar.getmembers():
+                            member_path = os.path.join(path, member.name)
+                            if not is_within_directory(path, member_path):
+                                raise Exception("Attempted Path Traversal in Tar File")
+                    
+                        tar.extractall(path, members, numeric_owner) 
+                        
+                    
+                    safe_extract(tar, path=extractDir)
                     tar.close()
                     fpga_src_expanded = True
             if BinaryType.MCUSource in files:
                 with tarfile.open(files[BinaryType.MCUSource], "r:gz") as tar:
-                    tar.extractall(path=extractDir)
+                    def is_within_directory(directory, target):
+                        
+                        abs_directory = os.path.abspath(directory)
+                        abs_target = os.path.abspath(target)
+                    
+                        prefix = os.path.commonprefix([abs_directory, abs_target])
+                        
+                        return prefix == abs_directory
+                    
+                    def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+                    
+                        for member in tar.getmembers():
+                            member_path = os.path.join(path, member.name)
+                            if not is_within_directory(path, member_path):
+                                raise Exception("Attempted Path Traversal in Tar File")
+                    
+                        tar.extractall(path, members, numeric_owner) 
+                        
+                    
+                    safe_extract(tar, path=extractDir)
                     tar.close()
                     mcu_src_expanded = True
             return version, fpga_src_expanded and mcu_src_expanded
