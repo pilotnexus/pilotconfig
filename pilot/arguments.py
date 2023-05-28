@@ -90,6 +90,8 @@ def project_arguments(parser):
                       help='Specify named node to update firmware code (node is not reprogrammed, it is just used to get the modules)')
   parser.add_argument('--local', '-l', dest='local', action='store_true',
                   help='Use local instead of github template')
+  parser.add_argument('--tag', '-t', dest='tag', default='master',
+                  help='Set github template tag or branch, default is master')
   for mod in range(1, PilotDriver.MODULE_COUNT+1):
     parser.add_argument('--module{}'.format(mod), '-m{}'.format(mod), dest='m{}'.format(mod), help='Firmware id of module {}'.format(mod))
       

@@ -1,3 +1,4 @@
+import re
 import lazy_import
 from colorama import Fore
 
@@ -17,6 +18,7 @@ class Sbc():
   remote_client = None
   remoteit = None
   args = None
+  architecture = None
   targethardwarelist = {}
   target = {}
 
@@ -87,11 +89,18 @@ class Sbc():
       exit(1)
 
       #raise Exception('Could not connect to target') 
+    
+    self.architecture = self.get_architecture()
+    if not self.architecture:
+      print('Could not detect target architecture.')
+      exit(1)
+
     for hw in self.targethardwarelist:
       try:  
-        if self.cmd(hw['hardware']['runcheck']).strip() == hw['hardware']['checkresult']:
+        device = self.cmd(hw['hardware']['runcheck']).strip()
+        if re.match(hw['hardware']['checkre'], device):
           self.target = hw
-          #print("{} detected".format(self.target['fullname']))
+          print("{} detected ({}, {})".format(self.target['fullname'], device, self.architecture))
           break
       except: 
         pass
@@ -109,6 +118,20 @@ class Sbc():
 
     if self.remoteit != None:
         self.remoteit.disconnect()
+  
+  def get_architecture(self):
+    try:
+        output = self.cmd("uname -m").strip()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+    if output == 'aarch64':
+        return 'arm64'
+    elif output in ('armv6l', 'armv7l', 'armv7hl', 'armv8'):
+        return 'arm32'
+    else:
+        return None
 
   def connect_with_key(self, user, key_filename, port):
     if 'node' in self.args and self.args.node != None:

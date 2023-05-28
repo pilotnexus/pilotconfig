@@ -71,7 +71,7 @@ def init(args, pilotconfig_version):
 
     # copy default project files if pulled from github
     if not args.local:
-        res = subprocess.call("git clone https://github.com/pilotnexus/pilot_plc_template.git {}".format(targetpath), shell = True)
+        res = subprocess.call("curl -L https://github.com/pilotnexus/pilot_plc_template/tarball/{} | tar xz --strip=1 -C {}".format(args.tag, targetpath), shell = True)
         if res != 0:
             exit(res)
 

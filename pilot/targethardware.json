@@ -2,11 +2,10 @@
 	"version": "0.1",
 	"targethardware": [
     {
-      "name": "rpi",
-      "architecture": "cortex-a53_32bit",
+      "name": "raspberry_pi",
       "tty": "/dev/ttyAMA0",
       "apt_source": "deb http://archive.amescon.com/ rpi_raspbian main",
-      "kernelversionre": "Linux (?P<name>.*?) (?P<version>\\d+.\\d+.\\d+-.*?) #(?P<buildnum>\\d+).*?",
+      "kernelversionre": "Linux (?P<name>.*?) (?P<version>\\d+.\\d+.\\d+-.*?) #(?P<buildnum>\\d+).*?(?P<arch>\\S+) GNU/Linux",
       "fullname": "Raspberry Pi",
       "defaultuser": "pi",
       "defaultpassword": "raspberry",
@@ -30,16 +29,15 @@
       },
       "devicetree_overlay": "pilot_pi.dtbo",
       "hardware": {
-        "runcheck": "cat /etc/os-release | grep ID=raspbian",
-        "checkresult": "ID=raspbian"
+        "runcheck": "cat /sys/firmware/devicetree/base/model",
+        "checkre": "Raspberry Pi.*"
       }
     },
     {
       "name": "coral",
-      "architecture": "cortex-a53_64bit",
       "tty": "/dev/ttymxc0",
       "apt_source": "deb http://archive.amescon.com/ coral_mendel main",
-      "kernelversionre": "Linux (?P<name>.*?) (?P<version>\\d+.\\d+.\\d+-.*?) .*?",
+      "kernelversionre": "Linux (?P<name>.*?) (?P<version>\\d+.\\d+.\\d+-.*?) .*?(?P<arch>\\S+) GNU/Linux",
       "fullname": "Google Coral",
       "defaultuser": "mendel",
       "defaultpassword": "mendel",
@@ -64,7 +62,7 @@
       "devicetree_overlay": "pilot_coral.dtbo",
       "hardware": {
         "runcheck": "cat /etc/os-release | grep ID=mendel",
-        "checkresult": "ID=mendel"
+        "checkre": "ID=mendel"
       }
     }
   ]
