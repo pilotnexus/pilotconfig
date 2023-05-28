@@ -62,7 +62,7 @@ class PilotDriver():
         if sbc is not None:
             self.binpath = '{}/bin/{}'.format(
                 os.path.join(os.path.abspath(os.path.dirname(__file__))),
-                self.sbc.target['architecture'])
+                self.sbc.architecture)
 
     def get_modules(self):
         memregs = ['uid', 'hid', 'fid']
@@ -292,10 +292,10 @@ class PilotDriver():
             match = re.match(self.sbc.target['kernelversionre'],
                              self.sbc.cmd('uname -a'))
             if match:
-                packagename = "pilot-{}{}".format(
+                packagename = "pilot-{}{}-{}".format(
                     match.group('version'),
-                    match.group('buildnum')
-                    if 'buildnum' in match.groupdict() else '')
+                    match.group('buildnum') if 'buildnum' in match.groupdict() else '',
+                    match.group('arch'))
                 print('trying to install package '
                       '{}'
                       ''.format(packagename))
@@ -319,6 +319,7 @@ class PilotDriver():
                 print('Could not detect your linux version')
                 return 1
         except Exception as e:
+            print(e)
             # bugsnag.notify(e, user={
             #     "username": self.ps.pilotcfg['username']})
             return 1
@@ -347,10 +348,10 @@ class PilotDriver():
 
     def check_driver(self):
         if self.sbc.cmd_retcode('ls ' + self.pilot_driver_root) != 0:
-            print('Pilot driver is not loaded. Trying to load')
             if self.reload_drivers(False):
-                print('Drivers loaded')
+                print('Pilot driver loaded')
             else:
+                print('Pilot driver is installed, trying to install')
                 if self.install_driver() == 0:
                     print('Pilot driver installed.')
                     return 1
@@ -359,7 +360,8 @@ class PilotDriver():
                     ch = input("Do you want to try to build them locally? (needs a couple of minutes and plenty of disk space, be patient) [y/n]: ")
                     if (ch == 'y' or ch == 'yes'):
                         return self.try_build_drivers()
-                    #self.get_kernel_info()
+                    #else:
+                    #    self.get_kernel_info()
                     return -1
         return 0
     
