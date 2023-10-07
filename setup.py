@@ -95,8 +95,8 @@ setup(
                     'qrcode_terminal==0.8',
                     'gql==2.0.0',
                     'rich==10.2.2',
-                    'protobuf==3.19.4',
-                    'grpcio==1.44.0',
+                    'protobuf==4.22.4',
+                    'grpcio==1.54.0',
                     'requests_toolbelt==0.9.1'
                     ],
   python_requires='>=3',
