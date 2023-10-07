@@ -368,15 +368,17 @@ class PilotDriver():
     def try_build_drivers(self):
         print('Building Pilot Kernel Driver...', end='')
         sys.stdout.flush()
-        ret = self.sbc.cmd_retcode("sudo apt-get install -y python2 git build-essential")
-        if ret == 0:
-            ret = self.sbc.cmd_retcode("git clone https://github.com/pilotnexus/pilotdriver.git ~/pilotdriver && cd ~/pilotdriver && make prepare && make && make package && sudo make install")
-            if ret == 0:
-                print(Fore.GREEN + 'done')
-                return 1 # success, we built the drivers, returning 1 to indicate a reboot
-        print(Fore.RED + 'failed')
-        print("Could not install build tools")
-        return ret 
+        try:
+            self.sbc.cmd("sudo apt-get install -y python3 git build-essential", True)
+            self.sbc.cmd("rm -rf ~/pilotdriver && git clone --depth=1 https://github.com/pilotnexus/pilotdriver.git ~/pilotdriver && cd ~/pilotdriver && make prepare && make && make package && sudo make install", True)
+        except Exception as error:
+            print(Fore.RED + 'failed')
+            print(Fore.RED + "Could not install build tools")
+            print(error);
+            return -1
+
+        print(Fore.GREEN + 'done')
+        return 1 # success, we built the drivers, returning 1 to indicate a reboot
 
     def reload_drivers(self, verbose=True, pdstopped=False):
         ok = True

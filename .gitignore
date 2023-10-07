@@ -1,5 +1,8 @@
 **/__pycache__/
 /dist/
+/bin/
+/lib/
+/pilot-config-*/
 /build/
 /pilot.egg-info/
 /pilot_config\.egg-info/
@@ -7,3 +10,5 @@
 /testfiles/
 /.vscode/
 /**/*.tar.gz
+lib64
+pyvenv.cfg

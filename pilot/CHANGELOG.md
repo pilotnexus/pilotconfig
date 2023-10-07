@@ -1,4 +1,12 @@
 # CHANGELOG
+## 2.5.10
+fixed bug in error printing
+## 2.5.9
+remove pilotdriver folder if it already exists when building the driver locally
+## 2.5.8
+Errors are now printed to output when building the driver locally and it fails
+## 2.5.5
+64-bit support
 ## 2.5.4
 remote.it install script using --register-remote 
 ## 2.5.2

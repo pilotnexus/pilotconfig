@@ -4,6 +4,7 @@ import grpc
 
 from . import pilotbuild_pb2 as pilotbuild__pb2
 
+
 class PilotBuildStub(object):
     """Missing associated documentation comment in .proto file."""
 
