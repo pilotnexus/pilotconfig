@@ -12,12 +12,12 @@ fi
 # Install your tool with pipx
 pipx install pilot-config
 
-# Create a wrapper script to run the pilot-config tool with sudo
-echo "#!/bin/bash
-sudo ~/.local/bin/pilot \"\$@\"
-" > /usr/local/bin/pilot
-
-# Make the wrapper script executable
-chmod +x /usr/local/bin/pilot
+# Modify the ~/.local/bin/pilot script to include the sudo check and rerun
+sed -i '5i\
+# Check if we\'re running as root already.\
+if os.geteuid() != 0:\
+    # Re-run the script with sudo\
+    os.execvp("sudo", ["sudo", sys.executable] + sys.argv)\
+' ~/.local/bin/pilot
 
 echo "Installation complete! Start using pilot-config by typing 'pilot setup'"
