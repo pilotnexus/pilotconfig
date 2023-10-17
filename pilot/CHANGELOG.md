@@ -1,4 +1,6 @@
 # CHANGELOG
+## 2.5.11
+Package version updates
 ## 2.5.10
 fixed bug in error printing
 ## 2.5.9
