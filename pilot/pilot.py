@@ -9,6 +9,10 @@ import cryptography
 # needed until paramiko is fixed
 import warnings
 from cryptography import utils
+import logging
+
+# Configure the logging level for the gql package
+logging.getLogger('gql').setLevel(logging.WARNING)
 
 try:
   warnings.simplefilter("ignore", cryptography.utils.CryptographyDeprecationWarning)

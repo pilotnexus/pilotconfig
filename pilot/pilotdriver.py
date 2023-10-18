@@ -292,9 +292,9 @@ class PilotDriver():
             match = re.match(self.sbc.target['kernelversionre'],
                              self.sbc.cmd('uname -a'))
             if match:
-                packagename = "pilot-{}{}-{}".format(
+                packagename = "pilot-{}-{}".format(
                     match.group('version'),
-                    match.group('buildnum') if 'buildnum' in match.groupdict() else '',
+                    # match.group('buildnum') if 'buildnum' in match.groupdict() else '',
                     match.group('arch'))
                 print('trying to install package '
                       '{}'
@@ -373,7 +373,7 @@ class PilotDriver():
             self.sbc.cmd("rm -rf ~/pilotdriver && git clone --depth=1 https://github.com/pilotnexus/pilotdriver.git ~/pilotdriver && cd ~/pilotdriver && make prepare && make && make package && sudo make install", True)
         except Exception as error:
             print(Fore.RED + 'failed')
-            print(Fore.RED + "Could not install build tools")
+            print(Fore.RED + "Could not install pilot driver")
             print(error);
             return -1
 

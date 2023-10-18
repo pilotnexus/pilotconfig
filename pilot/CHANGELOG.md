@@ -1,4 +1,7 @@
 # CHANGELOG
+
+## 2.5.12
+build number removed from package version
 ## 2.5.11
 Package version updates
 ## 2.5.10
