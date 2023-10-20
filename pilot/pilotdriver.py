@@ -370,7 +370,11 @@ class PilotDriver():
         sys.stdout.flush()
         try:
             self.sbc.cmd("sudo apt-get install -y python3 git build-essential", True)
-            self.sbc.cmd("rm -rf ~/pilotdriver && git clone --depth=1 https://github.com/pilotnexus/pilotdriver.git ~/pilotdriver && cd ~/pilotdriver && make prepare && make && make package && sudo make install", True)
+            self.sbc.cmd("rm -rf ~/pilotdriver && git clone --depth=1 https://github.com/pilotnexus/pilotdriver.git ~/pilotdriver", True)
+            ok = self.sbc.cmd_retcode("cd ~/pilotdriver && make prepare")
+            if ok != 0: # fallback to full clone of kernel headers
+                self.sbc.cmd("cd ~/pilotdriver && make prepare-full")
+            self.sbc.cmd("cd ~/pilotdriver && make && make package && sudo make install", True)
         except Exception as error:
             print(Fore.RED + 'failed')
             print(Fore.RED + "Could not install pilot driver")
