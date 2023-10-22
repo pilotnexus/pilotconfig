@@ -3,7 +3,7 @@
 # Check if pipx is installed
 if ! command -v pipx &> /dev/null; then
     echo "pipx not found! Installing pipx..."
-    sudo apt install -y pipx
+    python3 -m pip install --user pipx
     python3 -m pipx ensurepath
     # Reload shell to ensure new path is active
     source ~/.bashrc
